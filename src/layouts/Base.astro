@@ -16,7 +16,8 @@ interface Props {
 const { title = `${site.name}, ${site.role}, ${site.location}`, description = site.description } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL(`${base}og.png`, Astro.site);
+// Bump ?v when og.png changes: link previews cache the image by its URL.
+const ogImage = new URL(`${base}og.png?v=2`, Astro.site);
 ---
 
 <!doctype html>
@@ -72,7 +73,7 @@ const ogImage = new URL(`${base}og.png`, Astro.site);
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${site.name}, ${site.role}. A storyboard of product design work.`} />
+    <meta property="og:image:alt" content={`${site.name}, ${site.role}. Six products laid out on a bench, ready to set off a chain reaction.`} />
     <meta property="og:locale" content="en_AU" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
