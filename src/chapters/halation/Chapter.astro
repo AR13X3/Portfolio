@@ -50,7 +50,8 @@ const frost = shot('coral-reeds-frost.webp');
       <div class="hx-slot" data-hx="slot"><i class="hx-spot" data-hx="spot"></i></div>
     </div>
 
-    <!-- The canvas. -->
+    <!-- The canvas. On phones its stage holds it still mid-screen while the frost wipes away. -->
+    <div class="hx-stage" data-hx="stage">
     <figure class="hx-canvas" data-hx="canvas">
       <div class="hx-canvas__inner" data-hx="inner">
         <div class="hx-canvas__drift" data-hx="drift">
@@ -120,6 +121,7 @@ const frost = shot('coral-reeds-frost.webp');
       <div class="hx-seam" aria-hidden="true" data-hx="seam"><i></i></div>
       <figcaption class="visually-hidden">Loops recorded with the live Halation editor's video export.</figcaption>
     </figure>
+    </div>
 
     <!-- Title card: Halation's sheet glass. -->
     <header class="hx-title" data-hx="title" data-clear>
@@ -367,6 +369,35 @@ const frost = shot('coral-reeds-frost.webp');
   }
 
   /* ---------- Canvas ---------- */
+  /* No box of its own, except on phones (below). */
+  .hx-stage {
+    display: contents;
+  }
+
+  /* Lite: the canvas sticks mid-screen for the stage's extra height, the scroll that wipes its
+     frost away (motion.ts reveal), then moves on with the page. */
+  :global(html.mode-lite) .hx-stage {
+    display: block;
+    order: -2;
+  }
+  /* Straight out of the CareVisor transition's band, with no gap before the canvas: the world starts
+     at the band's dim (its .cxh__dim, 0.78 of the room) and the lights come back up as it scrolls. */
+  :global(html.mode-lite) .hx-world {
+    padding-top: 0;
+    background: linear-gradient(180deg, rgb(8 8 10 / 0.78), rgb(8 8 10 / 0) 720px);
+  }
+  /* The hold: room inside the stage (a sticky box can't travel into its parent's padding). */
+  :global(html.mode-lite) .hx-stage::after {
+    content: '';
+    display: block;
+    height: 60svh;
+  }
+  :global(html.mode-lite) .hx-canvas {
+    position: sticky;
+    /* Centred: the canvas is the world's content width (at most 1120px less the gutters) at 16:10. */
+    top: max(var(--gutter), 50svh - (min(100vw, 1120px) - 2 * var(--gutter)) * 0.3125);
+  }
+
   .hx-canvas {
     position: relative;
     order: -2;
@@ -828,7 +859,8 @@ const frost = shot('coral-reeds-frost.webp');
     padding: 0;
   }
 
-  :global(html.mode-full) .hx-world > * {
+  :global(html.mode-full) .hx-world > *,
+  :global(html.mode-full) .hx-stage > * {
     position: absolute;
   }
 

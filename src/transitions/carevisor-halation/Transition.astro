@@ -2,9 +2,8 @@
 /**
  * CareVisor → Halation. The lights go down on CareVisor's bright page until the room is Halation's
  * near-black. Then a hairline of light opens down the middle, like light under a door, and the
- * two halves of the dark part to let Coral Reeds' frosted glow fill the window. On phones the
- * hairline instead slides to the canvas card's edge and turns Halation's red: it becomes the
- * seam that wipes the card's frost away.
+ * two halves of the dark part to let Coral Reeds' frosted glow fill the window. On phones it is
+ * a dark band that dims the page; Halation's canvas then holds mid-screen as its frost wipes away.
  */
 interface Props {
   from: string;
@@ -79,31 +78,31 @@ interface Props {
 
   /* The hairline: Coral Reeds' peach, glowing. */
   .cxh__seam {
-    --seam: #ffd0b4;
     position: absolute;
     top: 0;
     bottom: 0;
     left: 50%;
     width: 2px;
     margin-left: -1px;
-    background: var(--seam);
+    background: #ffd0b4;
     box-shadow:
       0 0 14px 3px rgb(255 150 112 / 0.6),
       0 0 70px 18px rgb(255 104 88 / 0.22);
     opacity: 0;
   }
 
-  /* Lite: the transition is a band in the page, so the dark fades in and out at its ends. */
-  :global(html.mode-lite) .cxh__vig {
+  /* Lite: the transition is a short band in the page. The lights go down across it, never to black
+     (--cxh-dim), and stay at that level into the top of Halation's world (Chapter.astro), where they
+     come back up: Halation's canvas rises straight out of the dim while the ground turns to coral. */
+  :global(html.mode-lite .chapter__transition:has(> .cxh)) {
+    height: 40vh;
+  }
+  :global(html.mode-lite) .cxh__vig,
+  :global(html.mode-lite) .cxh__seam {
     display: none;
   }
   :global(html.mode-lite) .cxh__dim {
-    opacity: 1;
-    mask-image: linear-gradient(180deg, transparent, #000 32%, #000 72%, transparent);
-  }
-  /* Out of the dark and down to the band's foot, pointing at the card that follows. */
-  :global(html.mode-lite) .cxh__seam {
-    top: 22%;
-    background: linear-gradient(180deg, transparent, var(--seam) 40%);
+    opacity: 0.78;
+    mask-image: linear-gradient(180deg, transparent, #000);
   }
 </style>

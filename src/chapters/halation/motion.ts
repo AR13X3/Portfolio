@@ -305,19 +305,33 @@ export const halation: ChapterMotion = {
     const frostImg = one(section, 'frost-img');
     const seam = one(section, 'seam');
 
-    // The canvas opens behind its frosted pane, once, as it comes into view.
+    // The canvas opens behind its frosted pane. Reduced: it fades, once, as it comes into view.
+    // Lite: while the canvas sticks mid-screen (.hx-stage), the scroll wipes the frost away
+    // behind the seam.
+    const stage = one(section, 'stage');
     if (canvas && frost && frostImg) {
       gsap.set(frost, { display: 'block' });
-      const st = { trigger: canvas, start: 'top 70%', once: true };
-      if (reduced) {
+      if (reduced || !stage) {
+        const st = { trigger: canvas, start: 'top 70%', once: true };
         gsap.to(frost, { autoAlpha: 0, duration: 0.8, ease: 'power1.out', scrollTrigger: st });
       } else {
-        const t = gsap.timeline({ scrollTrigger: st, defaults: { duration: 1.5, ease: 'power2.inOut' } });
-        if (seam) {
-          gsap.set(seam, { display: 'block' });
-          t.fromTo(seam.firstElementChild, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 }, 0);
+        const line = seam?.firstElementChild;
+        if (seam) gsap.set(seam, { display: 'block' });
+        const t = gsap.timeline({
+          defaults: { duration: 1, ease: 'power1.inOut' },
+          scrollTrigger: {
+            trigger: stage,
+            // From when the canvas sticks to when it lets go: the hold is the stage's ::after.
+            start: () => `top ${parseFloat(getComputedStyle(canvas).top) || 0}px`,
+            end: () => `+=${parseFloat(getComputedStyle(stage, '::after').height) || 0}`,
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+          },
+        });
+        if (seam && line) {
+          t.fromTo(line, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06, ease: 'none' }, 0);
           t.fromTo(seam, { xPercent: 0 }, { xPercent: 100 }, 0);
-          t.to(seam.firstElementChild, { autoAlpha: 0, duration: 0.2 }, 1.35);
+          t.to(line, { autoAlpha: 0, duration: 0.1, ease: 'none' }, 0.9);
         }
         t.fromTo(frost, { xPercent: 0 }, { xPercent: 100 }, 0);
         t.fromTo(frostImg, { xPercent: 0 }, { xPercent: -100 }, 0);
