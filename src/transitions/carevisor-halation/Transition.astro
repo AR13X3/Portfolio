@@ -1,52 +1,109 @@
 ---
 /**
- * CareVisor → Halation. CareVisor's blue (its accordion cards and every action on the site)
- * drops over the page in columns, left to right. Under it the ground turns to Halation's frosted
- * Coral Reeds. The columns catch the light like flutes of reeded glass, then narrow away to the
- * right, the direction Halation's own frost wipes, uncovering the canvas.
+ * CareVisor → Halation. The lights go down on CareVisor's bright page until the room is Halation's
+ * near-black. Then a hairline of light opens down the middle, like light under a door, and the
+ * two halves of the dark part to let Coral Reeds' frosted glow fill the window. On phones the
+ * hairline instead slides to the canvas card's edge and turns Halation's red: it becomes the
+ * seam that wipes the card's frost away.
  */
 interface Props {
   from: string;
   to: string;
 }
-const COLUMNS = 16;
 ---
 
 <div class="cxh">
-  {
-    Array.from({ length: COLUMNS }, () => (
-      <i class="cxh__col" data-cxh="col">
-        <b data-cxh="sheen" />
-      </i>
-    ))
-  }
+  <!-- Full mode: the room darkens from its corners first. -->
+  <i class="cxh__vig" data-cxh="vig"></i>
+  <div class="cxh__dim" data-cxh="dim">
+    <i class="cxh__door cxh__door--l" data-cxh="door"><b data-cxh="spill"></b></i>
+    <i class="cxh__door cxh__door--r" data-cxh="door"><b data-cxh="spill"></b></i>
+  </div>
+  <i class="cxh__seam" data-cxh="seam"></i>
 </div>
 
 <style>
   .cxh {
     position: absolute;
     inset: 0;
-    display: flex;
     overflow: hidden;
     pointer-events: none;
   }
 
-  /* CareVisor's blue, deepening down the column as its cards do (from #0052CC to #0A3F9E). */
-  .cxh__col {
-    position: relative;
-    flex: 1;
-    /* A hair wider than its slot, so neighbours overlap and no seam shows through. */
-    margin-right: -1px;
-    background: linear-gradient(180deg, #0052cc, #0a3f9e);
-    transform: scaleY(0);
-    transform-origin: 50% 0;
-  }
-
-  /* A flute's highlight: light gathers off-centre, as through Halation's reeded glass. */
-  .cxh__col b {
+  /* Halation's ground (#08080a), as the light falls off toward the edges of the window. */
+  .cxh__vig {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgb(255 255 255 / 0) 0%, rgb(255 255 255 / 0.1) 34%, rgb(255 255 255 / 0.2) 42%, rgb(255 255 255 / 0) 72%, rgb(0 0 0 / 0.25) 100%);
+    background: radial-gradient(ellipse 75% 70% at 50% 50%, rgb(8 8 10 / 0) 30%, rgb(8 8 10 / 0.85) 100%);
     opacity: 0;
+  }
+
+  /* The doors fade as one (no seam where they overlap), then part. */
+  .cxh__dim {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+
+  .cxh__door {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* A hair past the middle, so the two overlap and no line shows before they open. */
+    width: calc(50% + 1px);
+    background: #08080a;
+  }
+  .cxh__door--l {
+    left: 0;
+  }
+  .cxh__door--r {
+    right: 0;
+  }
+
+  /* Coral light spilling onto each door's inner edge once the crack opens. */
+  .cxh__door b {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: min(32vw, 420px);
+    opacity: 0;
+  }
+  .cxh__door--l b {
+    right: 0;
+    background: linear-gradient(90deg, rgb(255 132 102 / 0), rgb(255 132 102 / 0.16));
+  }
+  .cxh__door--r b {
+    left: 0;
+    background: linear-gradient(270deg, rgb(255 132 102 / 0), rgb(255 132 102 / 0.16));
+  }
+
+  /* The hairline: Coral Reeds' peach, glowing. */
+  .cxh__seam {
+    --seam: #ffd0b4;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--seam);
+    box-shadow:
+      0 0 14px 3px rgb(255 150 112 / 0.6),
+      0 0 70px 18px rgb(255 104 88 / 0.22);
+    opacity: 0;
+  }
+
+  /* Lite: the transition is a band in the page, so the dark fades in and out at its ends. */
+  :global(html.mode-lite) .cxh__vig {
+    display: none;
+  }
+  :global(html.mode-lite) .cxh__dim {
+    opacity: 1;
+    mask-image: linear-gradient(180deg, transparent, #000 32%, #000 72%, transparent);
+  }
+  /* Out of the dark and down to the band's foot, pointing at the card that follows. */
+  :global(html.mode-lite) .cxh__seam {
+    top: 22%;
+    background: linear-gradient(180deg, transparent, var(--seam) 40%);
   }
 </style>
