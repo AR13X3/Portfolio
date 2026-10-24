@@ -1,0 +1,96 @@
+---
+/**
+ * the app's sign-in meadow (src/assets/scenes/meadow.svg, exported from the team's Figma
+ * file), split into its own layers so each hill, cloud, grass row and sheep moves on the
+ * compositor. The art is 1280 x 832, as wide as the window (never under 900px) plus 4%, and
+ * pinned to the bottom, as in the app's Scene.jsx.
+ */
+import hills from './art/meadow-hills.svg?url';
+import cloud1 from './art/meadow-cloud-1.svg?url';
+import cloud2 from './art/meadow-cloud-2.svg?url';
+import cloud3 from './art/meadow-cloud-3.svg?url';
+import cloud4 from './art/meadow-cloud-4.svg?url';
+import grass1 from './art/meadow-grass-1.svg?url';
+import grass2 from './art/meadow-grass-2.svg?url';
+import grass3 from './art/meadow-grass-3.svg?url';
+import sheepA from './art/meadow-sheep-a.svg?url';
+import sheepB from './art/meadow-sheep-b.svg?url';
+import sheepC from './art/meadow-sheep-c.svg?url';
+
+type Piece = { src: string; kind: 'hill' | 'cloud' | 'grass' | 'msheep'; x: number; y: number; w: number; h: number };
+// Boxes in scene units, measured from the original artwork. Paint order as in the file.
+const pieces: Piece[] = [
+  // The three gold hills share one layer (fewer full-size layers to composite).
+  { src: hills, kind: 'hill', x: -40, y: -110, w: 1360, h: 952 },
+  { src: cloud1, kind: 'cloud', x: 343, y: 28, w: 192, h: 126 },
+  { src: cloud2, kind: 'cloud', x: 872, y: 144.8, w: 140, h: 92 },
+  { src: cloud3, kind: 'cloud', x: 158, y: 224.4, w: 110, h: 72 },
+  { src: cloud4, kind: 'cloud', x: 1018, y: 17.6, w: 163, h: 106 },
+  { src: grass1, kind: 'grass', x: -40, y: 537.38, w: 1360, h: 305 },
+  { src: sheepA, kind: 'msheep', x: 1005, y: 551, w: 201, h: 181 },
+  { src: grass2, kind: 'grass', x: -40, y: 549, w: 1360, h: 292 },
+  { src: sheepB, kind: 'msheep', x: 113, y: 623, w: 178, h: 155 },
+  { src: grass3, kind: 'grass', x: -40, y: 612.94, w: 1360, h: 230 },
+  { src: sheepC, kind: 'msheep', x: 398, y: 668, w: 193, h: 172 },
+];
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+---
+
+<div class="ts-meadow" aria-hidden="true" data-ts="meadow">
+  <div class="ts-meadow__art">
+    {
+      pieces.map((p) => (
+        <img
+          class:list={['ts-mpiece', `ts-mpiece--${p.kind}`]}
+          src={p.src}
+          alt=""
+          width={Math.round(p.w)}
+          height={Math.round(p.h)}
+          decoding="async"
+          style={`left:${pct(p.x, 1280)};top:${pct(p.y, 832)};width:${pct(p.w, 1280)};height:${pct(p.h, 832)}`}
+          data-ts={p.kind}
+        />
+      ))
+    }
+    <span class="ts-baa" data-ts="baa">Baa!</span>
+  </div>
+</div>
+
+<style>
+  .ts-meadow {
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .ts-meadow__art {
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    width: calc(max(100%, 900px) * 1.04);
+    margin-left: calc(max(100%, 900px) * -0.52);
+    aspect-ratio: 1280 / 832;
+  }
+
+  .ts-mpiece {
+    position: absolute;
+    max-width: none;
+    transform-origin: 50% 100%;
+  }
+
+  /* The app's "baa" bubble (scene.css .scene__baa) over the sheep that hops. */
+  .ts-baa {
+    position: absolute;
+    left: 15.5%;
+    top: 70%;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: #ece4d4;
+    box-shadow: 0 0.45px 9px -3px #372f2a;
+    color: #372f2a;
+    font: 700 16px/1.2 'Lato', system-ui, sans-serif;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+  }
+</style>

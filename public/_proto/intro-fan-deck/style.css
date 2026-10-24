@@ -1,0 +1,2368 @@
+/* ==================================================================
+   Fan Deck: intro prototype.
+   Shell tokens are the site's (src/styles/global.css). Colour lives
+   only in the blades: everything else is ink on paper.
+   ================================================================== */
+
+@property --open {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+:root {
+  --paper: #f3f4f5;
+  --ink: #101114;
+  --ink-2: #53575e;
+  --rule: rgb(16 17 20 / 0.13);
+  --card: #fbfbf9;
+  --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --gutter: clamp(16px, 4vw, 56px);
+  --rail: 56px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Static paper tooth: ink noise at about 5% alpha, on its own 240px tile. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .063 0 0 0 0 .067 0 0 0 0 .078 0 0 0 .34 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --prism: linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)), url(../../shots/carevisor/prism.webp);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+p,
+ol,
+ul,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+img,
+svg {
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.label {
+  font: 500 12px/1.3 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   Fixed grounds (the engine's BgStack): paper for the intro, the prism
+   for CareVisor. Opacity only. Full mode only; elsewhere sections
+   paint their own grounds.
+   ------------------------------------------------------------------ */
+.bg {
+  display: none;
+}
+
+/* The body would paint over a z-index -1 layer; the html keeps the paper. */
+html.mode-full body {
+  background: transparent;
+}
+
+html.mode-full .bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: block;
+}
+
+.bg__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.bg__layer--intro {
+  background: var(--paper);
+}
+
+.bg__layer--cv {
+  background-color: #e9f0fa;
+  background-image: var(--prism);
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* The site's progress rail, mocked: decorative here. */
+.rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .rail {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    z-index: 50;
+    display: grid;
+    gap: 7px;
+    transform: translateY(-50%);
+  }
+
+  .rail i {
+    position: relative;
+    display: block;
+    width: 3px;
+    height: 24px;
+  }
+
+  .rail i::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 1px;
+    width: 1px;
+    background: var(--ink);
+  }
+
+  .rail i:first-child::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background: var(--ink);
+  }
+}
+
+/* ------------------------------------------------------------------
+   The intro: stacked document by default (phones, tablets, short windows,
+   no JS on small screens); the poster composition from 1024 x 600.
+   ------------------------------------------------------------------ */
+.intro {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 18px var(--gutter) 44px;
+  background: var(--paper);
+  color: var(--ink);
+  overflow: clip;
+}
+
+.intro__grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--grain) 0 0 / 240px 240px repeat;
+  pointer-events: none;
+}
+
+html.mode-full .intro {
+  background: transparent;
+}
+
+/* The load sequence waits for the fonts (as the site's .js class does), at most 2s. */
+html.js:not(.is-ready) .intro {
+  visibility: hidden;
+}
+
+html.js:not(.is-ready) .intro * {
+  animation-play-state: paused !important;
+}
+
+/* Wrappers GSAP never touches carry the load animation (README rule). */
+.in {
+  display: block;
+}
+
+/* ---------- Top bar ---------- */
+.intro__bar .in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 28px;
+  font-size: 14px;
+  animation: fade 0.6s ease both;
+}
+
+.bar__left {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.bar__now {
+  display: none;
+  color: var(--ink-2);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.bar__now b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.bar__now:hover span {
+  text-decoration: underline;
+}
+
+.bar__links {
+  display: flex;
+  gap: 22px;
+}
+
+.bar__links a {
+  display: inline-block;
+  padding: 10px 0;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.bar__links a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Kicker, name, role, sub ---------- */
+.intro__kicker {
+  order: 1;
+  color: var(--ink-2);
+}
+
+.intro__kicker .in {
+  animation: fade 0.5s 0.12s ease both;
+}
+
+.intro__title {
+  order: 2;
+  --F: min(14vw, 7rem);
+  position: relative;
+  margin: 0;
+  font-weight: 400;
+}
+
+.name {
+  display: block;
+  font: 800 var(--F) / 0.86 var(--font-display);
+  font-stretch: 112%;
+  letter-spacing: -0.035em;
+  font-variant-ligatures: none;
+  pointer-events: none;
+}
+
+/* Each line rises inside a mask; the padding keeps ascenders and the q and y descenders. */
+.line {
+  display: block;
+  overflow: clip;
+  padding: 0.09em 0.06em 0.12em 0;
+  margin: -0.09em -0.06em -0.12em 0;
+}
+
+.line__rise {
+  display: block;
+  animation: line-rise 0.95s var(--ease-out) both;
+  animation-delay: calc(80ms + var(--n) * 90ms);
+}
+
+.line__out {
+  display: block;
+  white-space: nowrap;
+}
+
+.i {
+  position: relative;
+}
+
+/* The dotless i is for the rivet; it only shows where the rivet is drawn. */
+.i__full {
+  display: none;
+}
+
+.role {
+  display: block;
+  margin-top: 0.85rem;
+  font: 600 17px/1.3 var(--font-sans);
+  letter-spacing: -0.005em;
+}
+
+.role .in {
+  animation: rise-s 0.7s 0.6s var(--ease-out) both;
+}
+
+.intro__sub {
+  order: 3;
+  max-width: 36ch;
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.intro__sub .in {
+  animation: rise-s 0.7s 0.68s var(--ease-out) both;
+}
+
+.intro__readout {
+  display: none;
+}
+
+.intro__cue {
+  order: 5;
+  color: var(--ink-2);
+  font: 500 13px/1.4 var(--font-sans);
+}
+
+.intro__cue .in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fade 0.5s 1.3s ease both;
+}
+
+.cue__arrow {
+  flex: none;
+  width: 24px;
+  height: 14px;
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cue__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-2);
+}
+
+.cue--full,
+.cue--touch {
+  display: none;
+}
+
+html.mode-lite .cue--rest {
+  display: none;
+}
+
+html.mode-lite .cue--touch {
+  display: inline;
+}
+
+.rivet {
+  display: none;
+}
+
+/* ------------------------------------------------------------------
+   The deck, stacked (phones, tablets): every blade lies flat, chip on
+   the left, its words on the right.
+   ------------------------------------------------------------------ */
+.deck {
+  order: 4;
+}
+
+.deck__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .deck__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.blade-item {
+  --snap: 0deg;
+  --swing: 0deg;
+  --lift: 0px;
+  --rot: calc(var(--a) + var(--open) + var(--snap) + var(--swing));
+}
+
+.blade-item .blade {
+  position: relative;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 7px 14px 7px 7px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px rgb(16 17 20 / 0.08),
+    0 14px 26px -18px rgb(16 17 20 / 0.4);
+  text-decoration: none;
+  animation: rise-s 0.6s var(--ease-out) both;
+  animation-delay: calc(0.75s + var(--i) * 60ms);
+}
+
+.blade__card,
+.blade__neck,
+.blade__band,
+.deck__tips {
+  display: none;
+}
+
+.blade__chip {
+  position: relative;
+  display: block;
+  width: 104px;
+  height: calc(104px * 155 / 120);
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--bg);
+  --k: calc(104 / 120);
+}
+
+.blade__text {
+  display: grid;
+  gap: 2px;
+}
+
+.blade__text .num {
+  color: var(--ink-2);
+  font: 700 11px/1.3 var(--font-display);
+  font-stretch: 125%;
+  letter-spacing: 0.04em;
+}
+
+.blade__text .nm {
+  font-family: var(--face);
+  font-size: 20px;
+  font-weight: var(--w, 800);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.blade__text .mt {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font: 500 11px/1.35 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blade__text .ln {
+  margin-top: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------
+   Poster composition (1024 x 600 and up): the name across the foot,
+   the deck pinned through the dot of its i.
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .intro {
+    display: block;
+    height: 100vh;
+    min-height: 600px;
+    padding: 0;
+    /* Name size and the rivet. JS measures the tittle and overwrites --cx/--cy and the deck sizes. */
+    --F: min(12.5vw, 20vh);
+    --nb: clamp(30px, 5.2vh, 52px);
+    --cx: calc(var(--gutter) + var(--F) * 2.49);
+    --cy: calc(max(600px, 100vh) - var(--nb) - var(--F) * 1.711);
+    --L: clamp(250px, calc(var(--cy) - 118px), 520px);
+    --W: calc(var(--L) * 0.31);
+    --H: calc(var(--L) * 0.45);
+    --neck: max(26px, calc(var(--L) * 0.074));
+    --eye: calc(var(--L) * 0.11);
+    --k: 1;
+    --rv: calc(var(--F) * 0.196);
+  }
+
+  .intro__bar {
+    position: absolute;
+    top: clamp(16px, 3.6vh, 32px);
+    left: var(--gutter);
+    right: calc(var(--rail) + var(--gutter));
+    z-index: 6;
+  }
+
+  .intro__bar .in {
+    flex-wrap: nowrap;
+  }
+
+  .intro__sub {
+    position: absolute;
+    top: clamp(112px, 17vh, 158px);
+    left: var(--gutter);
+    z-index: 6;
+    width: min(19rem, calc(var(--cx) - var(--L) * 0.36 - var(--gutter)));
+    max-width: none;
+    font-size: clamp(16px, 1.3vw, 19px);
+  }
+
+  .intro__readout {
+    position: absolute;
+    top: clamp(112px, 17vh, 158px);
+    right: calc(var(--rail) + var(--gutter));
+    z-index: 6;
+    display: block;
+    width: min(19rem, 24vw);
+  }
+
+  .readout {
+    animation: fade 0.5s 1.4s ease both;
+  }
+
+  .readout__swap {
+    display: block;
+  }
+
+  .readout__swap.is-in {
+    animation: readout-in 0.24s var(--ease-out) both;
+  }
+
+  .readout__head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .readout__num {
+    color: var(--ink-2);
+    font: 500 12px/1 var(--font-mono);
+  }
+
+  .readout__name {
+    font-family: var(--face, var(--font-sans));
+    font-size: 26px;
+    font-weight: var(--w, 800);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .readout__meta {
+    margin-top: 10px;
+    color: var(--ink-2);
+  }
+
+  .readout__line {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .readout__idle {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .readout__idle b {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .intro__lockup {
+    position: absolute;
+    left: var(--gutter);
+    bottom: var(--nb);
+    z-index: 3;
+  }
+
+  /* The kicker stops short of the rivet; on narrow screens it wraps rather than reach the necks. */
+  .intro__kicker {
+    max-width: calc(var(--cx) - var(--gutter) - 40px);
+    margin-bottom: calc(var(--F) * 0.1);
+  }
+
+  .intro__title {
+    --F: inherit;
+  }
+
+  .name {
+    font-size: var(--F);
+  }
+
+  /* The role sits on the first line's baseline, past "Toufiq". JS refines --tw. */
+  .role {
+    position: absolute;
+    left: calc(var(--tw, calc(var(--F) * 3.26)) + var(--F) * 0.16);
+    top: calc(var(--F) * 0.86 - 1.18em);
+    margin: 0;
+    font-size: clamp(17px, 1.4vw, 21px);
+    white-space: nowrap;
+  }
+
+  .intro__cue {
+    position: absolute;
+    right: calc(var(--rail) + var(--gutter));
+    bottom: calc(var(--nb) + var(--F) * 0.14);
+    z-index: 6;
+  }
+
+  html.js:not(.mode-reduced) .cue--rest {
+    display: none;
+  }
+
+  html.mode-full .cue--full {
+    display: inline;
+  }
+
+  /* The rivet is the dot of the i. */
+  .i__full {
+    display: inline;
+  }
+
+  .i__lite {
+    display: none;
+  }
+
+  .rivet {
+    position: absolute;
+    left: var(--cx);
+    top: var(--cy);
+    z-index: 4;
+    display: block;
+    width: 0;
+    height: 0;
+    animation: rivet-in 0.5s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    pointer-events: none;
+  }
+
+  .rivet__out {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .rivet__head {
+    position: absolute;
+    left: calc(var(--rv, 30px) / -2);
+    top: calc(var(--rv, 30px) / -2);
+    width: var(--rv, 30px);
+    height: var(--rv, 30px);
+    border-radius: 50%;
+    /* A flat-headed rivet: a bevelled rim, a slightly domed face, one soft highlight. */
+    background:
+      radial-gradient(circle at 36% 32%, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0) 34%),
+      radial-gradient(circle at 50% 50%, #2c2e33 0 58%, #18191c 62%, #3a3c42 72%, #232428 86%, #141518 100%);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.55),
+      0 2px 4px -1px rgb(16 17 20 / 0.45);
+  }
+
+  /* ---------- The fan ---------- */
+  .deck {
+    position: absolute;
+    left: var(--cx);
+    top: var(--cy);
+    z-index: 2;
+    width: 0;
+    height: 0;
+  }
+
+  .deck__jolt,
+  .deck__list {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    display: block;
+  }
+
+  .blade-item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: calc(10 - var(--i));
+    width: 0;
+    height: 0;
+    transform: rotate(var(--rot));
+    animation: deck-open 1.15s cubic-bezier(0.2, 1.12, 0.3, 1) both;
+    animation-delay: calc(0.62s + var(--i) * 28ms);
+  }
+
+  .blade-item.is-hot {
+    z-index: 20;
+  }
+
+  .blade__slide {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .blade-item .blade {
+    position: absolute;
+    left: calc(var(--W) / -2);
+    top: calc(var(--L) * -1);
+    display: block;
+    width: var(--W);
+    height: calc(var(--L) + var(--eye) / 2);
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: translateY(calc(var(--lift) * -1));
+    pointer-events: none;
+    animation: fade 0.22s both;
+    animation-delay: calc(0.62s + var(--i) * 28ms);
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  .blade-item .blade:focus-visible {
+    outline: none;
+  }
+
+  .blade-item .blade:focus-visible .blade__card {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  .blade__card,
+  .blade__neck,
+  .blade__chip,
+  .blade__band {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  /* The head: card stock, the chip, a band with the number and accent token. */
+  .blade__card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 100%;
+    height: var(--H);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 1px 0 rgb(16 17 20 / 0.06),
+      0 18px 30px -16px rgb(16 17 20 / 0.34);
+  }
+
+  /* The neck runs to the eyelet round the rivet. */
+  .blade__neck {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--H) - 14px);
+    bottom: 0;
+    z-index: -1;
+    display: block;
+    width: var(--neck);
+    margin-left: calc(var(--neck) / -2);
+    border-radius: 0 0 999px 999px;
+    background: var(--card);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 10px 18px -12px rgb(16 17 20 / 0.3);
+  }
+
+  .blade__neck::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--eye);
+    height: var(--eye);
+    margin-left: calc(var(--eye) / -2);
+    border-radius: 50%;
+    background: var(--card);
+    box-shadow: 0 0 0 1px rgb(16 17 20 / 0.08);
+  }
+
+  .blade__hex {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    color: var(--ink-2);
+    font: 500 max(9px, calc(var(--L) * 0.021)) / 1 var(--font-mono);
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%);
+  }
+
+  .blade__chip {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: calc(var(--W) - 12px);
+    height: calc(var(--H) - 38px);
+    border-radius: 8px;
+    --k: inherit;
+  }
+
+  .blade__band {
+    position: absolute;
+    left: 11px;
+    right: 11px;
+    top: calc(var(--H) - 32px);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .band__num {
+    color: var(--ink-2);
+    font: 700 11px/1 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: 0.04em;
+  }
+
+  .band__acc {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink-2);
+    font: 500 9.5px/1 var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+
+  .band__acc i {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--acc);
+    box-shadow: inset 0 0 0 1px rgb(16 17 20 / 0.12);
+  }
+
+  .blade__text {
+    display: none;
+  }
+
+  /* Tip labels: their own layer above every blade, riding each tip and always level,
+     each set in its product's own face. Same angle as the blade, by the same variables. */
+  .deck__tips {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 30;
+    display: block;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .tip {
+    --snap: 0deg;
+    --swing: 0deg;
+    --lift: 0px;
+    --rot: calc(var(--a) + var(--open) + var(--snap) + var(--swing));
+    --R: calc(var(--L) + var(--lift) + 15px);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    white-space: nowrap;
+    transform:
+      translate(calc(sin(var(--rot)) * var(--R)), calc(cos(var(--rot)) * var(--R) * -1))
+      translate(calc((sin(var(--rot)) - 1) * 50%), calc((-1 * cos(var(--rot)) - 1) * 50%));
+    animation: deck-open 1.15s cubic-bezier(0.2, 1.12, 0.3, 1) both;
+    animation-delay: calc(0.62s + var(--i) * 28ms);
+  }
+
+  .tip .in {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 3px 4px;
+    animation: fade 0.5s both;
+    animation-delay: calc(1.12s + var(--i) * 45ms);
+  }
+
+  .tip b {
+    color: var(--ink-2);
+    font: 500 11px/1 var(--font-mono);
+  }
+
+  .tip .nm {
+    font-family: var(--face);
+    font-size: clamp(14px, 1.1vw, 16px);
+    font-weight: var(--w, 800);
+    letter-spacing: -0.015em;
+    line-height: 1;
+  }
+
+  .tip.is-hot .nm {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+  }
+}
+
+@media (min-width: 1200px) and (min-height: 600px) {
+  .bar__now {
+    display: inline;
+  }
+}
+
+/* Under 1280px the right column belongs to the fan's tips: the readout takes the sub's slot,
+   and swaps in for it while a blade is under the pointer or focus. */
+.swap,
+.readout__vis {
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+@media (min-width: 1024px) and (max-width: 1279.98px) and (min-height: 600px) {
+  .intro__readout {
+    left: var(--gutter);
+    right: auto;
+    width: min(19rem, calc(var(--cx) - var(--L) * 0.36 - var(--gutter)));
+    pointer-events: none;
+  }
+
+  .readout__vis {
+    opacity: 0;
+  }
+
+  .intro.is-reading .readout__vis {
+    opacity: 1;
+  }
+
+  .intro.is-reading .intro__sub .swap {
+    opacity: 0;
+  }
+
+  .readout__name {
+    font-size: 22px;
+  }
+}
+
+/* Short-but-wide windows (lite by height) keep the poster, unpinned. */
+
+/* ------------------------------------------------------------------
+   Chip fragments: each product's own UI, coded, on its own ground.
+   Drawn at 120 x 155 design px, scaled by --k to the chip.
+   ------------------------------------------------------------------ */
+.frag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120px;
+  height: 155px;
+  overflow: hidden;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.frag > * {
+  position: absolute;
+}
+
+.frag__ground {
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+/* 01 CareVisor: the app window on the prism, the real markup at a small --d. */
+.frag-cv__win {
+  left: -10px;
+  top: 34px;
+  width: 300px;
+  container-type: inline-size;
+  border-radius: 8px;
+  background: url(../../shots/carevisor/panel.webp) 70% 30% / 300% auto no-repeat;
+}
+
+.frag-cv__win:has(.cvd-app) {
+  background: none;
+}
+
+.frag-cv__win .cvd-app {
+  box-shadow: 0 6px 14px rgb(0 32 90 / 0.18);
+}
+
+.frag-cv__cursor {
+  left: 96px;
+  top: 112px;
+  width: 11px;
+  height: 14px;
+  transition: transform 0.6s var(--ease-out);
+}
+
+/* 02 Halation: a look behind reeded glass, the frosted panel over it. */
+.frag-ha__look {
+  inset: 0 -40% 0 0;
+  background: url(../../shots/halation/loop-coral-reeds-poster.webp) 30% 50% / cover;
+  transition: transform 1.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.frag-ha__glass {
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg,
+      rgb(255 255 255 / 0.12) 0 1px,
+      rgb(255 255 255 / 0.03) 1px 4px,
+      rgb(0 0 0 / 0.1) 4px 7px,
+      rgb(0 0 0 / 0.22) 7px 8px);
+  mix-blend-mode: soft-light;
+}
+
+.frag-ha__panel {
+  left: 34px;
+  right: 6px;
+  bottom: 8px;
+  padding: 8px 9px 9px;
+  border-radius: 9px;
+  background: rgb(18 16 22 / 0.78);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  color: #f4f2ee;
+}
+
+.frag-ha__panel b {
+  display: block;
+  font: 700 15px/1 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.frag-ha__row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: #c5c3c0;
+  font: 600 6px/1 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.frag-ha__track {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.frag-ha__knob {
+  position: absolute;
+  left: 34%;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: #ff3438;
+  box-shadow: 0 0 0 2px rgb(255 52 56 / 0.25);
+  transition: transform 1.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+/* 03 SiteScore: the hex map, a site's 36-month revenue card. */
+.frag-ss__map {
+  inset: 0;
+  width: 120px;
+  height: 155px;
+}
+
+.frag-ss__pin {
+  left: 84px;
+  top: 104px;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid #161616;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.frag-ss__card {
+  left: 36px;
+  top: 10px;
+  width: 78px;
+  padding: 6px 7px 5px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(22 22 22 / 0.08),
+    0 8px 16px -8px rgb(22 22 22 / 0.35);
+  color: #161616;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.frag-ss__card small {
+  display: block;
+  color: #4a4a47;
+  font-size: 5.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.frag-ss__card b {
+  display: block;
+  margin-top: 2px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.frag-ss__card span {
+  display: block;
+  margin-top: 2px;
+  color: #4a4a47;
+  font-size: 5.5px;
+  font-weight: 500;
+}
+
+.frag-ss__card svg {
+  width: 100%;
+  height: 14px;
+  margin-top: 3px;
+  overflow: visible;
+}
+
+/* 04 NASA Space Apps: the meadow under the teal sky, details redacted. */
+.frag-na__sky {
+  inset: 0;
+  background: linear-gradient(#5f9fa2, #7fb4b2 55%, #a9c6b6);
+}
+
+.frag-na__cloud {
+  left: 64px;
+  top: 18px;
+  width: 44px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fbf8f2;
+  box-shadow:
+    -12px 6px 0 -2px #fbf8f2,
+    12px 5px 0 -3px #fbf8f2;
+  transition: transform 1.6s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.frag-na__cloud::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: -9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fbf8f2;
+}
+
+.frag-na__hill {
+  left: -20px;
+  right: -20px;
+  bottom: -40px;
+  height: 92px;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(#a8a35c, #8b8d48);
+}
+
+.frag-na__hill--b {
+  left: 40px;
+  right: -60px;
+  bottom: -52px;
+  background: linear-gradient(#c3ad6c, #a8925a);
+}
+
+.frag-na__card {
+  left: 36px;
+  right: 6px;
+  top: 54px;
+  padding: 7px 7px 8px;
+  border-radius: 7px;
+  background: #fbf8f2;
+  box-shadow: 0 8px 16px -8px rgb(55 47 42 / 0.45);
+  font-family: 'Lato', system-ui, sans-serif;
+}
+
+.frag-na__pill {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #cfb173;
+  color: #2a231f;
+  font-size: 6px;
+  font-weight: 700;
+}
+
+.frag-na__bar {
+  display: block;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: #2a231f;
+  transform-origin: 0 50%;
+  transition: transform 0.5s var(--ease-out);
+}
+
+/* 05 BloodLine: a result just under its range, and the nudge to the GP. */
+.frag-bl__ground {
+  inset: 0;
+  background: linear-gradient(180deg, rgb(6 17 12 / 0.55), rgb(6 17 12 / 0.9)), url(../../shots/bloodline/bg-poster.webp) 40% 50% / cover;
+}
+
+.frag-bl__card {
+  left: 34px;
+  right: 6px;
+  top: 14px;
+  padding: 7px 8px 8px;
+  border-radius: 8px;
+  background: rgb(13 32 24 / 0.92);
+  box-shadow: inset 0 0 0 1px rgb(220 235 210 / 0.14);
+  color: #eaf2ec;
+  font-family: 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+}
+
+.frag-bl__card small {
+  display: block;
+  color: #a6bcad;
+  font-size: 6.5px;
+  font-weight: 600;
+}
+
+.frag-bl__card b {
+  display: block;
+  margin-top: 1px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.frag-bl__card b em {
+  margin-left: 2px;
+  color: #a6bcad;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.frag-bl__range {
+  position: relative;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 4px;
+  background: rgb(234 242 236 / 0.14);
+}
+
+.frag-bl__band {
+  position: absolute;
+  left: 30%;
+  right: 12%;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: rgb(220 235 210 / 0.55);
+}
+
+.frag-bl__mark {
+  position: absolute;
+  left: 25%;
+  top: -3px;
+  width: 3px;
+  height: 10px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: #f0b45a;
+}
+
+.frag-bl__ticks {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 12% 0 26%;
+  color: #a6bcad;
+  font-size: 5.5px;
+  font-weight: 600;
+}
+
+.frag-bl__alert {
+  left: 30px;
+  right: 6px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: rgb(234 242 236 / 0.96);
+  color: #06110c;
+  font: 600 6.5px/1.25 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+  box-shadow: 0 8px 16px -8px rgb(0 0 0 / 0.6);
+}
+
+.frag-bl__alert i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #06110c;
+}
+
+/* 06 Airpoint: the phone app's mark, and the pointer it moves. */
+.frag-ap__ground {
+  inset: 0;
+  background: radial-gradient(120% 70% at 50% 0%, #1a2340, #0d0f14 60%);
+}
+
+.frag-ap__phone {
+  left: 46px;
+  top: 16px;
+  width: 62px;
+  height: 130px;
+  border-radius: 13px;
+  background: #0a0b0f;
+  box-shadow:
+    inset 0 0 0 1.5px rgb(244 244 241 / 0.2),
+    0 10px 20px -10px rgb(0 0 0 / 0.8);
+}
+
+.frag-ap__phone svg {
+  position: absolute;
+  left: 15px;
+  top: 30px;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+}
+
+.frag-ap__phone b {
+  position: absolute;
+  left: 8px;
+  right: 6px;
+  top: 74px;
+  color: #f4f4f1;
+  font: 700 8px/1.15 'Sora', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.frag-ap__phone span {
+  position: absolute;
+  left: 8px;
+  bottom: 9px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #3b69ff;
+  color: #fff;
+  font: 600 5.5px/1 'Sora', ui-sans-serif, system-ui, sans-serif;
+}
+
+.frag-ap__cursor {
+  left: 26px;
+  top: 30px;
+  width: 13px;
+  height: 17px;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
+  transition: transform 1.2s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+/* 07 Compare Best AI: the hero robot, the search, a score. */
+.frag-cb__ground {
+  inset: 0;
+  background: linear-gradient(160deg, #ffffff, #eaf3fb);
+}
+
+.frag-cb__robot {
+  right: -18px;
+  top: 2px;
+  width: 104px;
+  height: auto;
+}
+
+.frag-cb__search {
+  left: 30px;
+  right: 6px;
+  top: 98px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 17px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px #dfe6ef,
+    0 4px 10px -4px rgb(10 16 32 / 0.25);
+  color: #45556c;
+  font: 500 6px/1 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.frag-cb__search i {
+  width: 6px;
+  height: 6px;
+  border: 1.2px solid #45556c;
+  border-radius: 50%;
+}
+
+.frag-cb__score {
+  left: 30px;
+  right: 6px;
+  top: 121px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: #0a1020;
+  color: #fff;
+  font: 700 6px/1 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.frag-cb__score span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.frag-cb__track {
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.frag-cb__fill {
+  display: block;
+  width: 91%;
+  height: 100%;
+  border-radius: 3px;
+  background: #00b0f0;
+  transform-origin: 0 50%;
+}
+
+/* One product-true reaction per blade, when it parts. */
+@media (prefers-reduced-motion: no-preference) {
+  .is-hot .frag-cv__cursor {
+    transform: translate(-30px, -40px);
+  }
+
+  .is-hot .frag-ha__look {
+    transform: translateX(-26%);
+  }
+
+  .is-hot .frag-ha__knob {
+    transform: translateX(34px);
+  }
+
+  .is-hot .frag-ss__pin {
+    transform: scale(1.5);
+  }
+
+  .is-hot .frag-ss__card {
+    transform: translateY(-3px);
+  }
+
+  .is-hot .frag-na__cloud {
+    transform: translateX(-26px);
+  }
+
+  .is-hot .frag-na__bar:nth-of-type(2) {
+    transform: scaleX(0.7);
+  }
+
+  .is-hot .frag-na__bar:nth-of-type(3) {
+    transform: scaleX(0.84);
+  }
+
+  .is-hot .frag-bl__mark {
+    animation: bl-mark 0.9s var(--ease-out) both;
+  }
+
+  .is-hot .frag-bl__alert {
+    animation: bl-alert 0.5s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .is-hot .frag-ap__cursor {
+    transform: translate(48px, 44px);
+  }
+
+  .is-hot .frag-cb__fill {
+    animation: cb-fill 0.9s var(--ease-out) both;
+  }
+}
+
+/* ------------------------------------------------------------------
+   CareVisor's first frame (chapter 01), mocked from Chapter.astro and
+   Demo.astro. Full mode: absolute over the intro inside the pinned
+   stage, revealed through a transform-only mask. Elsewhere: a section.
+   ------------------------------------------------------------------ */
+.stage {
+  position: relative;
+}
+
+.cv {
+  position: relative;
+  min-height: 100vh;
+  color: #000918;
+  font: 400 16px/1.6 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --cv-gutter: clamp(16px, 4vw, 48px);
+}
+
+.cv__mask,
+.cv__inner {
+  position: relative;
+  min-height: 100vh;
+}
+
+.cv__ground {
+  position: absolute;
+  inset: 0;
+  background-color: #e9f0fa;
+  background-image: var(--prism);
+  background-position: center;
+  background-size: cover;
+}
+
+html.mode-full .stage {
+  height: 100vh;
+}
+
+html.mode-full .cv {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  visibility: hidden;
+  opacity: 0;
+}
+
+html.mode-full .cv__mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 64px;
+  transform-origin: 0 0;
+}
+
+html.mode-full .cv__inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  transform-origin: 0 0;
+}
+
+.cv-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px var(--cv-gutter);
+}
+
+.cv-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cv-mark {
+  width: 32px;
+  height: 32px;
+}
+
+.cv-brand__name {
+  font: 700 18px/1 'Outfit', sans-serif;
+  letter-spacing: -0.3px;
+}
+
+.cv-brand__name span {
+  color: #0052cc;
+}
+
+.cv-brand__sep {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: rgb(0 9 24 / 0.14);
+}
+
+.cv-brand__tag {
+  color: #465062;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.cv-nav__meta {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.cv-nav__meta span {
+  padding: 9px 14px;
+  color: #424242;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.cv-nav__meta span:first-child {
+  color: #0052cc;
+  font: 700 13px/1.4 var(--font-mono);
+}
+
+.cv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: #0052cc;
+  color: #fff;
+  font: 600 14.5px/1 'Outfit', sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgb(0 82 204 / 0.35);
+}
+
+.cv-btn--sm {
+  min-height: 44px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cv-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.cv-hero {
+  position: relative;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vh, 64px) var(--cv-gutter) 0;
+  text-align: center;
+}
+
+.cv-hero__title {
+  font: 800 clamp(36px, 4.2vw, 60px) / 1.06 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  outline: none;
+}
+
+.cv-hero__title .w {
+  display: inline-block;
+  overflow: clip;
+  padding: 0.04em 0.02em 0.12em;
+  margin: -0.04em -0.02em -0.12em;
+  vertical-align: top;
+}
+
+.cv-hero__title .w > span {
+  display: inline-block;
+}
+
+.cv-blue {
+  color: #0052cc;
+}
+
+.cv-br {
+  display: none;
+}
+
+.cv-hero__lede {
+  max-width: 60ch;
+  margin: 20px auto 0;
+  color: #465062;
+  font-size: clamp(15.5px, 1.15vw, 17px);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.cv-hero__role {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+.cv-hero__role span {
+  color: #0052cc;
+  font: 700 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cv-hero__ctas {
+  margin-top: 24px;
+}
+
+.cv-product {
+  position: relative;
+  max-width: 1072px;
+  margin: 40px auto 0;
+  padding: 0 var(--cv-gutter) 48px;
+}
+
+.cv-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 8px;
+}
+
+.cv-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  font-family: 'Inter', ui-sans-serif, sans-serif;
+}
+
+.cv-tab__tile {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--tile);
+  color: var(--tile-ink);
+}
+
+.cv-tab__tile svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cv-tab:not(.is-on) .cv-tab__tile {
+  opacity: 0.5;
+}
+
+.cv-tab__caption {
+  color: #465062;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.cv-tab__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cv-tab__track {
+  display: block;
+  width: 100%;
+  max-width: 120px;
+  height: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e6e4;
+}
+
+.cv-tab__track i {
+  display: block;
+  height: 100%;
+  background: #0052cc;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.cv-tab.is-on .cv-tab__track i {
+  transform: scaleX(0.42);
+}
+
+.cv-demo {
+  margin-top: 27px;
+}
+
+@media (min-width: 1024px) {
+  .cv-br {
+    display: inline;
+  }
+
+  .cv-tabs {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .cv-nav__meta,
+  .cv-brand__sep,
+  .cv-brand__tag {
+    display: none;
+  }
+
+  .cv-nav .cv-btn {
+    margin-left: auto;
+  }
+}
+
+/* Full mode: the frame exactly as the chapter lands (1440 x 900: title at 117, window at 591). */
+html.mode-full .cv-nav {
+  position: absolute;
+  inset: 0 0 auto;
+  padding-right: calc(var(--rail) + var(--cv-gutter));
+}
+
+html.mode-full .cv-stack {
+  position: absolute;
+  left: 0;
+  right: var(--rail);
+  top: clamp(84px, 13vh, 132px);
+}
+
+html.mode-full .cv-hero {
+  padding-top: 0;
+}
+
+html.mode-full .cv-demo {
+  width: min(100%, calc((100vh - clamp(84px, 11vh, 110px) - 170px) * 2.13));
+  margin: clamp(20px, 3vh, 36px) auto 0;
+}
+
+/* ---------- The app window (Demo.astro, Participant Intake) ---------- */
+.cvd {
+  position: relative;
+  margin: 0;
+  container-type: inline-size;
+}
+
+.cvd-glow {
+  position: absolute;
+  inset: -3%;
+  border-radius: 48px;
+  background: radial-gradient(60% 60% at 50% 40%, rgb(0 82 204 / 0.16), rgb(74 143 232 / 0.08) 60%, rgb(153 194 255 / 0) 100%);
+}
+
+.cvd-app {
+  --d: calc(100cqw / 1024);
+  --ink: #000918;
+  --slate: #5a6472;
+  --grey: #657084;
+  --blue: #0052cc;
+  --skel: #e8ecf3;
+  --edge: #eef0f4;
+  --rule: #e4e6e4;
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(24 * var(--d));
+  border: 1px solid var(--rule);
+  background: #fff;
+  box-shadow: 0 calc(18 * var(--d)) calc(60 * var(--d)) rgb(0 9 24 / 0.12);
+  color: var(--ink);
+  font: 500 calc(12 * var(--d)) / 1.35 'Inter', ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+}
+
+.cvd-app svg {
+  flex: none;
+  width: auto;
+  height: 1.15em;
+}
+
+.cvd-chrome {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--d));
+  padding: calc(10 * var(--d)) calc(16 * var(--d));
+  border-bottom: 1px solid var(--edge);
+  background: #fafbfc;
+}
+
+.cvd-light {
+  width: calc(10 * var(--d));
+  height: calc(10 * var(--d));
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.cvd-url {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(224 * var(--d));
+  height: calc(24 * var(--d));
+  margin: 0 auto;
+  border-radius: calc(6 * var(--d));
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--edge);
+  color: var(--grey);
+  font-size: calc(10.5 * var(--d));
+}
+
+.cvd-spacer {
+  width: calc(54 * var(--d));
+}
+
+.cvd-body {
+  display: flex;
+  height: calc(440 * var(--d));
+}
+
+.cvd-side {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: calc(192 * var(--d));
+  padding: calc(12 * var(--d));
+  border-right: 1px solid var(--edge);
+  background: #fafbfc;
+}
+
+.cvd-org {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--d));
+  padding: 0 calc(6 * var(--d)) calc(12 * var(--d));
+}
+
+.cvd-org__icon {
+  display: grid;
+  place-items: center;
+  width: calc(28 * var(--d));
+  height: calc(28 * var(--d));
+  border-radius: calc(8 * var(--d));
+  background: linear-gradient(to bottom right, #0052cc, #4a8fe8);
+  color: #fff;
+  font-size: calc(13 * var(--d));
+}
+
+.cvd-org__name,
+.cvd-org__who {
+  display: block;
+}
+
+.cvd-org__name {
+  font-size: calc(12 * var(--d));
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.cvd-org__who {
+  color: var(--grey);
+  font-size: calc(9.5 * var(--d));
+}
+
+.cvd-nav {
+  position: relative;
+  display: grid;
+  gap: calc(2 * var(--d));
+}
+
+.cvd-nav__pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(33 * var(--d));
+  border-radius: calc(8 * var(--d));
+  background: #e8f0fe;
+  transform: translateY(calc(35 * var(--d)));
+}
+
+.cvd-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--d));
+  height: calc(33 * var(--d));
+  padding: 0 calc(10 * var(--d));
+  color: var(--slate);
+  font-size: calc(11.5 * var(--d));
+  font-weight: 600;
+}
+
+.cvd-nav__item.is-on {
+  color: var(--blue);
+}
+
+.cvd-side__foot {
+  display: grid;
+  gap: calc(8 * var(--d));
+  margin-top: auto;
+  padding: 0 calc(6 * var(--d));
+}
+
+.cvd-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: calc(20 * var(--d));
+  background: #fff;
+}
+
+.cvd-inner {
+  position: relative;
+  height: 100%;
+}
+
+.cvd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(12 * var(--d));
+}
+
+.cvd-h {
+  display: block;
+  font-size: calc(16 * var(--d));
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cvd-skel {
+  display: block;
+  width: calc(var(--w) * var(--d));
+  height: calc(8 * var(--d));
+  border-radius: 999px;
+  background: var(--skel);
+}
+
+.cvd-skel--sub {
+  margin-top: calc(8 * var(--d));
+}
+
+.cvd-skel--thin {
+  height: calc(6 * var(--d));
+}
+
+.cvd-stack {
+  display: grid;
+  gap: calc(6 * var(--d));
+}
+
+.cvd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6 * var(--d));
+  height: calc(32 * var(--d));
+  padding: 0 calc(12 * var(--d));
+  border-radius: calc(8 * var(--d));
+  background: var(--blue);
+  color: #fff;
+  font-size: calc(11.5 * var(--d));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cvd-rows {
+  display: grid;
+  gap: calc(12 * var(--d));
+  margin-top: calc(20 * var(--d));
+  padding-right: 46%;
+}
+
+.cvd-row {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--d));
+  padding: calc(12 * var(--d));
+  border: 1px solid var(--edge);
+  border-radius: calc(12 * var(--d));
+  background: #fff;
+}
+
+.cvd-ava {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(28 * var(--d));
+  height: calc(28 * var(--d));
+  border-radius: 50%;
+  background: #e8f0fe;
+  color: var(--blue);
+  font-size: calc(9.5 * var(--d));
+  font-weight: 700;
+}
+
+.cvd-card {
+  border: 1px solid var(--rule);
+  border-radius: calc(16 * var(--d));
+  background: #fff;
+  box-shadow: 0 calc(16 * var(--d)) calc(40 * var(--d)) rgb(0 9 24 / 0.1);
+}
+
+.cvd-card__title {
+  display: block;
+  font-size: calc(12.5 * var(--d));
+  font-weight: 700;
+}
+
+.cvd-label {
+  display: block;
+  margin-top: calc(10 * var(--d));
+  color: var(--grey);
+  font-size: calc(9.5 * var(--d));
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.cvd-field {
+  display: flex;
+  align-items: center;
+  height: calc(32 * var(--d));
+  margin-top: calc(4 * var(--d));
+  padding: 0 calc(10 * var(--d));
+  border: 1px solid var(--rule);
+  border-radius: calc(8 * var(--d));
+  background: #fafbfc;
+}
+
+.cvd-form {
+  position: absolute;
+  right: 0;
+  top: calc(48 * var(--d));
+  width: 43%;
+  padding: calc(16 * var(--d));
+}
+
+.cvd-cursor {
+  position: absolute;
+  left: 71%;
+  top: 9%;
+  width: calc(16 * var(--d));
+  height: auto;
+}
+
+/* After the intro: CareVisor's colour, so the end of the scroll can be judged. */
+.after {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 40px var(--gutter);
+  background-color: #e9f0fa;
+  background-image: var(--prism);
+  background-position: center;
+  background-size: cover;
+  color: #465062;
+  font: 700 12px/1.4 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+html.mode-full .after {
+  background: transparent;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 13px/1.3 var(--font-sans);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toast.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ------------------------------------------------------------------
+   Keyframes. Transforms and opacity only (plus --open, an angle).
+   ------------------------------------------------------------------ */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes line-rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes rise-s {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes rivet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+/* Every blade starts closed onto 01 and swings out to rest: a thumb pushing the fan open. */
+@keyframes deck-open {
+  from {
+    --open: calc(-10deg - var(--a));
+  }
+}
+
+@keyframes readout-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes bl-mark {
+  from {
+    transform: translateX(42px);
+  }
+}
+
+@keyframes bl-alert {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+}
+
+@keyframes cb-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Reduced motion: fades only. The fan is simply there, at rest. */
+@media (prefers-reduced-motion: reduce) {
+  .line__rise,
+  .role .in,
+  .intro__sub .in,
+  .blade-item .blade,
+  .rivet {
+    animation-name: fade;
+  }
+
+  .blade-item,
+  .tip {
+    animation: none !important;
+  }
+
+  .blade-item.is-hot .blade__card {
+    background: #fff;
+    box-shadow:
+      0 0 0 1px var(--ink),
+      0 18px 30px -16px rgb(16 17 20 / 0.34);
+  }
+}
+
+/* The same, forced for review with ?reduced. */
+
+html.force-reduced .line__rise,
+html.force-reduced .role .in,
+html.force-reduced .intro__sub .in,
+html.force-reduced .blade-item .blade,
+html.force-reduced .rivet{
+  animation-name: fade;
+}
+
+html.force-reduced .blade-item,
+html.force-reduced .tip{
+  animation: none !important;
+}
+
+html.force-reduced .blade-item.is-hot .blade__card{
+  background: #fff;
+  box-shadow:
+    0 0 0 1px var(--ink),
+    0 18px 30px -16px rgb(16 17 20 / 0.34);
+}
+
+@media print {
+  .intro__cue,
+  .intro__readout,
+  .rail,
+  .toast {
+    display: none;
+  }
+}
+
+html.force-reduced .frag *,
+html.force-reduced .frag {
+  transition: none !important;
+  animation: none !important;
+}

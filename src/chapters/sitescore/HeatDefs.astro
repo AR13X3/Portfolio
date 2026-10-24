@@ -1,0 +1,57 @@
+---
+/**
+ * The opportunity map's cells, defined once and drawn wherever a <use> points at them (the
+ * hero map). Each colour step is a hex marker;
+ * each ring of cells is one polyline whose vertices carry that marker, so a cell costs one
+ * coordinate pair in the markup. Ramp and step alphas: frontend/src/lib/theme.ts and
+ * frontend/src/components/HexLayer.tsx.
+ */
+import { HEAT_ALPHA, HEAT_POINTS, HEAT_R, HEAT_RAMP } from './heat';
+
+const h = (HEAT_R * Math.sqrt(3)) / 2;
+const r = HEAT_R;
+// Centred in a box a little larger than the cell, so nothing relies on marker overflow.
+const c = Math.ceil(r + 1);
+const f = (v: number) => +v.toFixed(2);
+const hex = `M${c} ${f(c - r)}L${f(c + h)} ${f(c - r / 2)}V${f(c + r / 2)}L${c} ${f(c + r)}L${f(c - h)} ${f(c + r / 2)}V${f(c - r / 2)}Z`;
+---
+
+<svg class="ss-heatdefs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    {
+      HEAT_RAMP.map((fill, b) => (
+        <marker id={`ss-hx${b}`} markerUnits="userSpaceOnUse" markerWidth={c * 2} markerHeight={c * 2} refX={c} refY={c}>
+          <path d={hex} fill={fill} fill-opacity={HEAT_ALPHA[b]} />
+        </marker>
+      ))
+    }
+    {
+      HEAT_POINTS.map((ring, g) =>
+        ring.map(
+          (points, b) =>
+            points && (
+              <polyline
+                id={`ss-heat-${g}-${b}`}
+                points={points}
+                fill="none"
+                stroke="none"
+                marker-start={`url(#ss-hx${b})`}
+                marker-mid={`url(#ss-hx${b})`}
+                marker-end={`url(#ss-hx${b})`}
+              />
+            ),
+        ),
+      )
+    }
+  </defs>
+</svg>
+
+<style>
+  .ss-heatdefs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+</style>

@@ -1,0 +1,788 @@
+---
+/**
+ * The gate: the loader, then the choice between the two ways in (scripts/boot.ts runs both).
+ *
+ * The whole opening is one object, the dot. On first paint a pale full stop sits at the optical
+ * centre and fills with ink as the site really loads; when it is full it drops onto its seat and
+ * the choice blooms out of it: the Fan's blades fan out of it up to the left, the Machine's run
+ * leaves it down to the right.
+ *
+ * Shown only when the head script (layouts/Base.astro) decides this visit gets it
+ * (html[data-boot="load"]): never without JavaScript, never on a deep link or a restore. The
+ * choice's words and drawings live in <template>s, so crawlers and the no-JS page never see them.
+ */
+import type { Chapter } from '../../chapters/types';
+import { intros } from '../../intros/registry';
+import { fanBlades, machineSvg, type Layout } from './previews';
+
+interface Props {
+  chapters: Chapter[];
+}
+const { chapters } = Astro.props;
+const layouts: Layout[] = ['wide', 'stacked'];
+---
+
+<div class="boot" data-gate role="dialog" aria-modal="true" aria-labelledby="boot-label">
+  <i class="boot__probe" data-boot-probe aria-hidden="true"></i>
+  <p class="visually-hidden" id="boot-label">Loading</p>
+
+  <!-- The specimen (scripts/specimen.ts): "Joy" set in each product's face as it arrives, the dot its full stop. -->
+  <div class="spec" aria-hidden="true">
+    <div class="spec__mask" data-spec-mask></div>
+    <div class="spec__cap" data-spec-cap><i class="spec__sw" data-cap-sw></i><span class="spec__id" data-cap-id></span><span class="spec__face" data-cap-face></span></div>
+  </div>
+
+  <div
+    class="boot__dot"
+    data-boot-dot
+    role="progressbar"
+    aria-label="Loading the site"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    tabindex="-1"
+  >
+    <i class="boot__x" data-boot-x
+      ><i class="boot__face" data-boot-face><i class="boot__ghost"></i><i class="boot__ink" data-boot-ink></i><i class="boot__rivet"></i></i
+    ></i>
+  </div>
+  <p class="boot__label" aria-hidden="true" data-boot-label><span data-boot-word>Loading</span> <b data-boot-pct>0%</b></p>
+  <p class="boot__late" data-boot-late><a href="#carevisor" data-boot-skip>Skip intro</a></p>
+  <p class="visually-hidden" aria-live="polite" data-boot-status></p>
+
+  <template data-boot-choice>
+    <div class="choice" data-choice>
+      <div class="choice__art" data-choice-art aria-hidden="true"></div>
+      <header class="choice__head">
+        <h2 class="choice__title" id="boot-title" tabindex="-1"><span data-ch="title">Pick an intro</span></h2>
+      </header>
+      {
+        intros.map((m) => (
+          <button
+            type="button"
+            class={`choice__opt choice__opt--${m.id}`}
+            data-choice-option={m.id}
+            data-side={m.id}
+            aria-labelledby={`choice-${m.id}-name`}
+          >
+            <span class="choice__name" id={`choice-${m.id}-name`}>{m.label}</span>
+          </button>
+        ))
+      }
+      <p class="choice__skip" data-ch="skip"><a href="#carevisor" data-boot-skip>Skip intro</a></p>
+    </div>
+  </template>
+
+  {
+    layouts.map((layout) => (
+      <template data-boot-art={layout}>
+        <div class="pv-side pv-side--fan" data-side="fan">
+          <div class="pv-fan" set:html={fanBlades(chapters, layout)} />
+        </div>
+        <div class="pv-side pv-side--machine" data-side="machine" set:html={machineSvg(chapters, layout)} />
+      </template>
+    ))
+  }
+</div>
+
+<style is:global>
+  /* ------------------------------------------------------------------
+     The gate (components/boot/Gate.astro, scripts/boot.ts). Only ever shown by
+     html[data-boot="load"]; global.css holds the page-level rules (lock, hiding the page).
+     ------------------------------------------------------------------ */
+  .boot {
+    --card: #fbfbf9;
+    --k: 1;
+    /* The hinge: where the dot sits between the two ways in. CSS knows it on first paint;
+       boot.ts refines it from a 100svh probe (never innerHeight: the URL bar must not move it). */
+    --hx: 50%;
+    --hy: 60%;
+    /* The loader's dot sits at the optical centre, then drops onto the hinge. */
+    --ly: 46%;
+    --dot-w: 36px;
+    --dot-h: 30px;
+    --rivet: 35px;
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    touch-action: none;
+    overscroll-behavior: contain;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (max-aspect-ratio: 1249/1000), (max-width: 699.98px) {
+    .boot {
+      --hy: 52.5%;
+      --dot-w: 26px;
+      --dot-h: 22px;
+      --rivet: 26px;
+    }
+  }
+
+  /* Reduced motion: the dot waits at its seat from the start; nothing drops. */
+  @media (prefers-reduced-motion: reduce) {
+    .boot {
+      --ly: var(--hy);
+    }
+  }
+
+  .boot__probe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100vh;
+    height: 100svh;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* ---------- The dot ---------- */
+  .boot__dot {
+    position: absolute;
+    left: var(--hx);
+    top: var(--ly);
+    z-index: 3;
+    width: var(--dot-w);
+    height: var(--dot-h);
+    margin: calc(var(--dot-h) / -2) 0 0 calc(var(--dot-w) / -2);
+    outline: none;
+    pointer-events: none;
+    transform-origin: 50% 100%;
+    animation: boot-in 0.2s 0.16s both;
+  }
+
+  .boot.is-seated .boot__dot {
+    top: var(--hy);
+  }
+
+  .boot__x,
+  .boot__face,
+  .boot__ghost,
+  .boot__ink,
+  .boot__rivet {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Where the specimen's word has pushed the full stop along its line. */
+  .boot__x {
+    transform-origin: 50% 100%;
+  }
+
+  /* The Machine tips it toward the run about its bottom-right corner. */
+  .boot__face {
+    transform-origin: 100% 100%;
+    transition: transform 0.25s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  /* A hairline edge, so the empty full stop reads as a hollow dot filling up, not an underscore. */
+  .boot__ghost {
+    background: rgb(16 17 20 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(16 17 20 / 0.22);
+    transition: opacity 0.18s ease;
+  }
+
+  /* A stall: nothing new for a while, so the empty part breathes (it says nothing about progress). */
+  .boot.is-stalled .boot__ghost {
+    animation: boot-breathe 1.6s ease-in-out infinite;
+  }
+
+  @keyframes boot-breathe {
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .boot__ink {
+    background: var(--ink);
+    transform-origin: 50% 100%;
+    transform: scaleY(0);
+    transition: opacity 0.18s ease;
+  }
+
+  /* The Fan's rivet, the exact face it wears on the i. */
+  .boot__rivet {
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: var(--rivet);
+    height: var(--rivet);
+    margin: calc(var(--rivet) / -2) 0 0 calc(var(--rivet) / -2);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 36% 32%, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0) 34%),
+      radial-gradient(circle at 50% 50%, #2c2e33 0 58%, #18191c 62%, #3a3c42 72%, #232428 86%, #141518 100%);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.55),
+      0 2px 4px -1px rgb(16 17 20 / 0.45);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .boot[data-hover='fan'] .boot__rivet {
+    opacity: 1;
+  }
+
+  .boot[data-hover='fan'] :is(.boot__ghost, .boot__ink) {
+    opacity: 0;
+  }
+
+  .boot[data-hover='machine'] .boot__face {
+    transform: rotate(12deg);
+  }
+
+  /* Reduced motion keeps the dimming and the dot's change of face, but nothing tips. */
+  @media (prefers-reduced-motion: reduce) {
+    .boot[data-hover='machine'] .boot__face {
+      transform: none;
+    }
+  }
+
+  /* Once a way in is picked, nothing else answers. */
+  .boot.is-picking :is(.choice__opt, .choice__skip) {
+    pointer-events: none;
+  }
+
+  /* ---------- Loading label and the late skip ---------- */
+  .boot__label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--ly) + 34px);
+    color: var(--ink-2);
+    font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    transition: opacity 0.24s ease;
+  }
+
+  .boot__label b {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .boot__late {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--ly) + 52px);
+    text-align: center;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 0.3s ease,
+      visibility 0s 0.3s;
+  }
+
+  .boot.is-slow .boot__label,
+  .boot.is-late .boot__label {
+    opacity: 1;
+  }
+
+  .boot.is-late .boot__late {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Once the specimen has set a word, the label and the skip link move to the caption's row. */
+  .boot.is-set .boot__label {
+    left: auto;
+    right: var(--lab-r);
+    top: var(--cap-t);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .boot.is-set .boot__late {
+    top: var(--late-t);
+  }
+
+  .boot.is-choosing :is(.boot__label, .boot__late, .spec) {
+    display: none;
+  }
+
+  /* ---------- The specimen ---------- */
+  /* The line: a clip from over the caps to under the descenders; the word's right edge meets the dot. */
+  .spec__mask {
+    position: absolute;
+    left: 0;
+    top: var(--mask-t);
+    width: var(--mask-w);
+    height: var(--mask-h);
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  .spec__w {
+    position: absolute;
+    right: var(--mask-x);
+    top: var(--w-top);
+    width: var(--w-w);
+    height: var(--w-h);
+    visibility: hidden;
+    white-space: nowrap;
+    font-kerning: normal;
+    line-height: 1.3;
+  }
+
+  .spec__w.is-on {
+    visibility: visible;
+  }
+
+  .spec__l {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+    display: block;
+    font-style: normal;
+  }
+
+  /* Each product's word is filled from its own palette (specimen.ts sets --fill). */
+  .spec__w--fill .spec__l {
+    color: transparent;
+    background: var(--fill);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  /* A hidden twin measures each face once, when it arrives: kerned letter positions and the baseline. */
+  .spec__twin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+    white-space: nowrap;
+    line-height: 1.3;
+  }
+
+  .spec__twin i {
+    display: inline-block;
+    width: 0;
+    height: 0;
+  }
+
+  /* The caption: the product, its number and swatch (as on the Fan's blades), and the face. */
+  .spec__cap {
+    position: absolute;
+    left: var(--cap-l);
+    top: var(--cap-t);
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 8px;
+    row-gap: 5px;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .spec__sw {
+    width: 6px;
+    height: 6px;
+  }
+
+  .spec__id {
+    font: 500 11px/1 var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spec__id b {
+    font-weight: 500;
+    color: var(--ink-2);
+    margin-right: 0.5em;
+  }
+
+  .spec__face {
+    grid-column: 2;
+    color: var(--ink-2);
+    font: 400 12px/1 var(--font-sans);
+  }
+
+  @media (max-aspect-ratio: 1249/1000), (max-width: 699.98px) {
+    .spec__id {
+      font-size: 10px;
+    }
+
+    .spec__face {
+      font-size: 11px;
+    }
+  }
+
+  .boot a[data-boot-skip] {
+    display: inline-block;
+    padding: 12px 6px;
+    color: var(--ink-2);
+    font: 500 14px/1.2 var(--font-sans);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgb(16 17 20 / 0.35);
+    text-underline-offset: 0.25em;
+  }
+
+  .boot a[data-boot-skip]:hover {
+    color: var(--ink);
+  }
+
+  /* ---------- The choice ---------- */
+  .choice {
+    position: absolute;
+    inset: 0;
+  }
+
+  .choice__art {
+    position: absolute;
+    left: var(--hx);
+    top: var(--hy);
+    z-index: 0;
+    width: 0;
+    height: 0;
+    /* --ka: the wide drawing's own zoom, set by boot.ts to fill the room the heading leaves it. */
+    transform: scale(var(--ka, var(--k)));
+    transform-origin: 0 0;
+    pointer-events: none;
+  }
+
+  .pv-side {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: opacity 0.22s ease;
+    forced-color-adjust: none;
+  }
+
+  /* The fan: each blade pivots on the hinge (0deg = straight up). */
+  .pv-fan {
+    --s: 1.06;
+  }
+
+  .boot.is-stacked .pv-fan {
+    --s: 0.74;
+  }
+
+  .pv-blade {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform: rotate(var(--a));
+  }
+
+  .pv-blade__lift {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .pv-blade__neck {
+    position: absolute;
+    left: calc(-10px * var(--s));
+    top: calc(-140px * var(--s));
+    width: calc(20px * var(--s));
+    height: calc(140px * var(--s));
+    border-radius: calc(10px * var(--s));
+    background: var(--card);
+    box-shadow: inset 0 0 0 0.8px rgb(16 17 20 / 0.1);
+  }
+
+  .pv-blade__head {
+    position: absolute;
+    left: calc(-38px * var(--s));
+    top: calc(-232px * var(--s));
+    width: calc(76px * var(--s));
+    height: calc(100px * var(--s));
+    border-radius: calc(9px * var(--s));
+    background: var(--card);
+    box-shadow:
+      inset 0 0 0 0.8px rgb(16 17 20 / 0.1),
+      0 6px 10px -4px rgb(16 17 20 / 0.16);
+  }
+
+  .pv-blade__chip {
+    position: absolute;
+    left: calc(5px * var(--s));
+    top: calc(5px * var(--s));
+    width: calc(66px * var(--s));
+    height: calc(61.875px * var(--s));
+    border-radius: calc(5px * var(--s));
+    overflow: hidden;
+  }
+
+  .pv-blade__swatch {
+    position: absolute;
+    left: calc(8px * var(--s));
+    top: calc(84px * var(--s));
+    width: calc(6px * var(--s));
+    height: calc(6px * var(--s));
+    border-radius: calc(1.4px * var(--s));
+    box-shadow: inset 0 0 0 0.6px rgb(16 17 20 / 0.2);
+  }
+
+  .pv-blade__num {
+    position: absolute;
+    right: calc(8px * var(--s));
+    bottom: calc(7px * var(--s));
+    color: #53575e;
+    font: 600 calc(10px * var(--s)) / 1 var(--font-sans);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A 1px drawing that overflows: global.css caps svg at 100% of its (empty) box, and an svg
+     with no width is not rendered at all. */
+  .pv-machine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    max-width: none;
+    overflow: visible;
+  }
+
+  .pv-sq {
+    fill: var(--ink);
+    opacity: 0.3;
+  }
+
+  .pv-part {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  .boot[data-hover='fan'] [data-side='machine'],
+  .boot[data-hover='machine'] [data-side='fan'] {
+    opacity: 0.4;
+  }
+
+  /* Heading */
+  .choice__head {
+    position: absolute;
+    top: 6%;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    padding: 0 var(--gutter);
+    text-align: center;
+  }
+
+  .choice__title {
+    margin: 14px 0 -0.12em;
+    padding-bottom: 0.12em;
+    overflow: clip;
+    font: 800 calc(80px * var(--k)) / 0.9 var(--font-display);
+    font-stretch: 112%;
+    letter-spacing: -0.035em;
+    outline: none;
+  }
+
+  .choice__title span {
+    display: block;
+  }
+
+  /* Options: each button is its half of the screen; the heading and the skip link sit above them. */
+  .choice__opt {
+    position: absolute;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: opacity 0.22s ease;
+  }
+
+  .choice__opt--fan {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--hx);
+  }
+
+  .choice__opt--machine {
+    left: var(--hx);
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  /* The options' names are for screen readers; only the one-column fallback shows them. */
+  .boot:not(.is-flow) .choice__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* The options have no words: keyboard focus rings the focused half (its drawing also reacts). */
+  .choice__opt:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -16px;
+    border-radius: 24px;
+  }
+
+  /* A pick: the heading, the skip link, the other side and the chosen side's words fade, while
+     boot.ts folds the chosen drawing into the dot. CSS transitions, so they run on the compositor
+     while the page is built under them; each on an element the entrance does not animate itself
+     (a pick can come while it still plays, and a second animation of the same property on one
+     element keeps it off the compositor, frozen until the build is done). */
+  .boot.is-picking :is(.choice__head, .choice__skip > a),
+  .boot[data-pick='fan'] [data-side='machine'],
+  .boot[data-pick='machine'] [data-side='fan'] {
+    opacity: 0;
+    transition: opacity 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  }
+
+  .boot[data-pick='fan'] .choice__opt--fan,
+  .boot[data-pick='machine'] .choice__opt--machine {
+    opacity: 0;
+    transition: opacity 0.24s 0.06s cubic-bezier(0.5, 1, 0.89, 1);
+  }
+
+  /* Still building the way in after a moment: the dot breathes until the route takes over. */
+  .boot.is-waiting .boot__face {
+    animation: boot-wait 0.8s 0.45s ease-in-out infinite alternate both;
+  }
+
+  @keyframes boot-wait {
+    to {
+      opacity: 0.45;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boot.is-waiting .boot__face {
+      animation: none;
+    }
+  }
+
+  /* In a corner, out of the drawing's way (boot.ts zooms the drawing into the room it leaves). */
+  .choice__skip {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 18px;
+    z-index: 2;
+    white-space: nowrap;
+  }
+
+  /* Stacked: phones and portrait tablets. The fan above the dot, the machine below. */
+  .boot.is-stacked .choice__head {
+    top: 7.5%;
+  }
+
+  .boot.is-stacked .choice__title {
+    margin-top: 10px;
+    font-size: calc(46px * var(--k));
+  }
+
+  .boot.is-stacked .choice__opt--fan {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    width: auto;
+    height: var(--hy);
+  }
+
+  .boot.is-stacked .choice__opt--machine {
+    left: 0;
+    right: 0;
+    top: var(--hy);
+    bottom: 0;
+  }
+
+  .boot.is-stacked .choice__skip {
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+  }
+
+  /* Short: landscape phones and low windows. A one-line heading, the options closer in. */
+  .boot.is-short .choice__head {
+    top: 14px;
+    text-align: left;
+  }
+
+  .boot.is-short .choice__title {
+    margin-top: 0;
+    font-size: 32px;
+  }
+
+  .boot.is-short .choice__skip {
+    top: 2px;
+    right: var(--gutter);
+    bottom: auto;
+    left: auto;
+    transform: none;
+  }
+
+  /* Flow: when the drawing cannot fit (tiny screens, large text), one scrolling column. */
+  .boot.is-flow {
+    overflow-y: auto;
+    touch-action: pan-y;
+  }
+
+  .boot.is-flow .choice {
+    position: static;
+    display: grid;
+    gap: 28px;
+    padding: 32px var(--gutter);
+  }
+
+  .boot.is-flow :is(.choice__art, .boot__dot) {
+    display: none;
+  }
+
+  .boot.is-flow :is(.choice__head, .choice__opt, .choice__skip) {
+    position: static;
+    width: auto;
+    height: auto;
+    transform: none;
+    text-align: left;
+  }
+
+  .boot.is-flow .choice__opt {
+    padding: 16px;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+  }
+
+  .boot.is-flow :is(.choice__title, .choice__name) {
+    font-size: 40px;
+  }
+
+  @keyframes boot-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .boot__ink {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+  }
+
+  @media print {
+    .boot {
+      display: none !important;
+    }
+  }
+</style>

@@ -1,0 +1,240 @@
+---
+/**
+ * Airpoint → Compare Best AI. A browser window opens on Airpoint's Ink, on a new tab. Airpoint's
+ * own cursor (the live pad's core, halo and punched centre) glides in, presses the address bar
+ * (the press ripples green, as on the pad) and comparebestai.com decodes in. Compare Best AI's
+ * navy top bar wipes down inside the window, the page turns to its light grey, and
+ * the window grows until its inside is the viewport: the next chapter's own frame.
+ * Geometry is laid out by motion.ts in the overlay's own pixels (--k, --w, --h).
+ */
+import { CURSOR } from '../../chapters/airpoint/geometry';
+
+interface Props {
+  from: string;
+  to: string;
+}
+---
+
+<div class="axc">
+  <div class="axc__win" data-axc="win">
+    <div class="axc__chrome" data-axc="chrome">
+      <span class="axc__light"></span>
+      <span class="axc__light"></span>
+      <span class="axc__light"></span>
+      <span class="axc__url">
+        <span class="axc__url-text axc__url-text--hint" data-axc="url-from">Search or type a URL</span>
+        <span class="axc__url-text" data-axc="url-to">comparebestai.com</span>
+      </span>
+    </div>
+    <div class="axc__body">
+      <!-- A new tab on Airpoint's Ink: a search field and a row of shortcuts, in skeletons. -->
+      <div class="axc__tab" data-axc="tab">
+        <span class="axc__tab-search"></span>
+        <span class="axc__tab-tiles"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+
+      <!-- Compare Best AI: navy top bar, light page, and the homepage's tiles as empty shells,
+           laid out by motion.ts from the chapter's own tiles, so the chapter fills them in place. -->
+      <div class="cxc__cb-page" data-axc="cb-page"></div>
+      <div class="cxc__shells"><i data-axc="shell"></i><i data-axc="shell"></i><i data-axc="shell"></i></div>
+      <div class="cxc__cb-top" data-axc="cb-top"></div>
+    </div>
+    <!-- The pad's press ripple (LivePad.kt), in Airpoint's live green. -->
+    <span class="axc__pulse" data-axc="pulse"></span>
+    <!-- Airpoint's cursor: Electric core, 2.8× halo, punched centre. -->
+    <svg class="axc__cursor" viewBox={`${-CURSOR.halo} ${-CURSOR.halo} ${CURSOR.halo * 2} ${CURSOR.halo * 2}`} data-axc="cursor">
+      <circle r={CURSOR.halo} fill="rgb(59 105 255 / 0.18)"></circle>
+      <circle r={CURSOR.core} fill="#3b69ff"></circle>
+      <circle r={CURSOR.punch} fill="#090b0f"></circle>
+    </svg>
+  </div>
+</div>
+
+<style>
+  /* --k, --w and --h come from motion.ts, set on the overlay's parent before it shows. */
+  .axc {
+    --chrome: 36px;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* The browser in Airpoint's dark tokens (Theme.kt DarkColors): surface, outline, ink. */
+  .axc__win {
+    position: absolute;
+    left: calc((100% - var(--w) * var(--k)) / 2);
+    top: calc((100% - var(--h) * var(--k) - var(--chrome)) / 2);
+    width: calc(var(--w) * var(--k));
+    border-radius: 16px;
+    background: #0d0f14;
+    /* The outline is a ring, not a border, so the body starts exactly under the chrome and the
+       grown window lands on the chapter's own pixels. */
+    box-shadow:
+      0 0 0 1px #242934,
+      0 30px 80px -20px rgb(0 0 0 / 0.7);
+    overflow: hidden;
+    opacity: 0;
+    transform-origin: 0 0;
+  }
+
+  .axc__chrome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--chrome);
+    padding: 0 16px;
+    border-bottom: 1px solid #242934;
+    background: #15181f;
+  }
+
+  .axc__light {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #353b48;
+  }
+
+  .axc__url {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 260px;
+    height: 24px;
+    margin: 0 auto;
+    padding-right: 54px;
+    border-radius: 6px;
+    background: #0d0f14;
+    box-shadow: 0 0 0 1px #242934;
+    color: #f4f4f1;
+    font: 500 11px/1 'Sora Variable', 'Sora', ui-sans-serif, sans-serif;
+  }
+
+  .axc__url-text {
+    grid-area: 1 / 1;
+    white-space: pre;
+  }
+
+  .axc__url-text--hint {
+    color: #8a909c;
+  }
+
+  [data-axc='url-to'] {
+    opacity: 0;
+  }
+
+  .axc__body {
+    position: relative;
+    height: calc(var(--h) * var(--k));
+    overflow: hidden;
+  }
+
+  /* ---------- New tab ---------- */
+  .axc__tab {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 22px;
+  }
+
+  .axc__tab-search {
+    width: min(420px, 60%);
+    height: 40px;
+    border-radius: 999px;
+    background: #15181f;
+    box-shadow: inset 0 0 0 1px #242934;
+  }
+
+  .axc__tab-tiles {
+    display: flex;
+    gap: 14px;
+  }
+
+  .axc__tab-tiles i {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #15181f;
+    box-shadow: inset 0 0 0 1px #242934;
+  }
+
+  .axc__tab-tiles i:first-child {
+    background: #1d2129;
+  }
+
+  /* ---------- CompareBestAI, in the chapter's proportions times --k ---------- */
+  .cxc__cb-page {
+    position: absolute;
+    inset: 0;
+    background: #f7f9fc;
+    opacity: 0;
+  }
+
+  .cxc__cb-top {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(64px * var(--k));
+    background: #0a1020;
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+  }
+
+  /* The homepage stack's cards, empty, in the chapter's own pixels times --k (Chapter.astro
+     .cb-hcard, .cb-float, .cb-mini): navy glass, frosted white, and white with a Signal hairline.
+     Placed, rounded and skinned by motion.ts from each card's data-shell. */
+  .cxc__shells i {
+    position: absolute;
+    display: none;
+    border: 1px solid transparent;
+    opacity: 0;
+  }
+
+  .cxc__shells i[data-skin='dark'] {
+    border-color: rgb(255 255 255 / 0.07);
+    background:
+      radial-gradient(90% 60% at 100% 0%, rgb(0 176 240 / 0.24), transparent 60%),
+      radial-gradient(70% 50% at 0% 100%, rgb(0 114 163 / 0.22), transparent 70%),
+      linear-gradient(165deg, #142038, #0a1020 62%);
+    box-shadow: 0 calc(40px * var(--k)) calc(80px * var(--k)) calc(-32px * var(--k)) rgb(10 16 32 / 0.65);
+  }
+
+  .cxc__shells i[data-skin='glass'] {
+    border-color: rgb(255 255 255 / 0.8);
+    background: rgb(255 255 255 / 0.74);
+    backdrop-filter: blur(calc(14px * var(--k))) saturate(1.4);
+    box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) calc(-16px * var(--k)) rgb(10 16 32 / 0.32);
+  }
+
+  .cxc__shells i[data-skin='light'] {
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(140deg, rgb(0 176 240 / 0.55), #dde7f3 45%) border-box;
+    box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) calc(-16px * var(--k)) rgb(10 16 32 / 0.32);
+  }
+
+  /* ---------- Pointer ---------- */
+  .axc__cursor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    overflow: visible;
+    opacity: 0;
+  }
+
+  .axc__pulse {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 2px solid #3dd68c;
+    border-radius: 50%;
+    opacity: 0;
+  }
+</style>

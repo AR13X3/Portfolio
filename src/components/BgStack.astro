@@ -1,0 +1,74 @@
+---
+/**
+ * One fixed background layer per section, crossfaded by the motion engine. A layer can carry a
+ * looping video (a chapter's theme.bgVideo): it plays only while its layer shows, and never
+ * under reduced motion, where the stack is not used at all.
+ */
+interface Layer {
+  id: string;
+  bg: string;
+  art?: string;
+  video?: { src: string; veil?: string; dim?: number };
+}
+interface Props {
+  layers: Layer[];
+}
+const { layers } = Astro.props;
+---
+
+<div class="bg-stack" aria-hidden="true">
+  {
+    layers.map((l) => (
+      <div class="bg-layer" data-layer={l.id} style={`--layer-bg:${l.bg};${l.art ? `--layer-art:${l.art};` : ''}`}>
+        {l.video && (
+          <>
+            <video class="bg-layer__video" src={l.video.src} muted loop playsinline preload="none" disablepictureinpicture data-layer-video />
+            <i class="bg-layer__dim" style={`opacity:${l.video.dim ?? 0}`} data-layer-dim />
+            {l.video.veil && <i class="bg-layer__veil" style={`background:${l.video.veil}`} />}
+          </>
+        )}
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  // Play a layer's video while the layer shows (the engine fades layers with autoAlpha).
+  const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('[data-layer-video]'));
+  if (videos.length) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const tick = () => {
+      for (const v of videos) {
+        const layer = v.parentElement as HTMLElement;
+        const cs = getComputedStyle(layer);
+        const shows = !reduce.matches && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.01 && getComputedStyle(layer.parentElement!).display !== 'none';
+        if (shows && v.paused) {
+          if (v.preload === 'none') v.preload = 'auto';
+          v.play().catch(() => {});
+        } else if (!shows && !v.paused) {
+          v.pause();
+        }
+      }
+    };
+    window.setInterval(tick, 300);
+  }
+</script>
+
+<style>
+  .bg-layer__video,
+  .bg-layer__dim,
+  .bg-layer__veil {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .bg-layer__video {
+    object-fit: cover;
+  }
+
+  .bg-layer__dim {
+    background: var(--layer-bg);
+  }
+</style>

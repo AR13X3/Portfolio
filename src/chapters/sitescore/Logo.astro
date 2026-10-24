@@ -1,0 +1,18 @@
+---
+/**
+ * The SiteScore mark (frontend/src/components/Brand.tsx, public/favicon.svg): three cells of
+ * the opportunity map, one picked. The ink cells follow the text colour; the picked cell is
+ * the red signal. Turning the cluster 120° moves the picked cell to the next slot.
+ */
+interface Props {
+  class?: string;
+  size?: number;
+}
+const { class: className, size = 28 } = Astro.props;
+---
+
+<svg class:list={['ss-logo', className]} width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" data-ss="logo">
+  <path d="M10.2 4.5l5.54 3.2v6.4l-5.54 3.2-5.54-3.2V7.7z" fill="currentColor" data-ss="logocell" />
+  <path d="M21.8 4.5l5.54 3.2v6.4l-5.54 3.2-5.54-3.2V7.7z" fill="currentColor" data-ss="logocell" />
+  <path d="M16 14.7l5.54 3.2v6.4L16 27.5l-5.54-3.2v-6.4z" fill="#e5484d" data-ss="logocell" />
+</svg>

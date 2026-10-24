@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import BgStack from '../components/BgStack.astro';
+import ProgressNav from '../components/ProgressNav.astro';
+import Intro from '../components/Intro.astro';
+import Contact from '../components/Contact.astro';
+import Gallery from '../components/Gallery.astro';
+import Footer from '../components/Footer.astro';
+import { chapters } from '../chapters';
+import { chapterComponents } from '../chapters/components';
+import { gallery } from '../data/gallery';
+
+// The drawings and photography section appears once it has a real image to show.
+const showGallery = gallery.some((item) => item.src);
+const afterChapters = showGallery ? 'gallery' : 'contact';
+
+const layers = [
+  { id: 'intro', bg: 'var(--paper)' },
+  ...chapters.map((c) => ({ id: c.slug, bg: c.theme.bg, art: c.theme.bgArt, video: c.theme.bgVideo })),
+  ...(showGallery ? [{ id: 'gallery', bg: 'var(--paper)' }] : []),
+  { id: 'contact', bg: 'var(--paper)' },
+];
+---
+
+<Base>
+  <BgStack layers={layers} />
+  <ProgressNav chapters={chapters} gallery={showGallery} />
+  <main id="main">
+    <Intro chapters={chapters} />
+    {
+      chapters.map((chapter, i) => {
+        const Component = chapterComponents[chapter.slug];
+        return <Component chapter={chapter} index={i} next={chapters[i + 1]?.slug ?? afterChapters} />;
+      })
+    }
+    {showGallery && <Gallery />}
+    <Contact />
+  </main>
+  <Footer />
+  <script>
+    // The gate (loader, choice), then the engine and the chosen intro, all loaded from here.
+    import '../scripts/boot';
+  </script>
+</Base>

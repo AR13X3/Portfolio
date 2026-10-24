@@ -1,0 +1,81 @@
+---
+/**
+ * A redaction bar standing in for words that can't be shown yet. The hidden text is
+ * never in the page: pass only its rough length. Bars animate in from the left like a
+ * marker stroke (driven by the chapter's timeline through [data-redacted-bar]) and
+ * carry a slow sheen when motion is allowed.
+ */
+interface Props {
+  /** Rough length of the hidden text, in characters. */
+  chars: number;
+  /** What a screen reader hears. */
+  label?: string;
+  class?: string;
+}
+const { chars, label = 'Hidden while the project is in progress', class: className } = Astro.props;
+---
+
+<span class:list={['redacted', className]} role="img" aria-label={label} style={`--chars:${chars}`} data-redacted
+  ><span class="redacted__bar" data-redacted-bar></span></span
+>
+
+<style>
+  .redacted {
+    --redact: #1d1a17;
+    position: relative;
+    display: inline-block;
+    width: calc(var(--chars) * 0.52em);
+    max-width: 100%;
+    height: 0.86em;
+    margin: 0 0.08em;
+    vertical-align: -0.1em;
+  }
+
+  .redacted__bar {
+    position: absolute;
+    inset: 0;
+    border-radius: 0.08em;
+    background: var(--redact);
+    transform-origin: 0 50%;
+    overflow: hidden;
+  }
+
+  /* A slow sheen across the bar: transform only. */
+  .redacted__bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.14), transparent);
+    transform: translateX(-120%);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .redacted__bar::after {
+      animation: redacted-sheen 3.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      animation-delay: calc(var(--chars) * 0.11s);
+    }
+  }
+
+  /* Contrast themes force backgrounds to Canvas, which would erase the bar: keep it solid text colour. */
+  @media (forced-colors: active) {
+    .redacted__bar {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    .redacted__bar::after {
+      display: none;
+    }
+  }
+
+  @keyframes redacted-sheen {
+    0% {
+      transform: translateX(-120%);
+    }
+    60%,
+    100% {
+      transform: translateX(320%);
+    }
+  }
+</style>

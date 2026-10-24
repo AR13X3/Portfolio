@@ -1,0 +1,341 @@
+---
+/**
+ * The GP app's alert screen, rebuilt in HTML from mobile/app/alert/[id].tsx
+ * and mobile/src/components/ui.tsx (RangeBar, ReasonChip). Synthetic data,
+ * the same Haemoglobin 118 g/L example the BloodLine site uses.
+ */
+
+// RangeBar maths from ui.tsx: value 118, printed range 130–180.
+const W = 300;
+const PAD = 10;
+const TICKS = 33;
+const value = 118;
+const lo = 130;
+const hi = 180;
+const min = Math.min(lo, value) - (hi - lo) * 0.35;
+const max = Math.max(hi, value) + (hi - lo) * 0.35;
+const x = (v: number) => PAD + ((v - min) / (max - min)) * (W - PAD * 2);
+const ticks = Array.from({ length: TICKS }, (_, i) => {
+  const tx = PAD + (i / (TICKS - 1)) * (W - PAD * 2);
+  return { tx, long: i % 4 === 0, inRange: tx >= x(lo) && tx <= x(hi) };
+});
+// Where the marker starts before it slides to 118 (an in-range 152).
+const startShift = x(152) - x(value);
+---
+
+<figure class="bl-alert" data-bl-alert>
+  <div class="bl-alert__hero">
+    <div class="bl-alert__chips">
+      <span class="bl-chip bl-chip--mist">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><path d="M4 22v-7" /></svg>
+        Lab flag
+      </span>
+      <span class="bl-chip bl-chip--amber" data-bl-chip>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 18 4 4 4-4M8 6l4-4 4 4M12 2v20" /></svg>
+        Outside range
+      </span>
+    </div>
+    <p class="bl-alert__test">Haemoglobin</p>
+    <p class="bl-alert__value">{value}<span>g/L</span></p>
+  </div>
+
+  <div class="bl-alert__body">
+    <p class="bl-alert__label">Where it sits</p>
+    <div class="bl-alert__card">
+      <div class="bl-ruler">
+        <svg viewBox={`0 0 ${W} 50`} aria-hidden="true">
+          <rect x={x(lo)} y="2" width={x(hi) - x(lo)} height="5" rx="2.5" fill="#8EC4D4" />
+          {ticks.map((t) => <line x1={t.tx} x2={t.tx} y1={t.long ? 20 : 27} y2="42" stroke={t.inRange ? '#2E869E' : '#A2B1B8'} stroke-width="1.5" stroke-linecap="round" />)}
+          <g data-bl-marker data-shift={startShift.toFixed(2)}>
+            <g class="bl-ruler__ink" data-bl-ink>
+              <line x1={x(value)} x2={x(value)} y1="16" y2="47" stroke="#0F3B4B" stroke-width="3" stroke-linecap="round" />
+              <circle cx={x(value)} cy="16" r="5.5" fill="#0F3B4B" stroke="#fff" stroke-width="2" />
+            </g>
+            <g class="bl-ruler__amber" data-bl-amber>
+              <line x1={x(value)} x2={x(value)} y1="16" y2="47" stroke="#E0A23F" stroke-width="3" stroke-linecap="round" />
+              <circle cx={x(value)} cy="16" r="5.5" fill="#E0A23F" stroke="#7D5414" stroke-width="1.5" />
+            </g>
+          </g>
+        </svg>
+        <span class="bl-ruler__num" style={`left:${(x(lo) / W) * 100}%`}>{lo}</span>
+        <span class="bl-ruler__num" style={`left:${(x(hi) / W) * 100}%`}>{hi}</span>
+      </div>
+    </div>
+
+    <p class="bl-alert__label">Why you’re seeing this</p>
+    <ul class="bl-alert__card bl-why">
+      <li data-bl-why>
+        <span class="bl-why__icon bl-why__icon--mist">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><path d="M4 22v-7" /></svg>
+        </span>
+        <span><strong>The lab flagged this result</strong> Flag printed on the report: L.</span>
+      </li>
+      <li data-bl-why>
+        <span class="bl-why__icon bl-why__icon--amber">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 18 4 4 4-4M8 6l4-4 4 4M12 2v20" /></svg>
+        </span>
+        <span><strong>Outside the reported range, may need review</strong> 118 g/L is below the range printed on this report (130–180).</span>
+      </li>
+    </ul>
+
+    <div class="bl-seen" aria-hidden="true">
+      <span class="bl-seen__fill" data-bl-fill></span>
+      <span class="bl-seen__label" data-bl-mark>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+        Mark as seen
+      </span>
+      <span class="bl-seen__label bl-seen__label--done" data-bl-done>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>
+        Seen at 9:42
+      </span>
+    </div>
+  </div>
+  <figcaption class="bl-alert__caption">Synthetic data</figcaption>
+</figure>
+
+<style>
+  .bl-alert {
+    --b-bg: #f1f4f6;
+    --b-card: #ffffff;
+    --b-ink: #0f3b4b;
+    --b-text: #123441;
+    --b-muted: #56686f;
+    --b-mist: #e8eef1;
+    --b-panel: #dce9ee;
+    --b-amber-soft: #fbf1df;
+    --b-amber-text: #7d5414;
+    --b-green: #27795c;
+    position: relative;
+    width: min(100%, 330px);
+    border-radius: 26px;
+    background: var(--b-bg);
+    color: var(--b-text);
+    font-family: 'Urbanist Variable', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.06),
+      0 40px 80px -24px rgb(0 0 0 / 0.6);
+  }
+
+  .bl-alert svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bl-alert__hero {
+    padding: 20px 20px 46px;
+    border-radius: 26px 26px 30px 30px;
+    background: var(--b-panel);
+  }
+
+  .bl-alert__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .bl-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .bl-chip svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .bl-chip--mist {
+    background: var(--b-mist);
+    color: var(--b-ink);
+  }
+
+  .bl-chip--amber {
+    background: var(--b-amber-soft);
+    color: var(--b-amber-text);
+  }
+
+  .bl-alert__test {
+    margin-top: 14px;
+    font-size: 24px;
+    line-height: 1.2;
+    color: var(--b-ink);
+  }
+
+  .bl-alert__value {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    font-size: 58px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--b-amber-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bl-alert__value span {
+    margin-bottom: 8px;
+    font-size: 16px;
+    letter-spacing: 0;
+    color: var(--b-muted);
+  }
+
+  .bl-alert__body {
+    display: grid;
+    gap: 8px;
+    margin-top: -28px;
+    padding: 0 14px 14px;
+  }
+
+  .bl-alert__label {
+    margin: 6px 0 0 4px;
+    font-size: 13px;
+    color: var(--b-muted);
+  }
+
+  .bl-alert__card {
+    padding: 12px 14px;
+    border-radius: 20px;
+    background: var(--b-card);
+  }
+
+  .bl-ruler {
+    position: relative;
+    padding-bottom: 16px;
+  }
+
+  .bl-ruler svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    stroke: none;
+  }
+
+  .bl-ruler__ink {
+    opacity: 0;
+  }
+
+  .bl-ruler__num {
+    position: absolute;
+    bottom: 0;
+    font-size: 12px;
+    color: var(--b-muted);
+    transform: translateX(-50%);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bl-why {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 14px;
+    list-style: none;
+  }
+
+  .bl-why li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    align-items: start;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--b-muted);
+  }
+
+  .bl-why strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--b-text);
+  }
+
+  .bl-why__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
+
+  .bl-why__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .bl-why__icon--mist {
+    background: var(--b-mist);
+    color: var(--b-ink);
+  }
+
+  .bl-why__icon--amber {
+    background: var(--b-amber-soft);
+    color: var(--b-amber-text);
+  }
+
+  .bl-seen {
+    position: relative;
+    display: grid;
+    height: 50px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: var(--b-ink);
+    color: #ffffff;
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .bl-seen__fill {
+    position: absolute;
+    inset: 0;
+    background: var(--b-green);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .bl-seen__label {
+    position: relative;
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .bl-seen__label svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bl-seen__label--done {
+    opacity: 0;
+  }
+
+  .bl-alert__caption {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 4px;
+    right: 4px;
+    font: 500 0.6875rem/1.4 var(--font-sans);
+    letter-spacing: 0.04em;
+    color: var(--c-muted);
+  }
+
+  /* Below the card it sits on the card's own grey, so it takes the card's muted ink. */
+  @media (max-width: 1023.98px) {
+    .bl-alert__caption {
+      position: static;
+      margin: 0;
+      padding: 0 18px 16px;
+      color: var(--b-muted);
+    }
+  }
+</style>

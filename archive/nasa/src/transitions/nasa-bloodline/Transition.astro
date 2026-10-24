@@ -1,0 +1,190 @@
+---
+/**
+ * NASA → BloodLine. The risk chart's dashed "either" line (risk A or risk B, from 30 years of
+ * NASA weather) lifts off the chart, settles at its lowest-risk date and runs down to the
+ * bottom of the frame, where it becomes BloodLine's heartbeat baseline and then its pulse.
+ * Meanwhile the meadow's greens deepen into BloodLine's forest and the chapter number turns
+ * over from Lato to Urbanist. Everything here is cleared before BloodLine's own opening.
+ */
+import '@fontsource-variable/urbanist';
+import { chapters } from '../../chapters';
+
+interface Props {
+  from: string;
+  to: string;
+}
+const { from, to } = Astro.props;
+const label = (slug: string) => {
+  const i = chapters.findIndex((c) => c.slug === slug);
+  return i < 0 ? '' : `${String(i + 1).padStart(2, '0')} · ${chapters[i].name}`;
+};
+// BloodLine's hero pulse, as its chapter draws it (src/chapters/bloodline/Chapter.astro).
+const pulse = 'M0 120 H1040 L1060 120 L1075 96 L1093 150 L1119 30 L1145 176 L1165 104 L1183 120 H1340 L1358 112 L1374 120 H1600';
+---
+
+<div class="nb">
+  <div class="nb__dusk nb__dusk--green" data-nb="dusk"></div>
+  <div class="nb__dusk nb__dusk--forest" data-nb="forest"></div>
+  <svg class="nb__line" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+    <path class="nb__risk" d="M0 0" data-nb="risk"></path>
+    <path class="nb__solid" d="M0 0" data-nb="solid"></path>
+  </svg>
+  <svg class="nb__pulse" viewBox="0 0 1600 200" preserveAspectRatio="none" data-nb="pulse">
+    <defs>
+      <clipPath id="nb-trace"><rect x="0" y="-40" width="1640" height="280" data-nb="trace"></rect></clipPath>
+      <clipPath id="nb-glow"><rect x="-160" y="-40" width="120" height="280" data-nb="glow"></rect></clipPath>
+    </defs>
+    <g clip-path="url(#nb-trace)">
+      <path class="nb__base" d={pulse} data-nb="base"></path>
+      <g clip-path="url(#nb-glow)">
+        <path class="nb__halo" d={pulse}></path>
+        <path class="nb__glow" d={pulse}></path>
+      </g>
+    </g>
+  </svg>
+  <p class="nb__ticker">
+    <span class="nb__tick nb__tick--from" data-nb="tick-from">{label(from)}</span>
+    <span class="nb__tick nb__tick--to" data-nb="tick-to">{label(to)}</span>
+  </p>
+</div>
+
+<style>
+  .nb {
+    --pulse-bottom: clamp(18px, 4vh, 40px);
+    --pulse-h: clamp(110px, 16vh, 180px);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .nb__dusk,
+  .nb__line path,
+  .nb__pulse,
+  .nb__tick {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .nb__dusk {
+    position: absolute;
+    inset: 0;
+    will-change: opacity;
+  }
+
+  /* The meadow at dusk: the greens deepen towards BloodLine's forest (#06110c), darkest low down. */
+  .nb__dusk--green {
+    background: linear-gradient(180deg, rgb(13 32 24 / 0.5) 0%, rgb(9 26 18 / 0.72) 55%, rgb(6 17 12 / 0.9) 100%);
+  }
+
+  .nb__dusk--forest {
+    background: #06110c;
+  }
+
+  .nb__line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .nb__line path,
+  .nb__pulse path {
+    fill: none;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* The same stroke as the chapter's chart line (the app row.css .risk-chart__risk). */
+  .nb__risk {
+    stroke: #372f2a;
+    stroke-width: 2.5;
+    stroke-dasharray: 4 4;
+  }
+
+  .nb__solid {
+    stroke: #372f2a;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  /* Placed exactly like BloodLine's .bl-pulse in full mode. */
+  .nb__pulse {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--pulse-bottom);
+    width: 100%;
+    height: var(--pulse-h);
+    overflow: visible;
+    mask: linear-gradient(90deg, transparent 0%, #000 22%, #000 88%, transparent 100%);
+  }
+
+  .nb__pulse path {
+    stroke-linecap: round;
+  }
+
+  .nb__base {
+    stroke: #dcebd2;
+    stroke-width: 1.5;
+  }
+
+  .nb__halo {
+    stroke: rgb(220 235 210 / 0.22);
+    stroke-width: 9;
+  }
+
+  .nb__glow {
+    stroke: #dcebd2;
+    stroke-width: 2;
+  }
+
+  /* The chapter number, set first in the app's Lato 900 and then in BloodLine's Urbanist. */
+  .nb__ticker {
+    position: absolute;
+    left: var(--gutter);
+    bottom: calc(var(--pulse-bottom) + var(--pulse-h) + 6px);
+    height: 1.3em;
+    margin: 0;
+    overflow: hidden;
+    font-size: clamp(20px, 2.2vw, 30px);
+    line-height: 1.3;
+  }
+
+  .nb__tick {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .nb__tick--from {
+    color: #ece4d4;
+    font-family: 'Lato', system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .nb__tick--to {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #dcebd2;
+    font-family: 'Urbanist Variable', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  /* Lite: the overlay is a 70vh block between the chapters; the pulse sits in its lower part. */
+  :global(html.mode-lite) .nb__dusk {
+    display: none;
+  }
+
+  :global(html.mode-lite) .nb {
+    --pulse-bottom: 12%;
+    --pulse-h: 26%;
+  }
+
+  :global(html.mode-lite) .nb__ticker {
+    bottom: calc(12% + 26% + 6px);
+  }
+</style>

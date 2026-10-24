@@ -1,0 +1,343 @@
+---
+/**
+ * Halation's dock (halation/index.html #dock; css/app.css "dock: transport + looks"):
+ * play, time, seamless loop, the scrubber with its red playhead (the one place brand red
+ * marks "now"), the performance mode and refine status, then the looks filmstrip with
+ * the app's own thumbnails, All looks and the hide-interface eye. Decorative.
+ */
+import Icon from './Icon.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// The built-in looks through Emerald Pour, in the dock's order, with the editor's own thumbnails.
+const LOOKS = [
+  'Coral Reeds',
+  'Lava Flutes',
+  'Amber Terminal',
+  'Dune Contours',
+  'Lagoon Ribbons',
+  'Rose Metal',
+  'Amethyst Facets',
+  'Copper Hammered',
+  'Synth CRT',
+  'Moiré Ribbon',
+  'Liquid Glass',
+  'Prism Filaments',
+  'Indigo Harp',
+  'Ember Bow',
+  'Moss Reeds',
+  'Mercury Silk',
+  'Emerald Pour',
+];
+---
+
+<div
+  class="dock"
+  role="img"
+  aria-label="Recreated Halation dock: play button, time 1.6 of 10 seconds, a scrubber with a red playhead, then a filmstrip of built-in looks starting with Coral Reeds, and an All looks button."
+  style={`--films:url(${base}shots/halation/films.webp)`}
+>
+  <div class="dock__transport">
+    <div class="dock__row">
+      <span class="dock__play"><Icon name="play" /></span>
+      <span class="dock__time"><span data-hx="time">1.6</span> <i>/ 10 s</i></span>
+      <span class="dock__loop"><Icon name="loop" /></span>
+    </div>
+    <div class="dock__scrub" data-hx="scrub">
+      <i class="dock__track"></i>
+      <i class="dock__fill" data-hx="scrub-fill"></i>
+      <i class="dock__at" data-hx="playhead"><i class="dock__head"></i></i>
+    </div>
+    <div class="dock__status">
+      <span>Balanced <Icon name="chevron" /></span>
+      <span>Full quality</span>
+    </div>
+  </div>
+  <span class="dock__sep"></span>
+  <div class="dock__films">
+    <div class="dock__strip" data-hx="film-strip">
+      <div class="dock__reel" data-hx="film-reel">
+        {LOOKS.map((name, i) => <span class="dock__film" style={`--i:${i}`} title={name} />)}
+        <span class="dock__ring" data-hx="film-ring"></span>
+      </div>
+    </div>
+    <span class="dock__all"><Icon name="grid" /><span>All looks</span></span>
+    <span class="dock__eye"><Icon name="eye" /></span>
+  </div>
+</div>
+
+<style>
+  .dock {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 96px;
+    max-width: 100%;
+    padding: 0 10px 0 12px;
+    font: 12.5px/1.4 var(--hx-font);
+    color: var(--hx-text);
+  }
+
+  .dock__transport {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: 186px;
+    flex: none;
+  }
+
+  .dock__row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .dock__play {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--hx-paper);
+    color: var(--hx-ink);
+    flex: none;
+  }
+
+  .dock__play :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dock__time {
+    flex: 1;
+    color: var(--hx-text-2);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .dock__time i {
+    font-style: normal;
+    color: var(--hx-faint);
+  }
+
+  .dock__loop {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--hx-wash-2);
+    color: var(--hx-text);
+  }
+
+  .dock__loop :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* The scrubber: a 3px track, white fill up to now, and the red 3×14 playhead with its glow. */
+  .dock__scrub {
+    position: relative;
+    height: 14px;
+    --at: 0.16;
+  }
+
+  .dock__track,
+  .dock__fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 5.5px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .dock__track {
+    background: rgb(255 255 255 / 0.18);
+  }
+
+  .dock__fill {
+    background: rgb(255 255 255 / 0.72);
+    transform-origin: 0 50%;
+    transform: scaleX(var(--at));
+  }
+
+  /* "Now": a track-wide layer moved by a percentage of the track, carrying the playhead at its left edge. */
+  .dock__at {
+    position: absolute;
+    inset: 0;
+    transform: translateX(calc(var(--at) * 100%));
+  }
+
+  .dock__head {
+    position: absolute;
+    top: 0;
+    left: -1.5px;
+    width: 3px;
+    height: 14px;
+    border-radius: 1.5px;
+    background: var(--hx-red);
+    box-shadow: 0 0 8px rgb(255 52 56 / 0.75);
+  }
+
+  .dock__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--hx-muted);
+    white-space: nowrap;
+  }
+
+  .dock__status > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .dock__status :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+
+  .dock__sep {
+    width: 1px;
+    height: 58px;
+    background: var(--hx-hair);
+    flex: none;
+  }
+
+  .dock__films {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .dock__strip {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    padding: 5px 4px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 14px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 14px), transparent);
+  }
+
+  .dock__film {
+    flex: none;
+    width: 52px;
+    height: 70px;
+    border-radius: 9px;
+    background: var(--films) calc(var(--i) * 100% / 16) 0 / 1700% 100% no-repeat;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  }
+
+  /* The films ride on a reel, scrolled by transform to keep the active look in view. */
+  .dock__reel {
+    position: relative;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* The active look's paper ring (.film.active), moved by transform when the look changes. */
+  .dock__ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 52px;
+    height: 70px;
+    border-radius: 9px;
+    box-shadow: 0 0 0 2px var(--hx-paper);
+    pointer-events: none;
+  }
+
+  .dock__all {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 58px;
+    height: 70px;
+    border-radius: 11px;
+    background: var(--hx-wash);
+    color: var(--hx-text-2);
+    font-size: 11px;
+    flex: none;
+  }
+
+  .dock__all :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dock__eye {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin-left: -4px;
+    color: var(--hx-text-2);
+    flex: none;
+  }
+
+  .dock__eye :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Phones: the app's own phone layout (css/app.css @media max-width 720px): transport in one row, filmstrip below. */
+  @media (max-width: 720px) {
+    .dock {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      height: auto;
+      padding: 10px;
+    }
+
+    .dock__sep,
+    .dock__status,
+    .dock__loop {
+      display: none;
+    }
+
+    .dock__transport {
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      width: auto;
+    }
+
+    .dock__row {
+      display: contents;
+    }
+
+    .dock__play {
+      order: 0;
+    }
+
+    .dock__scrub {
+      order: 1;
+      flex: 1;
+    }
+
+    .dock__time {
+      order: 2;
+      flex: none;
+      font-size: 12px;
+    }
+
+    .dock__films {
+      gap: 8px;
+    }
+
+    .dock__strip {
+      flex: 1;
+    }
+  }
+</style>

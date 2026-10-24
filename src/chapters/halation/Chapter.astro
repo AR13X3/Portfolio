@@ -1,0 +1,1004 @@
+---
+/**
+ * Halation, told in the editor's own world (halation/css/app.css, index.html, js/ui/*,
+ * AGPL-3.0, by AR13X3): the artwork full-window behind a frosted pane that wipes away,
+ * then the room it lights, the frosted glass chrome (top bar, inspector on the Glass tab,
+ * the dock with its red playhead and filmstrip) and the guided tour's cards carrying the
+ * design decisions. The artwork is the editor's own Video export: seamless 10-second loops of
+ * Coral Reeds, Indigo Harp and Emerald Pour on a 16:10 canvas, plus stills where a frame will do.
+ */
+import ChapterSection from '../../components/ChapterSection.astro';
+import Dock from './Dock.astro';
+import Icon from './Icon.astro';
+import Inspector from './Inspector.astro';
+import Mark from './Mark.astro';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const [live, repo] = chapter.links;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const shot = (name: string) => `${base}shots/halation/${name}`;
+// A loop's still, as its background rather than a poster attribute: a poster is fetched as soon as
+// the HTML is parsed, while the page is still held out of layout under the loader, and the four
+// of them (about 560KB) competed with what the loader waits for. A background is fetched once the
+// chapter is laid out. The video shows it through until its first frame (object-fit: cover, as here).
+const poster = (name: string) => `--poster: url(${shot(name)})`;
+const srcset = (name: string) => `${shot(`${name}-1440.webp`)} 1440w, ${shot(`${name}.webp`)} 2160w`;
+const LOOKS = [
+  { id: 'coral', name: 'Coral Reeds' },
+  { id: 'indigo', name: 'Indigo Harp' },
+  { id: 'emerald', name: 'Emerald Pour' },
+];
+const frost = shot('coral-reeds-frost.webp');
+---
+
+<ChapterSection chapter={chapter} next={next} class="hx">
+  <div class="hx-world" data-hx="world" style={`--hx-bg-art:${chapter.theme.bgArt};--hx-frost:url(${frost});--hx-amb-coral:url(${shot('coral-reeds-room.webp')});--hx-amb-indigo:url(${shot('indigo-harp-room.webp')});--hx-amb-emerald:url(${shot('emerald-pour-room.webp')})`}>
+    <!-- The room: the artwork's own light, dimmed, under the app's vignette (full mode). -->
+    <div class="hx-room" aria-hidden="true" data-hx="room">
+      <i class="hx-amb hx-amb--coral"></i>
+      <i class="hx-amb hx-amb--indigo" data-hx-amb="indigo"></i>
+      <i class="hx-amb hx-amb--emerald" data-hx-amb="emerald"></i>
+    </div>
+    <div class="hx-free" aria-hidden="true">
+      <div class="hx-slot" data-hx="slot"><i class="hx-spot" data-hx="spot"></i></div>
+    </div>
+
+    <!-- The canvas. -->
+    <figure class="hx-canvas" data-hx="canvas">
+      <div class="hx-canvas__inner" data-hx="inner">
+        <div class="hx-canvas__drift" data-hx="drift">
+          <video
+            class="hx-look"
+            src={shot('loop-coral-reeds.mp4')}
+            style={poster('loop-coral-reeds-poster.webp')}
+            width="1600"
+            height="1000"
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-label="Coral Reeds, Halation's default look: plum and peach bands flowing behind reeded glass that steps them into vertical bars."
+            data-hx-look="coral"
+            data-hx-video></video>
+          <div class="hx-pane" data-hx="pane" aria-hidden="true">
+            <!-- Coral Reeds with no glass: where the pane has gone, the bands run smooth. -->
+            <video
+              class="hx-look"
+              src={shot('loop-coral-reeds-noglass.mp4')}
+              style={poster('loop-coral-reeds-noglass-poster.webp')}
+              width="1440"
+              height="900"
+              muted
+              loop
+              playsinline
+              preload="none"
+              data-hx="pane-img"
+              data-hx-video
+              data-hx-sync="coral"></video>
+            <i class="hx-pane__edge"></i>
+          </div>
+          <video
+            class="hx-look hx-look--alt"
+            src={shot('loop-indigo-harp.mp4')}
+            style={poster('loop-indigo-harp-poster.webp')}
+            width="1600"
+            height="1000"
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-label="Indigo Harp: fine indigo threads of light sweeping across a dark field like harp strings."
+            data-hx-look="indigo"
+            data-hx-video></video>
+          <video
+            class="hx-look hx-look--alt"
+            src={shot('loop-emerald-pour.mp4')}
+            style={poster('loop-emerald-pour-poster.webp')}
+            width="1600"
+            height="1000"
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-label="Emerald Pour: glossy liquid emerald folding over itself, with small sparkles in its highlights."
+            data-hx-video
+            data-hx-look="emerald"></video>
+        </div>
+        <!-- The frosted pane the chapter opens on; it wipes away to the right. -->
+        <div class="hx-frost" aria-hidden="true" data-hx="frost">
+          <i class="hx-frost__img" data-hx="frost-img"></i>
+          <i class="hx-frost__shade"></i>
+        </div>
+      </div>
+      <div class="hx-seam" aria-hidden="true" data-hx="seam"><i></i></div>
+      <figcaption class="visually-hidden">Loops recorded with the live Halation editor's video export.</figcaption>
+    </figure>
+
+    <!-- Title card: Halation's sheet glass. -->
+    <header class="hx-title" data-hx="title" data-clear>
+      <span class="hx-glass" data-hx="title-glass" aria-hidden="true">
+        <span class="hx-win" data-hx-win><i class="hx-win__art"></i><span class="hx-win__room" data-hx="win-room"><i class="hx-amb hx-amb--coral"></i><i class="hx-amb hx-amb--indigo" data-hx-amb="indigo"></i><i class="hx-amb hx-amb--emerald" data-hx-amb="emerald"></i></span></span><i class="hx-dim" data-hx="dim"></i>
+      </span>
+      <p class="hx-title__kicker">
+        <span class="hx-title__mark" data-hx="mark"><Mark /></span>
+        <span data-hx="kicker">{num}</span>
+      </p>
+      <h2 class="hx-title__name" id={`${chapter.slug}-title`} tabindex="-1" data-focus data-hx="name">{chapter.name}</h2>
+    </header>
+
+    <!-- Links, in the app's top-right bar (Export is the paper button). -->
+    <nav class="hx-bar hx-bar--end" aria-label="Halation links" data-hx="links" data-clear>
+      <span class="hx-glass" aria-hidden="true">
+        <span class="hx-win" data-hx-win><i class="hx-win__art"></i><span class="hx-win__room" data-hx="win-room"><i class="hx-amb hx-amb--coral"></i><i class="hx-amb hx-amb--indigo" data-hx-amb="indigo"></i><i class="hx-amb hx-amb--emerald" data-hx-amb="emerald"></i></span></span><i class="hx-dim" data-hx="dim"></i>
+      </span>
+      <a class="hx-btn" href={repo.href} target="_blank" rel="noopener noreferrer">
+        <Icon name="github" />{repo.label}<span class="visually-hidden"> (opens in a new tab)</span>
+      </a>
+      <a class="hx-btn hx-btn--primary" href={live.href} target="_blank" rel="noopener noreferrer">
+        <Icon name="external" />{live.label}<span class="visually-hidden"> (opens in a new tab)</span>
+      </a>
+    </nav>
+
+    <!-- The editor's top-left bar: brand, look name, undo and redo. -->
+    <div class="hx-bar hx-bar--start" aria-hidden="true" data-hx="bar" data-clear>
+      <span class="hx-glass"><i class="hx-dim" data-hx="dim"></i></span>
+      <span class="hx-bar__brand">
+        <span class="hx-bar__mark" data-hx="mark-slot"><Mark /></span>
+        <span class="hx-bar__name" data-hx="name-slot">Halation</span>
+      </span>
+      <span class="hx-bar__sep"></span>
+      <span class="hx-bar__look">
+        <span class="hx-bar__names">{LOOKS.map((l) => <span data-hx-name={l.id}>{l.name}</span>)}</span>
+        <i class="hx-bar__edited" data-hx="edited"></i>
+        <Icon name="chevron" />
+      </span>
+      <span class="hx-bar__sep"></span>
+      <span class="hx-bar__icon"><Icon name="undo" /></span>
+      <span class="hx-bar__icon is-off"><Icon name="redo" /></span>
+    </div>
+
+    <div class="hx-panel hx-panel--insp" data-hx="insp" data-clear>
+      <span class="hx-glass" aria-hidden="true"><i class="hx-dim" data-hx="dim"></i></span>
+      <Inspector />
+      <i class="hx-spot" data-hx="spot"></i>
+    </div>
+
+    <div class="hx-dockrow" data-hx="dockrow" data-clear>
+      <div class="hx-panel hx-panel--dock" data-hx="dock">
+        <span class="hx-glass" aria-hidden="true"><i class="hx-dim" data-hx="dim"></i></span>
+        <Dock />
+        <i class="hx-spot" data-hx="spot"></i>
+      </div>
+    </div>
+
+    <!-- Document layout only: the real editor. -->
+    <figure class="hx-doc hx-shot">
+      <img
+        src={shot('desktop-hero-1440.webp')}
+        srcset={`${shot('desktop-hero-1440.webp')} 1440w, ${shot('desktop-hero.webp')} 2880w`}
+        sizes="(min-width: 1180px) 1120px, 92vw"
+        width="2880"
+        height="1800"
+        alt="The Halation editor on Coral Reeds: the artwork in a portrait frame, lit room around it, a frosted top bar with the look name and Export, the Glass tab of the inspector with Reeded selected and 12 flutes, and the dock with a red playhead and a strip of looks."
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+
+    <!-- The design decisions, as the app's guided tour cards. -->
+    <section class="hx-tour" aria-labelledby={`${chapter.slug}-decisions`} data-hx="tour" data-clear>
+      <h3 class="visually-hidden" id={`${chapter.slug}-decisions`}>Design decisions</h3>
+      <ol>
+        {
+          chapter.decisions.map((d, i) => (
+            <li class="hx-card" data-hx="card">
+              <span class="hx-glass hx-glass--card" aria-hidden="true" />
+              <span class="hx-card__head" aria-hidden="true">
+                <span>
+                  {i + 1} of {chapter.decisions.length}
+                </span>
+                <Icon name="close" />
+              </span>
+              <h4>{d.title}</h4>
+              <span class="hx-card__foot" aria-hidden="true">
+                <span class="hx-card__quit">End tutorial</span>
+                <span class="hx-card__back">Back</span>
+                <span class="hx-card__next">{i === chapter.decisions.length - 1 ? 'Done' : 'Next'}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- Document layout only: a pane over half the canvas. -->
+    <figure class="hx-doc hx-panefig">
+      <img
+        src={shot('look-coral-reeds-pane-1440.webp')}
+        srcset={srcset('look-coral-reeds-pane')}
+        sizes="(min-width: 1180px) 1120px, 92vw"
+        width="2160"
+        height="1350"
+        alt="Coral Reeds with the glass covering only the right half: the bands are smooth on the left and stepped into bars on the right, with a thin lit edge where the pane ends."
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+  </div>
+</ChapterSection>
+
+<style>
+  /* Tokens from halation/css/app.css. (On .hx-world: the <section> belongs to ChapterSection.)
+     Muted and faint text are raised from the app's .58 and .38 so they pass 4.5:1 on the glass. */
+  .hx-world {
+    --hx-room: #08080a;
+    --hx-paper: #f4f2ee;
+    --hx-ink: #141217;
+    --hx-red: #ff3438;
+    --hx-text: #f4f2ee;
+    --hx-text-2: rgb(244 242 238 / 0.8);
+    --hx-muted: rgb(244 242 238 / 0.7);
+    --hx-faint: rgb(244 242 238 / 0.7);
+    --hx-wash: rgb(255 255 255 / 0.065);
+    --hx-wash-2: rgb(255 255 255 / 0.11);
+    --hx-wash-3: rgb(255 255 255 / 0.17);
+    --hx-hair: rgb(255 255 255 / 0.1);
+    --hx-well: rgb(0 0 0 / 0.22);
+    --hx-font: 'Segoe UI Variable Text', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --hx-display: 'Segoe UI Variable Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --hx-m: 16px;
+    --hx-bar-h: 48px;
+    --hx-insp-w: 316px;
+    --hx-dock-h: 96px;
+    /* The adaptive glass alpha (main.js adaptGlass clamps it to .36–.72). */
+    --glass-a: 0.72;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(72px, 12vh, 120px) var(--gutter) clamp(72px, 10vh, 120px);
+    color: var(--hx-text);
+    font: 400 16px/1.5 var(--hx-font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hx-world ::selection {
+    background: var(--hx-paper);
+    color: var(--hx-ink);
+  }
+
+  .hx-world :focus-visible {
+    outline: 2px solid var(--hx-paper);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Glass (css/app.css .glass) ---------- */
+  .hx-glass {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.32);
+    pointer-events: none;
+  }
+
+  .hx-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(17 16 21 / var(--glass-a));
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.09),
+      inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  /* Full mode darkens the glass with this layer (opacity only) instead of changing --glass-a:
+     .56 under a .364 layer composites to the app's .72 ceiling. */
+  .hx-dim {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(17 16 21 / 0.364);
+    opacity: 0;
+  }
+
+  /* The guided tour's card (css/app.css .tour-card). */
+  .hx-glass--card::after {
+    background: rgb(22 21 26 / 0.86);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  }
+
+  /* A pre-blurred copy of the room behind a panel (full mode positions it). */
+  .hx-win {
+    display: none;
+    position: absolute;
+  }
+
+  .hx-win > *,
+  .hx-room > i,
+  .hx-win__room > i {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hx-win__art {
+    background: var(--hx-frost) center / cover no-repeat;
+  }
+
+  .hx-win__room {
+    opacity: 0;
+  }
+
+  /* The room (css/app.css .stage): each look's light, blurred, at the app's 55% under its vignette,
+     baked into one opaque image so the room is a single layer. */
+  .hx-amb {
+    background: #08080a center / cover no-repeat;
+    opacity: 0;
+  }
+
+  .hx-amb--coral {
+    background-image: var(--hx-amb-coral);
+    opacity: 1;
+  }
+
+  .hx-amb--indigo {
+    background-image: var(--hx-amb-indigo);
+  }
+
+  .hx-amb--emerald {
+    background-image: var(--hx-amb-emerald);
+  }
+
+  .hx-room,
+  .hx-free {
+    display: none;
+  }
+
+  /* ---------- Canvas ---------- */
+  .hx-canvas {
+    position: relative;
+    order: -2;
+    margin: 0;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #000;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.07),
+      0 24px 70px -18px rgb(0 0 0 / 0.75);
+  }
+
+  .hx-canvas__inner {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+  }
+
+  .hx-canvas__drift {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hx-look {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--poster) 50% 50% / cover no-repeat;
+  }
+
+  .hx-look--alt {
+    display: none;
+  }
+
+  /* Pane: Right side. Its left part is revealed by transform; at rest it is out of frame. */
+  .hx-pane {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    transform: translateX(-100%);
+  }
+
+  .hx-pane > .hx-look {
+    transform: translateX(100%);
+  }
+
+  /* The pane's lit edge: a thin line of light, the glass's thickness shading inside it (shaders.js panel edge). */
+  .hx-pane__edge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 14px;
+    background:
+      linear-gradient(90deg, transparent calc(100% - 1.6px), rgb(255 255 255 / 0.2) 0),
+      linear-gradient(90deg, transparent, rgb(0 0 0 / 0.12));
+  }
+
+  /* The frosted pane: hidden until the script places it over the canvas. */
+  .hx-frost {
+    position: absolute;
+    inset: 0;
+    display: none;
+    overflow: hidden;
+  }
+
+  .hx-frost > i {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Exactly the chapter's background layer, so the pane is invisible until it moves. */
+  .hx-frost__img {
+    background-image: var(--hx-bg-art);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .hx-frost__shade {
+    right: auto !important;
+    width: 18px;
+    background: linear-gradient(90deg, rgb(0 0 0 / 0.22), transparent);
+  }
+
+  /* The seam that leads the wipe: brand red, which the app keeps for "now", as in the mark. */
+  .hx-seam {
+    position: absolute;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+  }
+
+  .hx-seam i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    width: 2px;
+    background: var(--hx-red);
+    box-shadow: 0 0 8px rgb(255 52 56 / 0.75);
+  }
+
+  /* ---------- Title card ---------- */
+  .hx-title {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 26px clamp(20px, 3vw, 34px) 30px;
+    border-radius: 22px;
+  }
+
+  .hx-title > :not(.hx-glass) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hx-title__kicker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--hx-text-2);
+  }
+
+  .hx-title__mark {
+    display: block;
+    width: 34px;
+    height: 40px;
+    flex: none;
+  }
+
+  .hx-title__mark :global(.hx-mark),
+  .hx-bar__mark :global(.hx-mark) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hx-title__name {
+    width: fit-content;
+    font: 600 clamp(56px, 7.4vw, 120px)/0.95 var(--hx-display);
+    letter-spacing: -0.03em;
+    outline: none;
+  }
+
+  /* ---------- Bars (css/app.css .bar) ---------- */
+  .hx-bar {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: fit-content;
+    height: var(--hx-bar-h);
+    padding: 0 7px;
+    border-radius: calc(var(--hx-bar-h) / 2);
+    font-size: 12.5px;
+  }
+
+  .hx-bar > :not(.hx-glass) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 17px;
+    color: var(--hx-text);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.12s;
+  }
+
+  .hx-btn :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+
+  .hx-btn:hover {
+    background: var(--hx-wash-2);
+  }
+
+  .hx-btn--primary {
+    background: var(--hx-paper);
+    color: var(--hx-ink);
+    font-weight: 600;
+  }
+
+  .hx-btn--primary:hover {
+    background: #fff;
+  }
+
+  .hx-bar--start {
+    display: none;
+  }
+
+  .hx-bar__brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 8px 0 7px;
+  }
+
+  .hx-bar__mark {
+    display: block;
+    width: 19px;
+    height: 22px;
+  }
+
+  .hx-bar__name {
+    font: 600 14px var(--hx-display);
+    letter-spacing: -0.01em;
+  }
+
+  .hx-bar__sep {
+    width: 1px;
+    height: 18px;
+    margin: 0 5px;
+    background: var(--hx-hair);
+    flex: none;
+  }
+
+  .hx-bar__look {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 8px 0 11px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .hx-bar__look :global(svg) {
+    width: 14px;
+    height: 14px;
+    color: var(--hx-muted);
+  }
+
+  .hx-bar__names {
+    display: grid;
+  }
+
+  .hx-bar__names > * {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+  }
+
+  .hx-bar__names > * + * {
+    visibility: hidden;
+  }
+
+  .hx-bar__edited {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--hx-muted);
+    opacity: 0;
+  }
+
+  .hx-bar__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    color: var(--hx-text-2);
+  }
+
+  .hx-bar__icon :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hx-bar__icon.is-off {
+    opacity: 0.32;
+  }
+
+  /* ---------- Panels ---------- */
+  .hx-panel {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .hx-panel > :global(.insp),
+  .hx-panel > :global(.dock) {
+    z-index: 1;
+  }
+
+  .hx-panel--insp {
+    display: none;
+  }
+
+  .hx-panel--dock {
+    border-radius: 26px;
+  }
+
+  .hx-dockrow {
+    display: flex;
+    order: -1;
+    margin-top: -4px;
+  }
+
+  .hx-panel--dock {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The tour's spotlight ring (css/app.css .tour-spot). The motion still drives it, but it stays
+     hidden: the owner wants no outline round the panels. */
+  .hx-spot {
+    position: absolute;
+    inset: -5px;
+    z-index: 2;
+    display: none !important;
+    border-radius: 14px;
+    box-shadow: 0 0 0 2px var(--hx-paper);
+    pointer-events: none;
+  }
+
+  .hx-panel--insp .hx-spot {
+    border-radius: 25px;
+  }
+
+  .hx-panel--dock .hx-spot {
+    border-radius: 31px;
+  }
+
+  .hx-slot .hx-spot {
+    border-radius: 8px;
+  }
+
+  /* ---------- Document figures ---------- */
+  .hx-doc {
+    position: relative;
+    margin: 0;
+  }
+
+  .hx-doc img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.07),
+      0 24px 70px -18px rgb(0 0 0 / 0.75);
+  }
+
+  /* ---------- Tour cards (css/app.css .tour-card) ---------- */
+  .hx-tour ol {
+    display: grid;
+    gap: 14px;
+  }
+
+  .hx-card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px 16px;
+    border-radius: 18px;
+    color: var(--hx-text-2);
+  }
+
+  .hx-card > :not(.hx-glass) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hx-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--hx-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hx-card__head :global(svg) {
+    width: 16px;
+    height: 16px;
+    color: var(--hx-text-2);
+  }
+
+  .hx-card h4 {
+    margin: 0;
+    color: var(--hx-text);
+    font: 600 18px/1.3 var(--hx-display);
+    letter-spacing: -0.01em;
+  }
+
+  .hx-card__foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12.5px;
+  }
+
+  .hx-card__quit {
+    margin-right: auto;
+    color: var(--hx-muted);
+  }
+
+  .hx-card__back,
+  .hx-card__next {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    font-weight: 500;
+  }
+
+  .hx-card__back {
+    color: var(--hx-text);
+  }
+
+  .hx-card__next {
+    background: var(--hx-paper);
+    color: var(--hx-ink);
+    font-weight: 600;
+  }
+
+  @media (min-width: 768px) {
+    .hx-tour ol {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport, laid out like the editor.
+     ------------------------------------------------------------------ */
+  :global(html.mode-full) .hx-world {
+    --hx-r: calc(var(--rail) + var(--gutter) + 8px);
+    --hx-free-r: calc(var(--hx-r) + var(--hx-insp-w) + 12px);
+    --hx-top: calc(var(--hx-m) + var(--hx-bar-h) + 12px);
+    /* The canvas frame, 16:10 like the loops, as large as the free area allows. */
+    --hx-free-h: calc(100vh - var(--hx-top) - var(--hx-m) - var(--hx-dock-h) - 12px);
+    --hx-frame-w: min(100vw - var(--hx-m) - var(--hx-free-r), var(--hx-free-h) * 1.6);
+    --glass-a: 0.56;
+    position: absolute;
+    inset: 0;
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .hx-world > * {
+    position: absolute;
+  }
+
+  :global(html.mode-full) .hx-room {
+    display: block;
+    inset: 0;
+    opacity: 0;
+  }
+
+  :global(html.mode-full) .hx-win {
+    display: block;
+  }
+
+  :global(html.mode-full) .hx-free {
+    display: grid;
+    place-items: center;
+    left: var(--hx-m);
+    right: var(--hx-free-r);
+    top: var(--hx-top);
+    bottom: calc(var(--hx-m) + var(--hx-dock-h) + 12px);
+    pointer-events: none;
+  }
+
+  :global(html.mode-full) .hx-slot {
+    position: relative;
+    width: var(--hx-frame-w);
+    aspect-ratio: 16 / 10;
+    border-radius: 3px;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.07),
+      0 24px 70px -18px rgb(0 0 0 / 0.75);
+    opacity: 0;
+  }
+
+  :global(html.mode-full) .hx-canvas {
+    inset: 0;
+    aspect-ratio: auto;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform-origin: 0 0;
+  }
+
+  :global(html.mode-full) .hx-look--alt {
+    display: block;
+  }
+
+  /* Everything that moves or fades in full mode gets its own layer, so scrubbing only composites. */
+  :global(html.mode-full) .hx-canvas,
+  :global(html.mode-full) .hx-canvas__inner,
+  :global(html.mode-full) .hx-canvas__drift,
+  :global(html.mode-full) .hx-pane,
+  :global(html.mode-full) .hx-pane > .hx-look,
+  :global(html.mode-full) .hx-frost,
+  :global(html.mode-full) .hx-frost__img,
+  :global(html.mode-full) .hx-seam {
+    will-change: transform;
+  }
+
+  /* Panels fade and slide as wholes; their own layers keep one panel's change from repainting the rest. */
+  :global(html.mode-full) .hx-title,
+  :global(html.mode-full) .hx-bar,
+  :global(html.mode-full) .hx-panel,
+  :global(html.mode-full) .hx-card,
+  :global(html.mode-full) .hx-slot,
+  :global(html.mode-full) .hx-spot,
+  :global(html.mode-full) .hx-title__name,
+  :global(html.mode-full) .hx-title__mark,
+  :global(html.mode-full) .hx-panel :global(.insp__body),
+  :global(html.mode-full) .hx-panel :global(.dock__at),
+  :global(html.mode-full) .hx-panel :global(.dock__fill),
+  :global(html.mode-full) .hx-panel :global(.dock__ring) {
+    will-change: transform, opacity;
+  }
+
+  :global(html.mode-full) .hx-look[data-hx-look],
+  :global(html.mode-full) .hx-room,
+  :global(html.mode-full) .hx-amb,
+  :global(html.mode-full) .hx-win__room,
+  :global(html.mode-full) .hx-dim {
+    will-change: opacity;
+  }
+
+  :global(html.mode-full) .hx-seam {
+    display: block;
+  }
+
+  :global(html.mode-full) .hx-title {
+    left: var(--gutter);
+    bottom: clamp(32px, 7vh, 72px);
+    z-index: 3;
+    width: min(580px, 46vw);
+    padding: 26px 34px 30px;
+  }
+
+  :global(html.mode-full) .hx-bar--end {
+    top: var(--hx-m);
+    right: var(--hx-r);
+  }
+
+  :global(html.mode-full) .hx-bar--start {
+    display: flex;
+    top: var(--hx-m);
+    left: var(--hx-m);
+  }
+
+  /* The name and mark fly in from the title card, so the bar's own copies only hold their places. */
+  :global(html.mode-full) .hx-bar__mark :global(.hx-mark),
+  :global(html.mode-full) .hx-bar__name {
+    visibility: hidden;
+  }
+
+  :global(html.mode-full) .hx-panel--insp {
+    display: block;
+    top: var(--hx-top);
+    right: var(--hx-r);
+    bottom: var(--hx-m);
+    width: var(--hx-insp-w);
+    border-radius: 20px;
+  }
+
+  :global(html.mode-full) .hx-dockrow {
+    left: var(--hx-m);
+    right: var(--hx-free-r);
+    bottom: var(--hx-m);
+    justify-content: center;
+    margin: 0;
+  }
+
+  :global(html.mode-full) .hx-panel--dock {
+    flex: 0 1 auto;
+  }
+
+  :global(html.mode-full) .hx-spot {
+    display: block;
+    opacity: 0;
+  }
+
+  :global(html.mode-full) .hx-doc {
+    display: none;
+  }
+
+  :global(html.mode-full) .hx-tour {
+    inset: 0;
+    pointer-events: none;
+  }
+
+  :global(html.mode-full) .hx-tour ol {
+    display: block;
+  }
+
+  :global(html.mode-full) .hx-card {
+    position: absolute;
+    /* The tour's cards float over the canvas, as the editor's do. */
+    width: 300px;
+  }
+
+  /* Each card sits beside what it spotlights, as the tour places them. */
+  :global(html.mode-full) .hx-card:nth-child(1) {
+    left: var(--hx-m);
+    bottom: calc(var(--hx-m) + var(--hx-dock-h) + 20px);
+  }
+
+  :global(html.mode-full) .hx-card:nth-child(2) {
+    right: calc(var(--hx-free-r) + 6px);
+    top: calc(var(--hx-top) + 48px);
+  }
+
+  :global(html.mode-full) .hx-card:nth-child(3) {
+    left: var(--hx-m);
+    top: calc(var(--hx-top) + 24px);
+  }
+</style>

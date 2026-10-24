@@ -1,0 +1,2478 @@
+/* ==================================================================
+   The Fan (src/intros/fan): the Fan Deck on desktop, the Thumb Riffle
+   on phones. Every rule starts at the route's root, .fan; the shell's
+   tokens are global.css's. Colour lives only in the blades and the
+   room: everything else is ink on paper.
+
+   Compositions:
+     default         a list of the six (phones without JavaScript, print)
+     poster          the name across the foot, the deck pinned through
+                     the dot of its i: 1024 x 600 and up (with or without
+                     JavaScript), and landscape lite windows
+     .lay-thumb      the Thumb Riffle (motion.ts sets it on upright
+                     phones and tablets)
+     .is-strip       the lite hand-off: a sticky stage on a track
+   The load-in plays only under .is-entering (motion.ts, as the choice
+   lifts); a build waiting for it is .is-held. Without JavaScript
+   nothing animates.
+   ================================================================== */
+
+@property --open {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+.fan {
+  --card: #fbfbf9;
+  /* Static paper tooth: ink noise at about 5% alpha, on its own 240px tile. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .063 0 0 0 0 .067 0 0 0 0 .078 0 0 0 .34 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 18px var(--gutter) 44px;
+  overflow: clip;
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font-sans);
+}
+
+/* Waiting for enter(): the choice is still up, or the switch is still fading. */
+.fan.is-held {
+  visibility: hidden;
+}
+
+/* The stage: a box of its own only as the lite strip's sticky frame (and on phones). */
+.fan__stick {
+  display: contents;
+}
+
+.fan__grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* The tooth itself, on a pseudo-element: its load-in fade must not touch the element the scrubbed
+   timeline hides (a tween first run during that fade would record it half faded). */
+.fan__grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grain) 0 0 / 240px 240px repeat;
+}
+
+/* Wrappers GSAP never touches carry the load animation. */
+.fan .in {
+  display: block;
+}
+
+.fan .label {
+  font: 500 12px/1.3 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- Top bar ---------- */
+.fan__bar .in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 28px;
+  font-size: 14px;
+}
+
+.fan .bar__end {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 22px;
+}
+
+/* A hairline between the switch and the links, only once the switch shows. */
+.fan .bar__rule {
+  display: none;
+  width: 1px;
+  height: 16px;
+  background: var(--rule);
+}
+
+.fan .bar__switch:not([hidden]) + .bar__rule {
+  display: block;
+}
+
+.fan .bar__links {
+  display: flex;
+  gap: 22px;
+}
+
+.fan .bar__links a {
+  display: inline-block;
+  padding: 10px 0;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.fan .bar__links a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Kicker, name, role, sub ---------- */
+/* The lockup holds no controls (the h1's words are aria-hidden pictures plus hidden text), so it
+   never takes a tap or click meant for a blade it overlaps. */
+.fan__lockup,
+html .fan .fan__lockup h1.fan__title {
+  pointer-events: none;
+}
+
+.fan__kicker {
+  order: 1;
+  color: var(--ink-2);
+}
+
+.fan__title {
+  order: 2;
+  --F: min(14vw, 7rem);
+  position: relative;
+  margin: 0;
+  font-weight: 400;
+  outline: none;
+}
+
+.fan .name {
+  display: block;
+  font: 800 var(--F) / 0.86 var(--font-display);
+  font-stretch: 112%;
+  letter-spacing: -0.035em;
+  font-variant-ligatures: none;
+  pointer-events: none;
+}
+
+/* Each line rises inside a mask; the padding keeps ascenders and the q and y descenders. */
+.fan .line {
+  display: block;
+  overflow: clip;
+  padding: 0.09em 0.06em 0.12em 0;
+  margin: -0.09em -0.06em -0.12em 0;
+}
+
+.fan .line__rise,
+.fan .line__out {
+  display: block;
+}
+
+.fan .line__out {
+  white-space: nowrap;
+}
+
+.fan .i {
+  position: relative;
+}
+
+/* The dotless i is for the rivet; it only shows where the rivet is drawn. */
+.fan .i__full {
+  display: none;
+}
+
+.fan .role {
+  display: block;
+  margin-top: 0.85rem;
+  font: 600 17px/1.3 var(--font-sans);
+  letter-spacing: -0.005em;
+}
+
+.fan__sub {
+  order: 3;
+  max-width: 36ch;
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.fan__readout,
+.fan__tout {
+  display: none;
+}
+
+.fan__cue {
+  order: 5;
+  color: var(--ink-2);
+  font: 500 13px/1.4 var(--font-sans);
+}
+
+.fan__cue .in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fan .cue__arrow {
+  flex: none;
+  width: 24px;
+  height: 14px;
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fan .cue--full,
+.fan .cue--touch,
+.fan .cue--thumb,
+.fan .cue--part,
+.fan .cue--mouse {
+  display: none;
+}
+
+.fan .rivet,
+.fan__room,
+.fan__ghost {
+  display: none;
+}
+
+/* ------------------------------------------------------------------
+   The list (phones without JavaScript, print): every blade lies flat,
+   chip on the left, its words on the right.
+   ------------------------------------------------------------------ */
+.fan .deck {
+  order: 4;
+}
+
+.fan .deck__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .fan .deck__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fan .blade-item {
+  --snap: 0deg;
+  --swing: 0deg;
+  --lift: 0px;
+  --rot: calc(var(--a) + var(--open) + var(--snap) + var(--swing));
+}
+
+.fan .blade-item .blade {
+  position: relative;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 7px 14px 7px 7px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px rgb(16 17 20 / 0.08),
+    0 14px 26px -18px rgb(16 17 20 / 0.4);
+  text-decoration: none;
+}
+
+.fan .blade__card,
+.fan .blade__neck,
+.fan .blade__band,
+.fan .deck__tips {
+  display: none;
+}
+
+.fan .blade__chip {
+  position: relative;
+  display: block;
+  width: 104px;
+  height: calc(104px * 155 / 120);
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--bg);
+  --k: calc(104 / 120);
+}
+
+.fan .blade__text {
+  display: grid;
+  gap: 2px;
+}
+
+.fan .blade__text .num {
+  color: var(--ink-2);
+  font: 700 11px/1.3 var(--font-display);
+  font-stretch: 125%;
+  letter-spacing: 0.04em;
+}
+
+.fan .blade__text .nm {
+  font-family: var(--face);
+  font-size: 20px;
+  font-weight: var(--w, 800);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.fan .blade__text .mt {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font: 500 11px/1.35 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fan .blade__text .ln {
+  margin-top: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------
+   Poster (1024 x 600 and up, and landscape lite windows): the name
+   across the foot, the deck pinned through the dot of its i. motion.ts
+   measures the tittle and overwrites --cx/--cy and the deck's sizes;
+   the values here place it without JavaScript.
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) and (min-height: 600px), screen and (min-aspect-ratio: 5/4) {
+  .fan {
+    display: block;
+    height: 100vh;
+    min-height: 600px;
+    padding: 0;
+    --F: min(12.5vw, 20vh);
+    --nb: clamp(30px, 5.2vh, 52px);
+    --cx: calc(var(--gutter) + var(--F) * 2.49);
+    --cy: calc(max(600px, 100vh) - var(--nb) - var(--F) * 1.711);
+    --L: clamp(250px, calc(var(--cy) - 118px), 520px);
+    --W: calc(var(--L) * 0.31);
+    --H: calc(var(--L) * 0.45);
+    --neck: max(26px, calc(var(--L) * 0.074));
+    --eye: calc(var(--L) * 0.11);
+    --k: 1;
+    --rv: calc(var(--F) * 0.196);
+  }
+
+  .fan__bar {
+    position: absolute;
+    top: clamp(16px, 3.6vh, 32px);
+    left: var(--gutter);
+    right: calc(var(--rail) + var(--gutter));
+    z-index: 6;
+  }
+
+  .fan__bar .in {
+    flex-wrap: nowrap;
+  }
+
+  .fan__sub {
+    position: absolute;
+    top: clamp(112px, 17vh, 158px);
+    left: var(--gutter);
+    z-index: 6;
+    width: min(19rem, calc(var(--cx) - var(--L) * 0.36 - var(--gutter)));
+    max-width: none;
+    font-size: clamp(16px, 1.3vw, 19px);
+  }
+
+  .fan__readout {
+    position: absolute;
+    top: clamp(112px, 17vh, 158px);
+    right: calc(var(--rail) + var(--gutter));
+    z-index: 6;
+    display: block;
+    width: min(19rem, 24vw);
+  }
+
+  .fan .readout__swap {
+    display: block;
+  }
+
+  .fan .readout__swap.is-in {
+    animation: fan-readout-in 0.24s var(--ease-out) both;
+  }
+
+  .fan .readout__head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .fan .readout__num {
+    color: var(--ink-2);
+    font: 500 12px/1 var(--font-mono);
+  }
+
+  .fan .readout__name {
+    font-family: var(--face, var(--font-sans));
+    font-size: 26px;
+    font-weight: var(--w, 800);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .fan .readout__meta {
+    margin-top: 10px;
+    color: var(--ink-2);
+  }
+
+  .fan .readout__line {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .fan .readout__idle {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .fan .readout__idle b {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Without JavaScript nothing parts (the head script sets data-boot only with it). */
+  html:not([data-boot]) .fan .readout__how {
+    display: none;
+  }
+
+  .fan__lockup {
+    position: absolute;
+    left: var(--gutter);
+    bottom: var(--nb);
+    z-index: 3;
+  }
+
+  /* The kicker stops short of the rivet; on narrow screens it wraps rather than reach the necks. */
+  .fan__kicker {
+    max-width: calc(var(--cx) - var(--gutter) - 40px);
+    margin-bottom: calc(var(--F) * 0.1);
+  }
+
+  .fan__title {
+    --F: inherit;
+  }
+
+  .fan .name {
+    font-size: var(--F);
+  }
+
+  /* The role sits on the first line's baseline, past the first name. JS refines --tw. */
+  .fan .role {
+    position: absolute;
+    left: calc(var(--tw, calc(var(--F) * 3.26)) + var(--F) * 0.16);
+    top: calc(var(--F) * 0.86 - 1.18em);
+    margin: 0;
+    font-size: clamp(17px, 1.4vw, 21px);
+    white-space: nowrap;
+  }
+
+  .fan__cue {
+    position: absolute;
+    right: calc(var(--rail) + var(--gutter));
+    bottom: calc(var(--nb) + var(--F) * 0.14);
+    z-index: 6;
+  }
+
+  html.js:not(.mode-reduced) .fan .cue--rest {
+    display: none;
+  }
+
+  html.mode-full .fan .cue--full {
+    display: inline;
+  }
+
+  /* The rivet is the dot of the i. */
+  .fan .i__full {
+    display: inline;
+  }
+
+  .fan .i__lite {
+    display: none;
+  }
+
+  .fan .rivet {
+    position: absolute;
+    left: var(--cx);
+    top: var(--cy);
+    z-index: 4;
+    display: block;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .fan .rivet__out {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .fan .rivet__head {
+    position: absolute;
+    left: calc(var(--rv, 30px) / -2);
+    top: calc(var(--rv, 30px) / -2);
+    width: var(--rv, 30px);
+    height: var(--rv, 30px);
+    border-radius: 50%;
+    /* A flat-headed rivet: a bevelled rim, a slightly domed face, one soft highlight. */
+    background:
+      radial-gradient(circle at 36% 32%, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0) 34%),
+      radial-gradient(circle at 50% 50%, #2c2e33 0 58%, #18191c 62%, #3a3c42 72%, #232428 86%, #141518 100%);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.55),
+      0 2px 4px -1px rgb(16 17 20 / 0.45);
+  }
+
+  /* ---------- The fan ---------- */
+  .fan .deck {
+    position: absolute;
+    left: var(--cx);
+    top: var(--cy);
+    z-index: 2;
+    width: 0;
+    height: 0;
+  }
+
+  .fan .deck__jolt,
+  .fan .deck__list {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 0;
+    height: 0;
+  }
+
+  .fan .blade-item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: calc(10 - var(--i));
+    width: 0;
+    height: 0;
+    transform: rotate(var(--rot));
+  }
+
+  .fan .blade-item.is-hot {
+    z-index: 20;
+  }
+
+  .fan .blade__slide {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .fan .blade-item .blade {
+    position: absolute;
+    left: calc(var(--W) / -2);
+    top: calc(var(--L) * -1);
+    display: block;
+    width: var(--W);
+    height: calc(var(--L) + var(--eye) / 2);
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: translateY(calc(var(--lift) * -1));
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /* Only the card, the neck, the chip and the band take a pointer (html: full mode makes every
+     link in a section a target). */
+  html .fan .blade-item a.blade {
+    pointer-events: none;
+  }
+
+  .fan .blade-item .blade:focus-visible {
+    outline: none;
+  }
+
+  .fan .blade-item .blade:focus-visible .blade__card {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  .fan .blade__card,
+  .fan .blade__neck,
+  .fan .blade__chip,
+  .fan .blade__band {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  /* The head: card stock, the chip, a band with the number and accent token. */
+  .fan .blade__card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 100%;
+    height: var(--H);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 1px 0 rgb(16 17 20 / 0.06),
+      0 18px 30px -16px rgb(16 17 20 / 0.34);
+  }
+
+  /* The neck runs to the eyelet round the rivet. */
+  .fan .blade__neck {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--H) - 14px);
+    bottom: 0;
+    z-index: -1;
+    display: block;
+    width: var(--neck);
+    margin-left: calc(var(--neck) / -2);
+    border-radius: 0 0 999px 999px;
+    background: var(--card);
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 10px 18px -12px rgb(16 17 20 / 0.3);
+  }
+
+  .fan .blade__neck::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--eye);
+    height: var(--eye);
+    margin-left: calc(var(--eye) / -2);
+    border-radius: 50%;
+    background: var(--card);
+    box-shadow: 0 0 0 1px rgb(16 17 20 / 0.08);
+  }
+
+  .fan .blade__hex {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    color: var(--ink-2);
+    font: 500 max(9px, calc(var(--L) * 0.021)) / 1 var(--font-mono);
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%);
+  }
+
+  .fan .blade__chip {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: calc(var(--W) - 12px);
+    height: calc(var(--H) - 38px);
+    border-radius: 8px;
+    --k: inherit;
+  }
+
+  .fan .blade__band {
+    position: absolute;
+    left: 11px;
+    right: 11px;
+    top: calc(var(--H) - 32px);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .fan .band__num {
+    color: var(--ink-2);
+    font: 700 11px/1 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: 0.04em;
+  }
+
+  .fan .band__acc {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink-2);
+    font: 500 9.5px/1 var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+
+  .fan .band__acc i {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--acc);
+    box-shadow: inset 0 0 0 1px rgb(16 17 20 / 0.12);
+  }
+
+  /* A lower blade's accent token would peek out from under the blade above as a stray letter or
+     two; it shows when the blade is raised. */
+  .fan .band__acc {
+    transition: opacity 0.2s ease;
+  }
+
+  .fan .blade-item:not(:first-child):not(.is-hot) .band__acc {
+    opacity: 0;
+  }
+
+  .fan .blade__text {
+    display: none;
+  }
+
+  /* Tip labels: their own layer above every blade, riding each tip and always level, each set in
+     its product's own face. Same angle as the blade, by the same variables. */
+  .fan .deck__tips {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 30;
+    display: block;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .fan .tip {
+    --snap: 0deg;
+    --swing: 0deg;
+    --lift: 0px;
+    --rot: calc(var(--a) + var(--open) + var(--snap) + var(--swing));
+    --R: calc(var(--L) + var(--lift) + 15px);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    white-space: nowrap;
+    transform:
+      translate(calc(sin(var(--rot)) * var(--R)), calc(cos(var(--rot)) * var(--R) * -1))
+      translate(calc((sin(var(--rot)) - 1) * 50%), calc((-1 * cos(var(--rot)) - 1) * 50%));
+  }
+
+  .fan .tip .in {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 3px 4px;
+  }
+
+  .fan .tip b {
+    color: var(--ink-2);
+    font: 500 11px/1 var(--font-mono);
+  }
+
+  .fan .tip .nm {
+    font-family: var(--face);
+    font-size: clamp(14px, 1.1vw, 16px);
+    font-weight: var(--w, 800);
+    letter-spacing: -0.015em;
+    line-height: 1;
+  }
+
+  .fan .tip.is-hot .nm {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+  }
+}
+
+/* Full mode: the pinned frame is the route's. Its gesture surface is the whole frame (hover parts
+   the deck wherever the pointer is), so it takes pointer events the section gives up. */
+html.mode-full .fan {
+  pointer-events: auto;
+  /* A touch-only tablet: the browser owns vertical panning (the pin scrubs) and pinch-zoom; a
+     sideways stroke is the finger parting the deck. */
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Narrower desktops and landscape tablets: the last name runs into the cue's corner, so the cue
+   wraps into the space past its last letter; under 1240px it drops its arrow. */
+@media (min-width: 1024px) and (max-width: 1365.98px) and (min-height: 600px) {
+  .fan__cue .in {
+    align-items: flex-start;
+    max-width: calc(100vw - var(--rail) - 2 * var(--gutter) - var(--F) * 5.95 - 16px);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1239.98px) and (min-height: 600px) {
+  .fan__cue .cue__arrow {
+    display: none;
+  }
+}
+
+/* Under 1280px the right column belongs to the fan's tips: the readout takes the sub's slot, and
+   swaps in for it while a blade is under the pointer or focus. */
+.fan .swap,
+.fan .readout__vis {
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+@media (min-width: 1024px) and (max-width: 1279.98px) and (min-height: 600px), screen and (max-width: 1279.98px) and (min-aspect-ratio: 5/4) and (min-height: 560px) {
+  .fan__readout {
+    left: var(--gutter);
+    right: auto;
+    width: min(19rem, calc(var(--cx) - var(--L) * 0.36 - var(--gutter)));
+    pointer-events: none;
+  }
+
+  .fan .readout__vis {
+    opacity: 0;
+  }
+
+  .fan.is-reading .readout__vis {
+    opacity: 1;
+  }
+
+  .fan.is-reading .fan__sub .swap {
+    opacity: 0;
+  }
+
+  .fan .readout__name {
+    font-size: 22px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Chip fragments: each product's own UI, coded, on its own ground.
+   Drawn at 120 x 155 design px, scaled by --k to the chip.
+   ------------------------------------------------------------------ */
+.fan .frag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120px;
+  height: 155px;
+  overflow: hidden;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.fan .frag > * {
+  position: absolute;
+}
+
+.fan .frag__ground {
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+/* 01 CareVisor: its own app window (Demo.astro) on the prism, small. */
+.fan .frag-cv__win {
+  left: -10px;
+  top: 34px;
+  width: 300px;
+}
+
+.fan .frag-cv__win .cvd-app {
+  box-shadow: 0 6px 14px rgb(0 32 90 / 0.18);
+}
+
+/* The window's own glow, pointer and click rings belong to the chapter's scene, not the chip. */
+.fan .frag-cv__win .cvd-glow,
+.fan :is(.frag-cv__win, .fan__win) :is(.cvd-cursor, .cvd-pulse) {
+  display: none !important;
+}
+
+/* The window as the chapter opens on it: its scene's first frame. Without the engine (and on phones,
+   where the chip keeps the static copy) the Demo shows its scene's last frame; the parts that pop in
+   later stay out here, so the chip, the room and the chapter all start from the same picture. */
+.fan :is(.frag-cv__win, .fan__win) .cvd-scene :is([data-k='pop'], [data-k='arrow'], [data-k='flash'], [data-k='write'], [data-k='in']) {
+  visibility: hidden !important;
+}
+
+.fan .frag-cv__cursor {
+  left: 96px;
+  top: 112px;
+  width: 11px;
+  height: 14px;
+  transition: transform 0.6s var(--ease-out);
+}
+
+/* 02 Halation: a look behind reeded glass, the frosted panel over it. */
+.fan .frag-ha__look {
+  inset: 0 -40% 0 0;
+  background-position: 30% 50%;
+  background-size: cover;
+  transition: transform 1.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.fan .frag-ha__glass {
+  inset: 0;
+  background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.12) 0 1px, rgb(255 255 255 / 0.03) 1px 4px, rgb(0 0 0 / 0.1) 4px 7px, rgb(0 0 0 / 0.22) 7px 8px);
+  mix-blend-mode: soft-light;
+}
+
+.fan .frag-ha__panel {
+  left: 34px;
+  right: 6px;
+  bottom: 8px;
+  padding: 8px 9px 9px;
+  border-radius: 9px;
+  background: rgb(18 16 22 / 0.78);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  color: #f4f2ee;
+}
+
+.fan .frag-ha__panel b {
+  display: block;
+  font: 700 15px/1 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.fan .frag-ha__row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: #c5c3c0;
+  font: 600 6px/1 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fan .frag-ha__track {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.fan .frag-ha__knob {
+  position: absolute;
+  left: 34%;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: #ff3438;
+  box-shadow: 0 0 0 2px rgb(255 52 56 / 0.25);
+  transition: transform 1.4s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+/* 03 SiteScore: the hex map, a site's 36-month revenue card. */
+.fan .frag-ss__map {
+  inset: 0;
+  width: 120px;
+  height: 155px;
+  max-width: none;
+}
+
+.fan .frag-ss__pin {
+  left: 84px;
+  top: 104px;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid #161616;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fan .frag-ss__card {
+  left: 36px;
+  top: 10px;
+  width: 78px;
+  padding: 6px 7px 5px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(22 22 22 / 0.08),
+    0 8px 16px -8px rgb(22 22 22 / 0.35);
+  color: #161616;
+  font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.fan .frag-ss__card small {
+  display: block;
+  color: #4a4a47;
+  font-size: 5.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fan .frag-ss__card b {
+  display: block;
+  margin-top: 2px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.fan .frag-ss__card span {
+  display: block;
+  margin-top: 2px;
+  color: #4a4a47;
+  font-size: 5.5px;
+  font-weight: 500;
+}
+
+.fan .frag-ss__card svg {
+  width: 100%;
+  height: 14px;
+  margin-top: 3px;
+  overflow: visible;
+}
+
+/* 04 BloodLine: a result just under its range, and the nudge to the GP. */
+.fan .frag-bl__ground {
+  inset: 0;
+  background-position: 40% 50%;
+  background-size: cover;
+}
+
+.fan .frag-bl__card {
+  left: 34px;
+  right: 6px;
+  top: 14px;
+  padding: 7px 8px 8px;
+  border-radius: 8px;
+  background: rgb(13 32 24 / 0.92);
+  box-shadow: inset 0 0 0 1px rgb(220 235 210 / 0.14);
+  color: #eaf2ec;
+  font-family: 'Urbanist Variable', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fan .frag-bl__card small {
+  display: block;
+  color: #a6bcad;
+  font-size: 6.5px;
+  font-weight: 600;
+}
+
+.fan .frag-bl__card b {
+  display: block;
+  margin-top: 1px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.fan .frag-bl__card b em {
+  margin-left: 2px;
+  color: #a6bcad;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.fan .frag-bl__range {
+  position: relative;
+  display: block;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 4px;
+  background: rgb(234 242 236 / 0.14);
+}
+
+.fan .frag-bl__band {
+  position: absolute;
+  left: 30%;
+  right: 12%;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: rgb(220 235 210 / 0.55);
+}
+
+.fan .frag-bl__mark {
+  position: absolute;
+  left: 25%;
+  top: -3px;
+  width: 3px;
+  height: 10px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: #f0b45a;
+}
+
+.fan .frag-bl__ticks {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 12% 0 26%;
+  color: #a6bcad;
+  font-size: 5.5px;
+  font-weight: 600;
+}
+
+.fan .frag-bl__alert {
+  left: 30px;
+  right: 6px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: rgb(234 242 236 / 0.96);
+  color: #06110c;
+  font: 600 6.5px/1.25 'Urbanist Variable', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+  box-shadow: 0 8px 16px -8px rgb(0 0 0 / 0.6);
+}
+
+.fan .frag-bl__alert i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #06110c;
+}
+
+/* 05 Airpoint: the phone app's mark, and the pointer it moves. */
+.fan .frag-ap__ground {
+  inset: 0;
+  background: radial-gradient(120% 70% at 50% 0%, #1a2340, #0d0f14 60%);
+}
+
+.fan .frag-ap__phone {
+  left: 46px;
+  top: 16px;
+  width: 62px;
+  height: 130px;
+  border-radius: 13px;
+  background: #0a0b0f;
+  box-shadow:
+    inset 0 0 0 1.5px rgb(244 244 241 / 0.2),
+    0 10px 20px -10px rgb(0 0 0 / 0.8);
+}
+
+.fan .frag-ap__phone svg {
+  position: absolute;
+  left: 15px;
+  top: 30px;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+}
+
+.fan .frag-ap__phone b {
+  position: absolute;
+  left: 8px;
+  right: 6px;
+  top: 74px;
+  color: #f4f4f1;
+  font: 700 8px/1.15 'Sora Variable', 'Sora', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.fan .frag-ap__phone span {
+  position: absolute;
+  left: 8px;
+  bottom: 9px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #3b69ff;
+  color: #fff;
+  font: 600 5.5px/1 'Sora Variable', 'Sora', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fan .frag-ap__cursor {
+  left: 26px;
+  top: 30px;
+  width: 13px;
+  height: 17px;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
+  transition: transform 1.2s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.fan .frag-ap__cursor .sh {
+  display: none;
+}
+
+/* 06 Compare Best AI: the hero robot, the search, a score. */
+.fan .frag-cb__ground {
+  inset: 0;
+  background: linear-gradient(160deg, #ffffff, #eaf3fb);
+}
+
+.fan .frag-cb__robot {
+  right: -18px;
+  top: 2px;
+  width: 104px;
+  height: auto;
+}
+
+.fan .frag-cb__search {
+  left: 30px;
+  right: 6px;
+  top: 98px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 17px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px #dfe6ef,
+    0 4px 10px -4px rgb(10 16 32 / 0.25);
+  color: #45556c;
+  font: 500 6px/1 'Montserrat Variable', 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fan .frag-cb__search i {
+  width: 6px;
+  height: 6px;
+  border: 1.2px solid #45556c;
+  border-radius: 50%;
+}
+
+.fan .frag-cb__score {
+  left: 30px;
+  right: 6px;
+  top: 121px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: #0a1020;
+  color: #fff;
+  font: 700 6px/1 'Montserrat Variable', 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.fan .frag-cb__score span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.fan .frag-cb__track {
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.fan .frag-cb__fill {
+  display: block;
+  width: 91%;
+  height: 100%;
+  border-radius: 3px;
+  background: #00b0f0;
+  transform-origin: 0 50%;
+}
+
+/* One product-true reaction per blade, when it parts or is raised. */
+@media (prefers-reduced-motion: no-preference) {
+  .fan .is-hot .frag-cv__cursor {
+    transform: translate(-30px, -40px);
+  }
+
+  .fan .is-hot .frag-ha__look {
+    transform: translateX(-26%);
+  }
+
+  .fan .is-hot .frag-ha__knob {
+    transform: translateX(34px);
+  }
+
+  .fan .is-hot .frag-ss__pin {
+    transform: scale(1.5);
+  }
+
+  .fan .is-hot .frag-ss__card {
+    transform: translateY(-3px);
+  }
+
+  .fan .is-hot .frag-bl__mark {
+    animation: fan-bl-mark 0.9s var(--ease-out) both;
+  }
+
+  .fan .is-hot .frag-bl__alert {
+    animation: fan-bl-alert 0.5s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .fan .is-hot .frag-ap__cursor {
+    transform: translate(48px, 44px);
+  }
+
+  .fan .is-hot .frag-cb__fill {
+    animation: fan-cb-fill 0.9s var(--ease-out) both;
+  }
+}
+
+/* ==================================================================
+   THUMB RIFFLE: phones and tablets, upright (motion.ts sets .lay-thumb).
+   The poster turned for the hand: the first name is set flush right,
+   so the rivet (still the dot of the i) sits low on the right, under
+   the thumb, and the blades sweep up and to the left. A sideways stroke
+   flips the deck; a vertical one always scrolls the page.
+   ================================================================== */
+.fan.lay-thumb {
+  --g: clamp(16px, calc(16px + (100vw - 390px) * 0.0423), 32px);
+  --gutter: var(--g);
+  --sh: 100vh;
+  /* How far the small viewport's foot sits above the stage's foot (0 unless the stage is sticky). */
+  --vb: 0px;
+  --fb: clamp(14px, calc(14px + (100vw - 390px) * 0.05), 30px);
+  /* The name: the last name fills the measure (JS measures it exactly). */
+  --F: min(calc((100vw - 2 * var(--g)) / 5.925), 15vh);
+  --cx: calc(100vw - var(--g) - var(--F) * 0.772);
+  --cy: calc(var(--sh) - var(--fb) - 26px - var(--F) * 1.715);
+  --k: 0.62;
+  --W: calc(120px * var(--k) + 12px);
+  --H: calc(155px * var(--k) + 38px);
+  --L: calc(var(--W) / 0.31);
+  --neck: max(26px, calc(var(--L) * 0.074));
+  --eye: calc(var(--L) * 0.11);
+  --rv: 14px;
+  display: block;
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+
+@supports (height: 100svh) {
+  .fan.lay-thumb {
+    --sh: 100svh;
+  }
+}
+
+.fan.lay-thumb .fan__stick {
+  position: relative;
+  display: block;
+  height: 100%;
+  /* The browser alone owns vertical panning and pinch-zoom; sideways strokes are the fan's. */
+  touch-action: pan-y pinch-zoom;
+}
+
+/* ---------- Shell ---------- */
+.fan.lay-thumb .fan__bar {
+  position: absolute;
+  top: 14px;
+  left: var(--g);
+  right: var(--g);
+  z-index: 6;
+}
+
+.fan.lay-thumb .fan__bar .in {
+  flex-wrap: nowrap;
+  gap: 0 10px;
+  font-size: 13px;
+}
+
+/* The switch on the left, the links on the right. */
+.fan.lay-thumb .bar__end {
+  display: contents;
+}
+
+.fan.lay-thumb .bar__switch {
+  order: -1;
+}
+
+.fan.lay-thumb .bar__rule {
+  display: none;
+}
+
+.fan.lay-thumb .bar__links {
+  gap: 4px;
+  margin-right: -5px;
+}
+
+.fan.lay-thumb .bar__links a {
+  padding: 13px 5px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+/* Narrow phones: the switch and three links share 330px. */
+@media (max-width: 389.98px) {
+  .fan.lay-thumb .bar__links {
+    gap: 0;
+  }
+
+  .fan.lay-thumb .bar__links a {
+    padding: 13px 4px;
+    font-size: 13px;
+  }
+}
+
+.fan.lay-thumb .fan__lockup {
+  position: static;
+}
+
+.fan.lay-thumb .fan__kicker {
+  position: absolute;
+  top: 70px;
+  left: var(--g);
+  right: var(--g);
+  z-index: 6;
+  margin: 0;
+  font-size: min(12.5px, 3.3vw);
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.fan.lay-thumb .fan__sub {
+  position: absolute;
+  top: 94px;
+  left: var(--g);
+  right: var(--g);
+  z-index: 6;
+  max-width: 30em;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.fan.lay-thumb .fan__title {
+  --F: inherit;
+  position: absolute;
+  left: var(--g);
+  right: var(--g);
+  bottom: calc(var(--vb) + var(--fb) + 26px);
+  z-index: 3;
+}
+
+.fan.lay-thumb .name {
+  font-size: var(--F);
+  text-align: right;
+}
+
+/* The role sits in the gap left of the first name, on its baseline. JS sets top and width. */
+.fan.lay-thumb .role {
+  position: absolute;
+  left: 0;
+  top: calc(var(--F) * 0.755 - 2.15em);
+  width: calc(100% - var(--tw, calc(var(--F) * 3.26)) - max(16px, calc(var(--F) * 0.42)));
+  margin: 0;
+  font: 600 16px/1.2 var(--font-sans);
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.fan.lay-thumb .fan__cue {
+  position: absolute;
+  left: var(--g);
+  right: var(--g);
+  bottom: calc(var(--vb) + var(--fb));
+  z-index: 6;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.fan.lay-thumb .fan__cue .in {
+  gap: 8px;
+}
+
+.fan.lay-thumb .cue--rest {
+  display: none;
+}
+
+.fan.lay-thumb .cue--thumb {
+  display: inline;
+}
+
+.fan.lay-thumb .cue--thumb.is-swap {
+  animation: fan-fade 0.3s ease both;
+}
+
+/* ---------- The readout in the sub's slot (after the first touch) ---------- */
+.fan.lay-thumb .fan__tout {
+  position: absolute;
+  top: 94px;
+  left: var(--g);
+  right: var(--g);
+  z-index: 6;
+  display: block;
+  pointer-events: none;
+}
+
+.fan.lay-thumb .tout__in {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fan.lay-thumb.is-reading .tout__in {
+  opacity: 1;
+}
+
+.fan.lay-thumb.is-reading .fan__tout {
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fan.lay-thumb.is-reading .fan__sub .swap {
+  opacity: 0;
+}
+
+.fan.lay-thumb .tout__in.is-in {
+  animation: fan-readout-in 0.24s var(--ease-out) both;
+}
+
+.fan.lay-thumb .tout__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fan.lay-thumb .tout__num {
+  flex: none;
+  color: var(--ink-2);
+  font: 500 12px/1 var(--font-mono);
+}
+
+.fan.lay-thumb .tout__name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--face, var(--font-sans));
+  font-size: 28px;
+  font-weight: var(--w, 800);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fan.lay-thumb .tout__sw {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-self: center;
+  margin-left: auto;
+}
+
+.fan.lay-thumb .tout__sw i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgb(16 17 20 / 0.18);
+}
+
+.fan.lay-thumb .tout__meta {
+  margin-top: 5px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.fan.lay-thumb .tout__line {
+  display: -webkit-box;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Short phones: the kicker alone idles in the slot; the readout is two lines. The sub stays for AT. */
+.fan.lay-thumb.is-compact .fan__sub {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fan.lay-thumb.is-compact .tout__line {
+  display: none;
+}
+
+/* ---------- The rivet: the dot of the i ---------- */
+.fan.lay-thumb .i__full {
+  display: inline;
+}
+
+.fan.lay-thumb .i__lite {
+  display: none;
+}
+
+.fan.lay-thumb .rivet {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  z-index: 4;
+  display: block;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.fan.lay-thumb .rivet__out {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.fan.lay-thumb .rivet__head {
+  position: absolute;
+  left: calc(var(--rv) / -2);
+  top: calc(var(--rv) / -2);
+  width: var(--rv);
+  height: var(--rv);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 32%, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0) 34%),
+    radial-gradient(circle at 50% 50%, #2c2e33 0 58%, #18191c 62%, #3a3c42 72%, #232428 86%, #141518 100%);
+  box-shadow:
+    0 0 0 1px rgb(16 17 20 / 0.55),
+    0 2px 4px -1px rgb(16 17 20 / 0.45);
+}
+
+/* ---------- The fan ---------- */
+.fan.lay-thumb .deck {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  z-index: 2;
+  width: 0;
+  height: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.fan.lay-thumb .deck__jolt,
+.fan.lay-thumb .deck__list {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+/* Fixed stacking, 01 on top, as on a riveted deck. JS writes one transform per blade. */
+.fan.lay-thumb .blade-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: calc(10 - var(--i));
+  width: 0;
+  height: 0;
+  transform: rotate(var(--ap));
+}
+
+.fan.lay-thumb .blade__slide {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+
+.fan.lay-thumb .blade-item .blade {
+  position: absolute;
+  left: calc(var(--W) / -2);
+  top: calc(var(--L) * -1);
+  display: block;
+  width: var(--W);
+  height: calc(var(--L) + var(--eye) / 2);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html .fan.lay-thumb .blade-item a.blade {
+  pointer-events: none;
+}
+
+.fan.lay-thumb .blade-item .blade:focus-visible {
+  outline: none;
+}
+
+.fan.lay-thumb .blade-item .blade:focus-visible .blade__card {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.fan.lay-thumb .blade__card,
+.fan.lay-thumb .blade__neck,
+.fan.lay-thumb .blade__chip,
+.fan.lay-thumb .blade__band {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.fan.lay-thumb .blade__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 100%;
+  height: var(--H);
+  border-radius: 12px;
+  background: var(--card);
+  /* Small and static: nothing ever animates a blur. */
+  box-shadow:
+    0 0 0 1px rgb(16 17 20 / 0.09),
+    0 10px 18px -12px rgb(16 17 20 / 0.42);
+}
+
+.fan.lay-thumb .blade__neck {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--H) - 14px);
+  bottom: 0;
+  z-index: -1;
+  display: block;
+  width: var(--neck);
+  margin-left: calc(var(--neck) / -2);
+  border-radius: 0 0 999px 999px;
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px rgb(16 17 20 / 0.09),
+    0 8px 14px -10px rgb(16 17 20 / 0.32);
+}
+
+.fan.lay-thumb .blade__neck::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--eye);
+  height: var(--eye);
+  margin-left: calc(var(--eye) / -2);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 0 0 1px rgb(16 17 20 / 0.09);
+}
+
+.fan.lay-thumb .blade__hex {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  color: var(--ink-2);
+  font: 500 max(9px, calc(var(--L) * 0.02)) / 1 var(--font-mono);
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%);
+}
+
+.fan.lay-thumb .blade__chip {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: calc(var(--W) - 12px);
+  height: calc(var(--H) - 38px);
+  border-radius: 8px;
+  --k: inherit;
+}
+
+/* Mirrored for this side: the number sits at the end that shows on the lower blades. */
+.fan.lay-thumb .blade__band {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: calc(var(--H) - 32px);
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  height: 32px;
+}
+
+/* The number is how a cropped wedge is told apart: 13px. */
+.fan.lay-thumb .band__num {
+  color: var(--ink-2);
+  font: 700 13px/1 var(--font-display);
+  font-stretch: 125%;
+  letter-spacing: 0.04em;
+}
+
+.fan.lay-thumb .band__acc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-2);
+  font: 500 9.5px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  transition: opacity 0.2s ease;
+}
+
+.fan.lay-thumb .band__acc i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--acc);
+  box-shadow: inset 0 0 0 1px rgb(16 17 20 / 0.12);
+}
+
+/* Only the blade at the index shows its accent token: on the others it would peek out from under
+   the blade above as a stray "FF". */
+.fan.lay-thumb .blade-item:not(.is-cur) .band__acc {
+  opacity: 0;
+}
+
+/* A head the screen's edge cuts through shows its product's ground and shapes, not words sliced in
+   half. Its words come up as it swings fully on screen (script sets .is-crop per detent). */
+.fan.lay-thumb :is(.frag-ha__panel, .frag-ss__card > small, .frag-ss__card > b, .frag-ss__card > span, .frag-bl__card > small, .frag-bl__card > b, .frag-bl__ticks, .frag-bl__alert, .frag-ap__phone > b, .frag-ap__phone > span, .frag-cb__search, .frag-cb__score > span:first-child) {
+  transition: opacity 0.2s ease;
+}
+
+.fan.lay-thumb .is-crop :is(.frag-ha__panel, .frag-ss__card > small, .frag-ss__card > b, .frag-ss__card > span, .frag-bl__card > small, .frag-bl__card > b, .frag-bl__ticks, .frag-bl__alert, .frag-ap__phone > b, .frag-ap__phone > span, .frag-cb__search, .frag-cb__score > span:first-child) {
+  opacity: 0;
+}
+
+.fan.lay-thumb .blade__text,
+.fan.lay-thumb .deck__tips {
+  display: none;
+}
+
+/* Layers are promoted only while the deck moves. */
+.fan.lay-thumb.is-moving:not(.low-mem) :is(.blade-item, .deck) {
+  will-change: transform;
+}
+
+/* ---------- Fragments, mirrored: on this side each lower blade shows its left edge ---------- */
+.fan.lay-thumb .frag-ha__look {
+  inset: 0 0 0 -40%;
+}
+
+.fan.lay-thumb .frag-ha__panel {
+  left: 6px;
+  right: 34px;
+}
+
+.fan.lay-thumb .frag-ss__pin {
+  left: 36px;
+}
+
+.fan.lay-thumb .frag-ss__card {
+  left: 6px;
+}
+
+.fan.lay-thumb .frag-bl__card {
+  left: 6px;
+  right: 34px;
+}
+
+.fan.lay-thumb .frag-bl__alert {
+  left: 6px;
+  right: 30px;
+}
+
+.fan.lay-thumb .frag-ap__phone {
+  left: 12px;
+}
+
+/* The shadow is baked into the cursor's SVG: no filter under a moving transform. */
+.fan.lay-thumb .frag-ap__cursor {
+  left: 81px;
+  overflow: visible;
+  filter: none;
+}
+
+.fan.lay-thumb .frag-ap__cursor .sh {
+  display: inline;
+}
+
+.fan.lay-thumb .frag-cb__robot {
+  left: -18px;
+  right: auto;
+}
+
+.fan.lay-thumb .frag-cb__search,
+.fan.lay-thumb .frag-cb__score {
+  left: 6px;
+  right: 30px;
+}
+
+/* ---------- Tablets, upright ---------- */
+@media (min-width: 600px) {
+  .fan.lay-thumb .fan__bar {
+    top: 16px;
+  }
+
+  .fan.lay-thumb .fan__bar .in {
+    font-size: 14px;
+  }
+
+  .fan.lay-thumb .bar__links a {
+    padding: 13px 6px;
+    font-size: 15px;
+  }
+
+  .fan.lay-thumb .fan__kicker {
+    top: 88px;
+    font-size: 12px;
+  }
+
+  .fan.lay-thumb :is(.fan__sub, .fan__tout) {
+    top: 112px;
+  }
+
+  .fan.lay-thumb .fan__sub {
+    font-size: 18px;
+  }
+
+  .fan.lay-thumb .fan__tout {
+    max-width: 30em;
+  }
+
+  .fan.lay-thumb .tout__name {
+    font-size: 34px;
+  }
+
+  .fan.lay-thumb .tout__line {
+    font-size: 15px;
+  }
+
+  .fan.lay-thumb .role {
+    top: calc(var(--F) * 0.755 - 0.95em);
+    font-size: 20px;
+    white-space: nowrap;
+  }
+
+  .fan.lay-thumb .fan__cue {
+    font-size: 13.5px;
+  }
+}
+
+/* One product-true reaction per blade, mirrored with its fragment. */
+@media (prefers-reduced-motion: no-preference) {
+  .fan.lay-thumb .is-hot .frag-ha__look {
+    transform: translateX(26%);
+  }
+
+  .fan.lay-thumb .is-hot .frag-ap__cursor {
+    transform: translate(-48px, 44px);
+  }
+}
+
+/* Reduced motion on phones: the readout fades in, opacity only. */
+@media (prefers-reduced-motion: reduce) {
+  .fan.lay-thumb .tout__in.is-in {
+    animation: fan-fade 0.2s ease both;
+  }
+}
+
+/* The Thumb Riffle's size, stepped by height (JS sets it exactly: L = rivet - slot - 30). */
+@media (min-height: 690px) {
+  .fan.lay-thumb {
+    --k: 0.8;
+  }
+}
+
+@media (min-height: 760px) {
+  .fan.lay-thumb {
+    --k: 0.95;
+  }
+}
+
+@media (min-height: 820px) {
+  .fan.lay-thumb {
+    --k: 1.03;
+  }
+}
+
+@media (min-width: 600px) and (min-height: 900px) {
+  .fan.lay-thumb {
+    --k: 1.23;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Landscape lite (aspect 5/4 or wider, under 1024 x 600): the desktop
+   poster, unpinned. Finger parting stands in for hover.
+   ------------------------------------------------------------------ */
+@media screen and (max-width: 1023.98px) and (min-aspect-ratio: 5/4), screen and (max-height: 599.98px) and (min-aspect-ratio: 5/4) {
+  .fan {
+    --vb: 0px;
+    height: 100vh;
+    height: 100svh;
+    min-height: 0;
+  }
+
+  .fan .fan__stick {
+    position: relative;
+    display: block;
+    height: 100%;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .fan__lockup {
+    bottom: calc(var(--nb) + var(--vb));
+  }
+
+  .fan__cue {
+    bottom: calc(var(--nb) + var(--F) * 0.14 + var(--vb));
+  }
+
+  html.js .fan .cue--touch,
+  html.js .fan .cue--rest {
+    display: none;
+  }
+
+  html.js .fan .cue--part {
+    display: inline;
+  }
+
+  /* A mouse (a desktop window under 1024 wide): it parts the deck by hovering, and one click opens
+     a blade (finger parting is touch only). */
+  @media (hover: hover) and (pointer: fine) {
+    html.js .fan .cue--part {
+      display: none;
+    }
+
+    html.js .fan .cue--mouse {
+      display: inline;
+    }
+  }
+
+  /* The touch cue is longer than the desktop one; it wraps in the space past the last name. */
+  .fan__cue .in {
+    max-width: 12em;
+    align-items: flex-start;
+  }
+
+  .fan .deck {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .fan .blade-item .blade {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fan .blade__card {
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 1px 0 rgb(16 17 20 / 0.06),
+      0 12px 20px -12px rgb(16 17 20 / 0.36);
+  }
+
+}
+
+/* No rail under 1024px. */
+@media screen and (max-width: 1023.98px) and (min-aspect-ratio: 5/4) {
+  .fan {
+    --rail: 0px;
+  }
+}
+
+/* Short landscape phones: the name on one line along the foot, the role at its end, the fan above
+   its i, and the kicker, the slot and the cue in a column on the right. */
+@media screen and (min-aspect-ratio: 5/4) and (max-height: 559.98px) {
+  .fan {
+    --nb: 14px;
+    --F: min(calc((100vw - 2 * var(--gutter) - 150px) / 9.55), 20vh);
+    --colx: 62vw;
+    /* The whole fan turns 12deg back so its last head clears the one-line name. */
+    --off: -12deg;
+    --cx: calc(var(--gutter) + var(--F) * 2.49);
+    --cy: calc(100vh - var(--nb) - var(--F) * 0.77);
+    --L: clamp(150px, calc(var(--cy) - 30px), 300px);
+  }
+
+  /* Low enough that the switch's and the links' 44px targets start under the rail's top band. */
+  .fan__bar {
+    top: 12px;
+    left: var(--colx);
+  }
+
+  .fan__bar .in {
+    justify-content: flex-end;
+  }
+
+  .fan .bar__end {
+    gap: 12px;
+  }
+
+  .fan .bar__links {
+    gap: 4px;
+  }
+
+  .fan .bar__links a {
+    padding: 13px 5px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  .fan__lockup {
+    position: static;
+  }
+
+  .fan__kicker {
+    position: absolute;
+    top: 64px;
+    left: var(--colx);
+    right: calc(var(--rail) + var(--gutter));
+    z-index: 6;
+    max-width: none;
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-wrap: balance;
+  }
+
+  .fan__title {
+    position: absolute;
+    left: var(--gutter);
+    bottom: calc(var(--nb) + var(--vb));
+    z-index: 3;
+  }
+
+  .fan .name {
+    white-space: nowrap;
+  }
+
+  .fan .line {
+    display: inline-block;
+    vertical-align: baseline;
+  }
+
+  .fan .line + .line {
+    margin-left: 0.2em;
+  }
+
+  .fan .role {
+    left: calc(var(--nw, calc(var(--F) * 9.55)) + 18px);
+    top: auto;
+    bottom: calc(var(--F) * 0.2);
+    width: 8em;
+    font-size: 15px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .fan .deck__list {
+    transform: rotate(var(--off));
+  }
+
+  .fan__sub,
+  .fan__readout {
+    top: 106px;
+    left: var(--colx);
+    right: calc(var(--rail) + var(--gutter));
+    width: auto;
+    font-size: 14px;
+  }
+
+  .fan__readout {
+    pointer-events: none;
+  }
+
+  .fan .readout__vis {
+    opacity: 0;
+  }
+
+  .fan.is-reading .readout__vis {
+    opacity: 1;
+  }
+
+  .fan.is-reading .fan__sub .swap {
+    opacity: 0;
+  }
+
+  .fan .readout__name {
+    font-size: 21px;
+  }
+
+  .fan .readout__meta {
+    margin-top: 6px;
+  }
+
+  .fan .readout__line {
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  .fan__cue {
+    left: var(--colx);
+    right: calc(var(--rail) + var(--gutter));
+    bottom: calc(var(--nb) + var(--F) * 1.02 + var(--vb));
+  }
+
+  .fan .deck__tips {
+    display: none !important;
+  }
+
+  .fan .blade__hex {
+    top: 16px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   The lite hand-off strip: a CSS sticky stage 100lvh tall on a track of
+   100lvh + 100svh, scrubbed by one ScrollTrigger (no pin). Every length
+   is in svh or lvh, so the URL bar changes nothing. Nothing above the
+   stage may clip, scroll or transform.
+   ------------------------------------------------------------------ */
+.fan.is-strip {
+  height: 200vh;
+  height: calc(100lvh + 100svh);
+  min-height: 0;
+  overflow: visible;
+}
+
+.fan.is-strip .fan__stick {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100lvh;
+  overflow: hidden;
+  overflow: clip;
+  background: var(--paper);
+}
+
+@supports (height: 100lvh) {
+  .fan.is-strip .fan__stick {
+    --vb: calc(100lvh - 100svh);
+  }
+}
+
+/* ------------------------------------------------------------------
+   The room: chapter 01's ground opening out of blade 01's chip (a
+   viewport-sized mask that starts as the chip, its contents counter-
+   scaled), with the chapter's window flying in it. Full mode and the
+   lite strip; transforms only.
+   ------------------------------------------------------------------ */
+html.mode-full .fan__room,
+.fan.is-strip .fan__room {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 64px;
+  transform-origin: 0 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.fan__room-in {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+}
+
+/* Painted exactly as chapter 01's background layer paints (BgStack), so the hand-over is seamless. */
+.fan__ground {
+  position: absolute;
+  inset: 0;
+  background-color: var(--room-bg);
+  background-image: var(--room-art);
+  background-position: center;
+  background-size: cover;
+}
+
+.fan__win {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+/* The ghost of a thumb: shown once, during the first hint. */
+.fan.lay-thumb .fan__ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 7;
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  background: rgb(16 17 20 / 0.08);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(16 17 20 / 0.28),
+    0 0 0 6px rgb(16 17 20 / 0.04);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------
+   The load-in, played once as the choice lifts (enter()). Transforms
+   and opacity only, plus --open (an angle).
+   ------------------------------------------------------------------ */
+/* The paper's tooth comes up over the choice's clean paper rather than switching on in a frame. */
+.fan.is-entering .fan__grain::before {
+  animation: fan-fade 0.4s ease both;
+}
+
+.fan.is-entering .fan__bar .in {
+  animation: fan-fade 0.6s ease both;
+}
+
+.fan.is-entering .fan__kicker .in {
+  animation: fan-fade 0.5s 0.12s ease both;
+}
+
+.fan.is-entering .line__rise {
+  animation: fan-line-rise 0.95s var(--ease-out) both;
+  animation-delay: calc(80ms + var(--n) * 90ms);
+}
+
+.fan.is-entering .role .in {
+  animation: fan-rise 0.7s 0.6s var(--ease-out) both;
+}
+
+.fan.is-entering .fan__sub .in {
+  animation: fan-rise 0.7s 0.68s var(--ease-out) both;
+}
+
+.fan.is-entering .fan__cue .in {
+  animation: fan-fade 0.5s 1.3s ease both;
+}
+
+.fan.is-entering .readout {
+  animation: fan-fade 0.5s 1.4s ease both;
+}
+
+.fan.is-entering .rivet {
+  animation: fan-rivet-in 0.5s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* The choice screen's dot flies on into the rivet instead (motion.ts). */
+.fan.is-entering.is-arriving .rivet {
+  animation: none;
+}
+
+/* Every blade starts closed onto 01 and swings out to rest: a thumb pushing the fan open. (On
+   phones motion.ts opens the deck itself.) */
+.fan.is-entering:not(.lay-thumb) :is(.blade-item, .tip) {
+  animation: fan-deck-open 1.15s cubic-bezier(0.2, 1.12, 0.3, 1) both;
+  animation-delay: calc(0.62s + var(--i) * 28ms);
+}
+
+.fan.is-entering .blade-item .blade {
+  animation: fan-fade 0.22s both;
+  animation-delay: calc(0.62s + var(--i) * 28ms);
+}
+
+.fan.is-entering .tip .in {
+  animation: fan-fade 0.5s both;
+  animation-delay: calc(1.12s + var(--i) * 45ms);
+}
+
+@keyframes fan-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fan-line-rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes fan-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes fan-rivet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.4);
+  }
+
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes fan-deck-open {
+  from {
+    --open: calc(-10deg - var(--a));
+  }
+}
+
+@keyframes fan-readout-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fan-bl-mark {
+  from {
+    transform: translateX(42px);
+  }
+}
+
+@keyframes fan-bl-alert {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+}
+
+@keyframes fan-cb-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Reduced motion: fades only. The fan is simply there, at rest. */
+@media (prefers-reduced-motion: reduce) {
+  .fan.is-entering :is(.line__rise, .role .in, .fan__sub .in, .blade-item .blade, .rivet) {
+    animation-name: fan-fade;
+  }
+
+  .fan.is-entering :is(.blade-item, .tip) {
+    animation: none !important;
+  }
+
+  .fan .blade-item.is-hot .blade__card {
+    background: #fff;
+    box-shadow:
+      0 0 0 1px var(--ink),
+      0 18px 30px -16px rgb(16 17 20 / 0.34);
+  }
+
+  .fan .frag,
+  .fan .frag * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media print {
+  .fan__cue,
+  .fan__readout,
+  .fan__room,
+  .fan__ghost {
+    display: none !important;
+  }
+}
+
+/* A visual portfolio: the lines that narrate are kept for screen readers only, their room kept so
+   the composition does not move (important: the motion animates their visibility). */
+.fan :is(.fan__kicker, .fan__sub) {
+  visibility: hidden !important;
+}
+
+.fan :is(.readout__meta, .readout__line, .tout__meta, .tout__line, .blade__text .mt, .blade__text .ln) {
+  display: none;
+}

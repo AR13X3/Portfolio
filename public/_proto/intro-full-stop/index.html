@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full Stop · Intro prototype</title>
+<meta name="theme-color" content="#0b0907">
+<link rel="icon" href="data:,">
+<link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  // Mode is chosen before first paint, as the engine does: full (desktop, motion), lite (small or short), reduced.
+  (function () {
+    var h = document.documentElement;
+    h.classList.add('js');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var wide = window.innerWidth >= 1024 && window.innerHeight >= 600;
+    h.classList.add(reduce ? 'mode-reduced' : wide ? 'mode-full' : 'mode-lite');
+    try { if (localStorage.getItem('fs-still') === '1') h.classList.add('is-still'); } catch (e) {}
+  })();
+</script>
+<style>
+  /* ---------- Fonts: the site's own files, copied from node_modules ---------- */
+  @font-face { font-family: 'Archivo FS'; src: url(fonts/archivo-latin-wdth-normal.woff2) format('woff2'); font-weight: 100 900; font-stretch: 62% 125%; font-display: block; }
+  @font-face { font-family: 'Geist FS'; src: url(fonts/geist-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Geist Mono FS'; src: url(fonts/geist-mono-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Plus Jakarta Sans FS'; src: url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2'); font-weight: 200 800; font-display: swap; }
+  @font-face { font-family: 'Outfit FS'; src: url(fonts/outfit-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Inter FS'; src: url(fonts/inter-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Sora FS'; src: url(fonts/sora-latin-wght-normal.woff2) format('woff2'); font-weight: 100 800; font-display: swap; }
+  @font-face { font-family: 'Urbanist FS'; src: url(fonts/urbanist-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Montserrat FS'; src: url(fonts/montserrat-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Lato FS'; src: url(fonts/lato-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+
+  /* ---------- Tokens ---------- */
+  :root {
+    /* Shell (src/styles/global.css) */
+    --paper: #f3f4f5;
+    --ink: #101114;
+    --gutter: clamp(16px, 4vw, 56px);
+    --rail: 56px;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-display: 'Archivo FS', 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Geist FS', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Geist Mono FS', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+    /* The intro: one print of film. Warm black, cream type, one red full stop. */
+    --film: #0b0907;     /* bars, ground */
+    --base: #1a1612;     /* the reel's film base */
+    --cream: #f4ecdf;    /* every word on the picture: 16.9:1 on film */
+    --cream-2: #d8ccb9;  /* labels on black and film base only: 12.5:1 / 11.1:1 */
+    --core: #fff5e6;     /* the title's hot core */
+    --red: #ff3438;      /* the full stop and the playhead only */
+
+    --bar: clamp(96px, 12.5vh, 132px);
+    --S: 28vw;           /* the title's size; desktop below */
+    --k1: 0.285;         /* "Toufiq Ahmed" to "Joy." so both lines share a measure */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { background: var(--film); -webkit-text-size-adjust: 100%; overflow-x: clip; }
+  body { margin: 0; background: var(--film); color: var(--cream); font: 400 1rem/1.55 var(--font-sans); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+  h1, h2, p, ol, ul, figure { margin: 0; padding: 0; }
+  ol, ul { list-style: none; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  svg { display: block; }
+  .vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  :focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+
+  .skip { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 14px; background: var(--cream); color: var(--film); font-weight: 600; text-decoration: none; border-radius: 6px; }
+  .skip:focus { top: 12px; }
+
+  /* ================================================================
+     THE INTRO
+     Layout comes from media queries (not the mode class), so the
+     first frame never jumps when the motion engine starts.
+     ================================================================ */
+  .stage { position: relative; z-index: 1; }
+
+  .intro {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    overflow: hidden;
+    background: var(--film);
+    color: var(--cream);
+    isolation: isolate;
+  }
+
+  /* --- The picture: chapter 01's first frame as a dim, warm, monochrome negative --- */
+  .intro__gate, .intro__lamp, .intro__plate, .intro__tone, .intro__scrim, .intro__dim,
+  .intro__grain, .intro__mask, .intro__print { position: absolute; inset: 0; pointer-events: none; }
+
+  .intro__gate { z-index: 0; }
+  .intro__plate {
+    overflow: hidden;
+    /* Without the clone (lite, reduced, no JS) the plate is CareVisor's ground alone. */
+    background:
+      linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)),
+      url(../../shots/carevisor/prism.webp) center / cover,
+      #e9f0fa;
+    /* A colour negative, then the colour taken out and a little warmth put back: B&W stock on a warm base. */
+    filter: invert(1) grayscale(1) sepia(0.42) blur(0.6px);
+    will-change: transform;
+  }
+  .intro__tone { background: #14110d; opacity: 0.88; }
+  /* Quiet the negative under the type, so the ghost is texture there and image elsewhere. */
+  .intro__scrim {
+    background:
+      radial-gradient(54% 44% at 33% 64%, rgb(11 9 7 / 0.66), rgb(11 9 7 / 0.3) 55%, rgb(11 9 7 / 0) 82%),
+      radial-gradient(30% 34% at 84% 76%, rgb(11 9 7 / 0.5), rgb(11 9 7 / 0) 70%);
+  }
+  .intro__dim { background: #000; opacity: 0; }
+
+  /* --- Grain: above the picture and the bars, under every word --- */
+  .intro__grain { z-index: 2; overflow: hidden; }
+  .intro__grain i {
+    position: absolute;
+    inset: -100px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .88 2.2 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 220px 220px;
+    opacity: 0.26;
+    will-change: transform;
+  }
+
+  /* --- Letterbox bars (desktop) / open-matte scrims (lite) --- */
+  .intro__mask { z-index: 1; }
+  .bar { position: absolute; left: 0; right: 0; height: 50vh; background: #060504; display: none; }
+  .bar--top { top: 0; transform: translateY(calc(var(--bar) - 50vh)); }
+  .bar--bottom { bottom: 0; transform: translateY(calc(50vh - var(--bar))); }
+  .matte { position: absolute; left: 0; right: 0; }
+  .matte--top { top: 0; height: 150px; background: linear-gradient(rgb(11 9 7 / 0.78), rgb(11 9 7 / 0)); }
+  .matte--bottom { bottom: 0; height: 240px; background: linear-gradient(rgb(11 9 7 / 0), rgb(11 9 7 / 0.8) 55%); }
+
+  /* --- Top bar --- */
+  .intro__top { position: relative; z-index: 3; }
+  .top-in {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 24px;
+    padding: 14px var(--gutter) 0;
+  }
+  .kicker {
+    color: var(--cream-2);
+    font: 500 11px/1.4 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  .top-right { display: flex; align-items: center; gap: 4px 22px; margin-left: auto; }
+  .links { display: flex; gap: 4px 20px; }
+  .links a {
+    display: inline-block;
+    padding: 10px 0;
+    color: var(--cream);
+    font: 500 14px/1 var(--font-sans);
+    text-decoration: none;
+    text-underline-offset: 0.3em;
+  }
+  .links a:hover { text-decoration: underline; }
+
+  /* The one control for every looping motion here (WCAG 2.2.2). */
+  .still {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 12px 0 10px;
+    border: 1px solid rgb(244 236 223 / 0.3);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--cream-2);
+    font: 500 12px/1 var(--font-sans);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+  .still:hover { color: var(--cream); border-color: rgb(244 236 223 / 0.6); }
+  .still svg { width: 10px; height: 10px; fill: currentColor; }
+  .still .i-play, .is-still .still .i-pause { display: none; }
+  .is-still .still .i-play { display: block; }
+  .still .t-play, .is-still .still .t-pause { display: none; }
+  .is-still .still .t-play { display: inline; }
+  .mode-reduced .still, html:not(.js) .still { display: none; }
+
+  /* --- The title card --- */
+  .intro__card {
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 28px var(--gutter) 28px;
+  }
+  .title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: end;
+    width: 100%;
+    font-weight: inherit;
+  }
+  .in { display: block; }
+  .title__first {
+    grid-row: 1;
+    font: 760 calc(var(--S) * var(--k1)) / 0.9 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: -0.012em;
+    text-transform: uppercase;
+    color: var(--cream);
+    white-space: nowrap;
+    text-shadow: 0 0 1px rgb(255 246 232 / 0.6), 0 0 12px rgb(255 128 76 / 0.22), 0 0 40px rgb(255 140 90 / 0.1);
+  }
+  .title__joy {
+    position: relative;
+    grid-row: 2;
+    margin-top: 0.07em;
+    font: 820 var(--S) / 0.8 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    color: var(--core);
+    white-space: nowrap;
+    isolation: isolate;
+  }
+  .joy-text { display: inline; }
+  /* Halation: the glow film picks up around a bright highlight. Warm, never Halation's red. */
+  .joy-halo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    color: transparent;
+    text-shadow:
+      0 0 2px rgb(255 244 228 / 0.85),
+      0 0 14px rgb(255 120 70 / 0.42),
+      0 0 38px rgb(255 120 60 / 0.2),
+      0 0 90px rgb(255 150 90 / 0.12);
+    pointer-events: none;
+  }
+
+  /* The full stop: Archivo's square period, the only red on the page. */
+  .stop { display: inline-block; position: relative; color: var(--red); }
+  .stop-in { display: inline-block; position: relative; transform-origin: 30% 82%; }
+  .stop-anchor { display: inline-block; position: relative; width: 0; height: 0; vertical-align: baseline; }
+  .stop-anchor > i {
+    position: absolute;
+    left: var(--ink-l, 0.0625em);
+    bottom: var(--ink-b, 0em);
+    width: var(--ink-w, 0.2345em);
+    height: var(--ink-h, 0.1875em);
+    pointer-events: none;
+  }
+  .stop-ember {
+    background: var(--red);
+    box-shadow: 0 0 0.02em #ff3438, 0 0 0.07em rgb(255 52 56 / 0.8), 0 0 0.2em rgb(255 110 50 / 0.42);
+    will-change: transform, opacity;
+  }
+  .stop-amber {
+    background: #ff9a3c;
+    box-shadow: 0 0 0.03em #ffb45e, 0 0 0.09em rgb(255 150 60 / 0.85), 0 0 0.22em rgb(255 100 40 / 0.55);
+    opacity: 0;
+  }
+  .stop-hot {
+    background: #fff6ea;
+    box-shadow: 0 0 0.03em #fffaf2, 0 0 0.09em rgb(255 214 160 / 0.9), 0 0 0.22em rgb(255 120 60 / 0.6);
+    opacity: 0;
+  }
+  .stop-anchor > .stop-bloom {
+    left: calc(var(--ink-l, 0.0625em) + var(--ink-w, 0.2345em) / 2 - 0.5em);
+    bottom: calc(var(--ink-b, 0em) + var(--ink-h, 0.1875em) / 2 - 0.5em);
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(255 236 210 / 0.9), rgb(255 90 60 / 0.55) 26%, rgb(255 110 40 / 0.18) 55%, rgb(255 120 50 / 0) 100%);
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  .title__aside { grid-row: 3; display: grid; gap: 14px; max-width: 30rem; margin-top: 28px; }
+  .title__role {
+    font: 600 12.5px/1.45 var(--font-display);
+    font-stretch: 125%;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cream);
+    text-wrap: balance;
+  }
+  .title__log {
+    max-width: 18.8em;
+    font: 400 17px/25px var(--font-sans);
+    color: var(--cream);
+    text-wrap: pretty;
+  }
+
+  /* --- The reel: seven chapters as frames on a strip of film --- */
+  .intro__reel { position: relative; z-index: 3; }
+  .strip { position: relative; padding: 0 0 18px; }
+  .reel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 var(--gutter) 12px;
+    color: var(--cream-2);
+    font: 500 10.5px/16px var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .reel-lead { position: relative; }
+  .lead-hover { display: none; }
+  .frames-wrap {
+    position: relative;
+    background-color: var(--base);
+    background-image:
+      repeating-linear-gradient(90deg, #070605 0 8px, transparent 8px 20px),
+      repeating-linear-gradient(90deg, #070605 0 8px, transparent 8px 20px);
+    background-size: 100% 6px, 100% 6px;
+    background-position: 6px 5px, 6px calc(100% - 5px);
+    background-repeat: repeat-x;
+  }
+  .frames {
+    --fh: 82px;
+    --fw: 112px;
+    --fg: 10px;
+    position: relative;
+    display: flex;
+    gap: var(--fg);
+    padding: 17px var(--gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 var(--gutter);
+    scrollbar-width: none;
+  }
+  .frames::-webkit-scrollbar { display: none; }
+  .frames li { flex: none; scroll-snap-align: start; }
+  .frame {
+    position: relative;
+    display: block;
+    width: var(--fw);
+    height: var(--fh);
+    color: var(--panel-fg);
+    text-decoration: none;
+    border-radius: 2px;
+  }
+  .frame-in {
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+    border-radius: inherit;
+    background-color: var(--panel-bg);
+    background-image: var(--panel-art);
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.35s var(--ease-out);
+  }
+  /* Unlit frames sit a touch under the projector; hover and focus light them. */
+  .frame-in::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(11 9 7 / 0.22);
+    transition: opacity 0.35s var(--ease-out);
+  }
+  .frame:hover .frame-in, .frame:focus-visible .frame-in { transform: translateY(-3px); }
+  .frame:hover .frame-in::after, .frame:focus-visible .frame-in::after { opacity: 0; }
+  .frame-num {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    z-index: 1;
+    padding: 2px 4px 1px;
+    border-radius: 2px;
+    background: var(--base);
+    color: var(--cream-2);
+    font: 500 9.5px/1.2 var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+  .frame-name {
+    position: absolute;
+    left: 8px;
+    right: 6px;
+    bottom: 6px;
+    z-index: 1;
+    font: 600 12px/1.15 var(--panel-font);
+    letter-spacing: -0.01em;
+    color: var(--panel-fg);
+  }
+  .playhead {
+    position: absolute;
+    left: calc(var(--gutter) - 6px);
+    top: -6px;
+    bottom: -6px;
+    width: 2px;
+    background: var(--red);
+    box-shadow: 0 0 10px rgb(255 52 56 / 0.85);
+    transform: translateX(calc(var(--ph, 0) * (var(--fw) + var(--fg))));
+    transition: transform 0.35s var(--ease-out);
+    pointer-events: none;
+    display: none;
+  }
+  .cue { white-space: nowrap; }
+  .cue-arrow { display: inline-block; }
+
+  /* --- Print (lite) and the finished burn (reduced, no JS) --- */
+  .intro__print { z-index: 4; display: none; background: #e9f0fa; }
+  .intro__canvas { position: absolute; left: 0; top: 0; z-index: 5; display: none; pointer-events: none; }
+  /* Reduced motion and no JS: the burn is shown finished, as the edge chapter 01 begins on. */
+  html:not(.mode-full):not(.mode-lite) .cv-frame::before {
+    content: '';
+    display: block;
+    height: 72px;
+    background: linear-gradient(to bottom,
+      #0b0907 0,
+      #1d0e08 20%,
+      #6e1a12 38%,
+      #ff3438 50%,
+      #ffb070 56%,
+      #fff6ea 60%,
+      rgb(255 248 238 / 0.55) 72%,
+      rgb(255 248 238 / 0) 100%);
+  }
+
+
+  /* ================================================================
+     DESKTOP LAYOUT: 2.1:1 letterbox, credit lockup bottom-left,
+     logline in its own column, reel in the lower bar.
+     ================================================================ */
+  @media (min-width: 1024px) and (min-height: 600px) {
+    :root { --S: min(21vw, 33vh); }
+    .intro { display: block; height: 100vh; min-height: 0; }
+    .bar { display: block; }
+    .matte { display: none; }
+
+    .intro__top { position: absolute; inset: 0 0 auto; height: var(--bar); }
+    .top-in { height: 100%; flex-wrap: nowrap; padding: 0 calc(var(--rail) + var(--gutter)) 0 var(--gutter); }
+
+    .intro__card {
+      position: absolute;
+      top: var(--bar);
+      bottom: var(--bar);
+      left: var(--gutter);
+      right: calc(var(--rail) + var(--gutter));
+      align-items: flex-end;
+      padding: 0 0 clamp(30px, 7vh, 80px);
+    }
+    .title {
+      grid-template-columns: max-content minmax(0, 1fr);
+      column-gap: clamp(40px, 6vw, 110px);
+    }
+    .title__first, .title__joy { grid-column: 1; }
+    .title__aside {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: end;
+      justify-self: end;
+      width: min(100%, 22rem);
+      margin: 0;
+      padding-bottom: calc(var(--S) * 0.067 + 2px);
+    }
+
+    .intro__reel { position: absolute; left: 0; right: 0; bottom: 0; height: var(--bar); }
+    .strip { height: 100%; padding: 0; display: flex; align-items: center; }
+    .reel-head { display: contents; }
+    .frames-wrap { position: absolute; inset: 0; }
+    .frames {
+      --fh: calc(var(--bar) - 36px);
+      --fw: calc(var(--fh) * 1.4);
+      position: absolute;
+      left: calc(var(--gutter) + 196px);
+      top: 0;
+      bottom: 0;
+      align-items: center;
+      padding: 0;
+      overflow: visible;
+    }
+    .playhead { display: block; left: -6px; top: 6px; bottom: 6px; }
+    .reel-lead {
+      position: absolute;
+      left: var(--gutter);
+      top: 50%;
+      width: 176px;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+    .lead-hover { position: absolute; left: 0; top: 50%; width: 100%; transform: translateY(-50%); display: block; opacity: 0; }
+    .lead-hover b { display: block; color: var(--cream); font-weight: 500; }
+    .lead-hover span { display: block; margin-top: 4px; font: 400 12px/15px var(--font-sans); letter-spacing: 0; text-transform: none; }
+    .reel-lead.is-reading .lead-default { opacity: 0; }
+    .reel-lead.is-reading .lead-hover { opacity: 1; }
+    .cue {
+      position: absolute;
+      right: calc(var(--rail) + var(--gutter));
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      color: var(--cream);
+    }
+
+  }
+
+  /* Narrow desktops (1024 to 1279): the reel tightens so the cue keeps its own room. */
+  @media (min-width: 1024px) and (max-width: 1279.98px) and (min-height: 600px) {
+    .frames { --fw: calc(var(--fh) * 1.28); left: calc(var(--gutter) + 132px); }
+    .reel-lead { width: 120px; }
+    .lead-hover span { font-size: 11px; line-height: 14px; }
+    .cue-long { display: none; }
+    .frame-name { font-size: 11px; }
+    .title__role { letter-spacing: 0.14em; }
+    .title__log { font-size: 16px; line-height: 23px; }
+  }
+
+  /* ================================================================
+     LOAD SEQUENCE (~2.2 s). CSS keyframes on wrappers only; GSAP owns
+     the elements it animates. Everything ends visible (fill backwards).
+     ================================================================ */
+  @media (prefers-reduced-motion: no-preference) {
+    .bar--top { animation: shutter-top 0.7s 0.1s cubic-bezier(0.7, 0, 0.2, 1) backwards; }
+    .bar--bottom { animation: shutter-bottom 0.7s 0.1s cubic-bezier(0.7, 0, 0.2, 1) backwards; }
+    .intro__lamp { animation: lamp 1s 0.15s cubic-bezier(0.3, 0, 0.2, 1) backwards; }
+    /* The negative develops after the name has landed, like a print in the tray. */
+    .intro__tone { animation: develop 1.3s 1.55s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+    .top-in { animation: fade 0.5s 0.62s ease-out backwards; }
+    .title__first .in { animation: rise 0.6s 0.7s var(--ease-out) backwards; }
+    .joy-halo { animation: fade 0.5s 0.82s ease-out backwards, halo-breathe 4.2s 1.4s ease-in-out infinite alternate; }
+    .joy-text { animation: fade 0.5s 0.95s ease-out backwards; }
+    .stop-in { animation: stop-cut 0.24s 1.45s cubic-bezier(0.2, 1.6, 0.4, 1) backwards; }
+    .stop-ember { animation: ember 1.7s 1.7s ease-in-out infinite alternate; }
+    .title__role .in { animation: rise 0.55s 1.3s var(--ease-out) backwards; }
+    .title__log .in { animation: rise 0.55s 1.42s var(--ease-out) backwards; }
+    .reel-lead, .frames-wrap { animation: fade 0.5s 1.05s ease-out backwards; }
+    .rail ol { animation: fade 0.5s 0.62s ease-out backwards; }
+    .frames li { animation: feed 0.6s calc(1.2s + var(--n) * 0.05s) var(--ease-out) backwards; }
+    .playhead-in { animation: fade 0.3s 1.9s ease-out backwards; }
+    .cue-in { display: inline-block; animation: fade 0.4s 1.95s ease-out backwards; }
+    .cue-arrow { animation: nudge 2.4s 2.4s ease-in-out infinite; }
+    .intro__grain i { animation: grain 0.667s steps(1) infinite; }
+
+    /* Lite: the same story, 1.4 s. */
+    .mode-lite .intro__lamp { animation-duration: 0.7s; }
+    .mode-lite .intro__tone { animation-delay: 1s; }
+    .mode-lite .title__first .in { animation-delay: 0.4s; }
+    .mode-lite .joy-halo { animation-delay: 0.5s, 1s; }
+    .mode-lite .joy-text { animation-delay: 0.58s; }
+    .mode-lite .stop-in { animation-delay: 0.95s; }
+    .mode-lite .title__role .in { animation-delay: 0.85s; }
+    .mode-lite .title__log .in { animation-delay: 0.92s; }
+    .mode-lite .frames li { animation-delay: calc(0.9s + var(--n) * 0.04s); }
+  }
+
+  /* Pause control and off-screen: every looping motion stops. */
+  .is-still .intro__grain i, .is-still .joy-halo, .is-still .stop-ember, .is-still .cue-arrow,
+  .intro.is-off .intro__grain i, .intro.is-off .joy-halo, .intro.is-off .stop-ember, .intro.is-off .cue-arrow {
+    animation-play-state: paused;
+  }
+
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes feed { from { opacity: 0; transform: translateX(40px); } }
+  @keyframes shutter-top { from { transform: translateY(0); } }
+  @keyframes shutter-bottom { from { transform: translateY(0); } }
+  @keyframes lamp { 0% { opacity: 0; } 45% { opacity: 0.6; } 100% { opacity: 1; } }
+  @keyframes develop { from { opacity: 0.985; } }
+  @keyframes stop-cut { 0% { opacity: 0; transform: scale(1.3); } 25% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes ember { from { opacity: 0.8; transform: scale(1); } to { opacity: 1; transform: scale(1.035); } }
+  @keyframes halo-breathe { from { opacity: 0.82; } to { opacity: 1; } }
+  @keyframes nudge { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(3px); } }
+  @keyframes grain {
+    0% { transform: translate(0, 0); }
+    12.5% { transform: translate(-61px, 37px); }
+    25% { transform: translate(-93px, -84px); }
+    37.5% { transform: translate(27px, -93px); }
+    50% { transform: translate(-71px, 52px); }
+    62.5% { transform: translate(88px, -27px); }
+    75% { transform: translate(-36px, 81px); }
+    87.5% { transform: translate(-82px, -9px); }
+  }
+
+  /* Hovering the name heats the dot a little: a hint that it is hot. */
+  @media (hover: hover) {
+    .stop-ember { transition: filter 0s; }
+    .title:hover .stop-anchor { transform: scale(1.12); }
+    .stop-anchor { transition: transform 0.3s var(--ease-out); }
+  }
+
+  /* Reduced motion: fades only, nothing loops, the burn is shown finished. */
+  @media (prefers-reduced-motion: reduce) {
+    .top-in, .title__first .in, .joy-text, .stop-in, .title__role .in, .title__log .in, .reel-lead, .frames-wrap, .frames li, .cue-in {
+      animation: fade 0.5s calc(var(--rd, 0) * 0.08s) ease-out backwards;
+    }
+    .title__first .in { --rd: 1; }
+    .joy-text, .stop-in { --rd: 2; }
+    .title__role .in, .title__log .in { --rd: 3; }
+    .reel-lead, .frames-wrap, .frames li, .cue-in { --rd: 4; }
+    .playhead, .frame-in, .frame-in::after { transition: none; }
+  }
+
+  /* ================================================================
+     CAREVISOR: chapter 01's first frame (src/chapters/carevisor).
+     The default is its document layout; html.mode-full pins it as
+     one viewport under the intro, as the chapter does.
+     The same frame is cloned into the intro as the negative.
+     ================================================================ */
+  .cv { position: relative; z-index: 2; color: #000918; }
+  .cv-frame {
+    --ink: #000918;
+    --slate: #465062;
+    --blue: #0052cc;
+    --rule: #e4e6e4;
+    --font-cv-display: 'Plus Jakarta Sans FS', 'Outfit FS', ui-sans-serif, system-ui, sans-serif;
+    --font-cv: 'Outfit FS', ui-sans-serif, system-ui, sans-serif;
+    --font-cv-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    --cv-gutter: clamp(16px, 4vw, 48px);
+    position: relative;
+    color: var(--ink);
+    font: 400 16px/1.6 var(--font-cv);
+    background:
+      linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)),
+      url(../../shots/carevisor/prism.webp) center / cover,
+      #e9f0fa;
+    padding-bottom: 64px;
+  }
+  .cv-frame :focus-visible { outline-color: var(--blue); }
+  .cv-blue { color: var(--blue); }
+
+  .cv-nav { display: flex; align-items: center; gap: 20px; padding: 16px var(--cv-gutter); }
+  .cv-brand { display: flex; align-items: center; gap: 10px; }
+  .cv-mark { width: 32px; height: 32px; }
+  .cv-brand__name { font: 700 18px/1 var(--font-cv); letter-spacing: -0.3px; }
+  .cv-brand__name span { color: var(--blue); }
+  .cv-brand__sep { width: 1px; height: 24px; margin: 0 4px; background: rgb(0 9 24 / 0.14); }
+  .cv-brand__tag { color: var(--slate); font-size: 11px; font-weight: 500; }
+  .cv-nav__meta { display: flex; flex-wrap: wrap; gap: 2px; margin-left: auto; }
+  .cv-nav__meta span { padding: 9px 14px; border-radius: 10px; color: #424242; font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
+  .cv-nav__meta span:first-child { color: var(--blue); font: 700 13px/1.4 var(--font-cv-mono); }
+
+  .cv-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; padding: 0 24px; border-radius: 999px;
+    font: 600 14.5px/1 var(--font-cv); text-decoration: none; white-space: nowrap;
+  }
+  .cv-btn--solid { background: var(--blue); color: #fff; box-shadow: 0 10px 26px rgb(0 82 204 / 0.35); }
+  .cv-btn--sm { min-height: 44px; padding: 0 22px; font-size: 14px; font-weight: 700; }
+  .cv-btn svg { width: 16px; height: 16px; }
+
+  .cv-hero { max-width: 1120px; margin: 0 auto; padding: clamp(48px, 10vh, 112px) var(--cv-gutter) 40px; text-align: center; }
+  .cv-hero__meta { display: none; margin-bottom: 16px; color: var(--blue); font: 700 12px/1.5 var(--font-cv-mono); letter-spacing: 0.04em; }
+  .cv-hero__title { font: 800 clamp(36px, 4.2vw, 60px) / 1.06 var(--font-cv-display); letter-spacing: -0.03em; text-wrap: balance; outline: none; }
+  .cv-br { display: none; }
+  @media (min-width: 1024px) { .cv-br { display: inline; } }
+  .cv-hero__lede { max-width: 60ch; margin: 20px auto 0; color: var(--slate); font-size: clamp(15.5px, 1.15vw, 17px); font-weight: 500; line-height: 1.6; }
+  .cv-hero__role { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 4px 12px; margin-top: 14px; font-weight: 600; }
+  .cv-hero__role span { color: var(--blue); font: 700 12px/1 var(--font-cv-mono); letter-spacing: 0.12em; text-transform: uppercase; }
+  .cv-hero__ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }
+  @media (max-width: 860px) {
+    .cv-nav__meta, .cv-brand__sep, .cv-brand__tag { display: none; }
+    .cv-nav .cv-btn { margin-left: auto; }
+    .cv-hero__meta { display: block; }
+  }
+
+  .cv-product { max-width: 1072px; margin: 0 auto; padding: 0 var(--cv-gutter); }
+  .cv-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; }
+  @media (min-width: 1024px) { .cv-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  .cv-tab { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; text-align: center; }
+  .cv-tab__tile { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--tile); color: var(--tile-ink); }
+  .cv-tab__tile svg { width: 18px; height: 18px; }
+  .mode-full .cv-tab:not(.is-on) .cv-tab__tile { opacity: 0.5; }
+  .cv-tab__caption { color: var(--slate); font: 500 11px/1.25 'Inter FS', ui-sans-serif, sans-serif; }
+  .cv-tab__title { font: 700 12.5px/1.25 'Inter FS', ui-sans-serif, sans-serif; }
+  .cv-tab__track { display: block; width: 100%; max-width: 120px; height: 3px; margin-top: 4px; overflow: hidden; border-radius: 999px; background: var(--rule); }
+  .cv-tab__track i { display: block; height: 100%; border-radius: inherit; background: var(--blue); transform: scaleX(0); transform-origin: 0 50%; }
+  .cv-tab.is-on .cv-tab__track i { transform: none; }
+  .mode-full .cv-tab.is-on .cv-tab__track i { transform: scaleX(0); }
+  .cv-demo-wrap { margin-top: 40px; }
+
+  /* The hero demo window (Demo.astro), in design pixels of a 1024px stage. */
+  .cvd { position: relative; width: 100%; margin: 0; container-type: inline-size; }
+  .cvd-glow {
+    position: absolute; inset: calc(-24 * var(--d, 1px)); border-radius: calc(40 * var(--d, 1px));
+    background: linear-gradient(to top right, rgb(0 82 204 / 0.15), rgb(74 143 232 / 0.1), rgb(153 194 255 / 0.15));
+    filter: blur(24px); --d: calc(100cqw / 1024);
+  }
+  .cvd-app {
+    --d: calc(100cqw / 1024);
+    --grey: #657084; --skel: #e8ecf3; --edge: #eef0f4; --slate-d: #5a6472;
+    position: relative; overflow: hidden; border-radius: calc(24 * var(--d)); border: 1px solid var(--rule);
+    background: #fff; box-shadow: 0 calc(18 * var(--d)) calc(60 * var(--d)) rgb(0 9 24 / 0.12);
+    color: var(--ink); font: 500 calc(12 * var(--d)) / 1.35 'Inter FS', ui-sans-serif, system-ui, sans-serif; text-align: left;
+  }
+  .cvd-app svg { flex: none; width: auto; height: 1.15em; }
+  .cvd-chrome { display: flex; align-items: center; gap: calc(8 * var(--d)); padding: calc(10 * var(--d)) calc(16 * var(--d)); border-bottom: 1px solid var(--edge); background: #fafbfc; }
+  .cvd-light { width: calc(10 * var(--d)); height: calc(10 * var(--d)); border-radius: 50%; background: var(--c); }
+  .cvd-url { display: flex; align-items: center; justify-content: center; width: calc(224 * var(--d)); height: calc(24 * var(--d)); margin: 0 auto; border-radius: calc(6 * var(--d)); background: #fff; box-shadow: 0 0 0 1px var(--edge); color: var(--grey); font-size: calc(10.5 * var(--d)); }
+  .cvd-spacer { width: calc(54 * var(--d)); }
+  .cvd-body { display: flex; height: calc(440 * var(--d)); }
+  .cvd-side { display: flex; flex-direction: column; flex: none; width: calc(192 * var(--d)); padding: calc(12 * var(--d)); border-right: 1px solid var(--edge); background: #fafbfc; }
+  .cvd-org { display: flex; align-items: center; gap: calc(8 * var(--d)); padding: 0 calc(6 * var(--d)) calc(12 * var(--d)); }
+  .cvd-org__icon { display: grid; place-items: center; width: calc(28 * var(--d)); height: calc(28 * var(--d)); border-radius: calc(8 * var(--d)); background: linear-gradient(to bottom right, #0052cc, #4a8fe8); color: #fff; font-size: calc(13 * var(--d)); }
+  .cvd-org__name, .cvd-org__who { display: block; }
+  .cvd-org__name { font-size: calc(12 * var(--d)); font-weight: 700; line-height: 1.2; }
+  .cvd-org__who { color: var(--grey); font-size: calc(9.5 * var(--d)); }
+  .cvd-nav { position: relative; display: grid; gap: calc(2 * var(--d)); }
+  .cvd-nav__pill { position: absolute; left: 0; right: 0; top: 0; height: calc(33 * var(--d)); border-radius: calc(8 * var(--d)); background: #e8f0fe; transform: translateY(calc(35 * var(--d))); }
+  .cvd-nav__item { position: relative; display: flex; align-items: center; gap: calc(10 * var(--d)); height: calc(33 * var(--d)); padding: 0 calc(10 * var(--d)); color: var(--slate-d); font-size: calc(11.5 * var(--d)); font-weight: 600; }
+  .cvd-nav__item.is-on { color: var(--blue); }
+  .cvd-nav__item svg { height: calc(14 * var(--d)); }
+  .cvd-stage { position: relative; flex: 1; min-width: 0; overflow: hidden; padding: calc(20 * var(--d)); background: #fff; }
+  .cvd-inner { position: relative; height: 100%; }
+  .cvd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(12 * var(--d)); }
+  .cvd-h { display: block; font-size: calc(16 * var(--d)); font-weight: 700; line-height: 1.3; }
+  .cvd-skel { display: block; width: calc(var(--w) * var(--d)); height: calc(8 * var(--d)); border-radius: 999px; background: var(--skel); }
+  .cvd-skel--sub { margin-top: calc(8 * var(--d)); }
+  .cvd-skel--thin { height: calc(6 * var(--d)); }
+  .cvd-stack { display: grid; gap: calc(6 * var(--d)); }
+  .cvd-btn { display: inline-flex; align-items: center; gap: calc(6 * var(--d)); height: calc(32 * var(--d)); padding: 0 calc(12 * var(--d)); border-radius: calc(8 * var(--d)); background: var(--blue); color: #fff; font-size: calc(11.5 * var(--d)); font-weight: 600; white-space: nowrap; }
+  .cvd-rows { display: grid; gap: calc(12 * var(--d)); margin-top: calc(20 * var(--d)); padding-right: 46%; }
+  .cvd-row { display: flex; align-items: center; gap: calc(12 * var(--d)); padding: calc(12 * var(--d)); border: 1px solid var(--edge); border-radius: calc(12 * var(--d)); background: #fff; }
+  .cvd-ava { display: grid; place-items: center; flex: none; width: calc(28 * var(--d)); height: calc(28 * var(--d)); border-radius: 50%; background: #e8f0fe; color: var(--blue); font-size: calc(9.5 * var(--d)); font-weight: 700; }
+  .cvd-card { border: 1px solid var(--rule); border-radius: calc(16 * var(--d)); background: #fff; box-shadow: 0 calc(16 * var(--d)) calc(40 * var(--d)) rgb(0 9 24 / 0.1); }
+  .cvd-card__title { display: block; font-size: calc(12.5 * var(--d)); font-weight: 700; }
+  .cvd-label { display: block; margin-top: calc(10 * var(--d)); color: var(--grey); font-size: calc(9.5 * var(--d)); font-weight: 600; letter-spacing: 0.025em; text-transform: uppercase; }
+  .cvd-field { display: flex; align-items: center; height: calc(32 * var(--d)); margin-top: calc(4 * var(--d)); padding: 0 calc(10 * var(--d)); border: 1px solid var(--rule); border-radius: calc(8 * var(--d)); background: #fafbfc; font-size: calc(12 * var(--d)); }
+  .cvd-form { position: absolute; right: 0; top: calc(48 * var(--d)); width: 43%; padding: calc(16 * var(--d)); }
+  .cvd-tags { display: flex; flex-wrap: wrap; gap: calc(8 * var(--d)); margin-top: calc(10 * var(--d)); }
+  .cvd-tag { padding: calc(4 * var(--d)) calc(8 * var(--d)); border-radius: calc(8 * var(--d)); background: #f0f4fb; color: var(--blue); font-size: calc(10 * var(--d)); font-weight: 600; }
+  .cvd-chip { display: inline-flex; align-items: center; gap: calc(4 * var(--d)); margin-top: calc(12 * var(--d)); padding: calc(4 * var(--d)) calc(10 * var(--d)); border: 1px solid #bfe6cc; border-radius: 999px; background: #e6f6ea; color: #1d7d45; font-size: calc(10.5 * var(--d)); font-weight: 600; white-space: nowrap; }
+  .cvd-tip { position: absolute; z-index: 3; left: 4%; top: 62%; width: calc(225 * var(--d)); padding: calc(14 * var(--d)); border-radius: calc(16 * var(--d)); background: var(--blue); color: #fff; box-shadow: 0 calc(14 * var(--d)) calc(36 * var(--d)) rgb(0 82 204 / 0.38); }
+  .cvd-tip__who { display: flex; align-items: center; gap: calc(8 * var(--d)); color: rgb(255 255 255 / 0.88); font-size: calc(11 * var(--d)); font-weight: 600; }
+  .cvd-tip__ini { display: grid; place-items: center; width: calc(24 * var(--d)); height: calc(24 * var(--d)); border-radius: 50%; background: rgb(255 255 255 / 0.25); color: #fff; font-size: calc(9.5 * var(--d)); font-weight: 700; }
+  .cvd-tip__text { display: block; margin-top: calc(6 * var(--d)); font-size: calc(12.5 * var(--d)); line-height: 1.375; }
+
+  /* --- Full mode: one pinned viewport, as the chapter lays it out --- */
+  .mode-full .stage { height: 100vh; }
+  .mode-full .intro { position: absolute; inset: 0; }
+  .mode-full .cv { position: absolute; inset: 0; z-index: 4; clip-path: polygon(0 0, 0 0, 0 0); }
+  .mode-full .cv-frame, .mode-full .intro__plate .cv-frame { position: absolute; inset: 0; padding: 0; }
+  .mode-full .cv > .cv-frame { will-change: transform; }
+  .mode-full .cv-nav { position: absolute; inset: 0 0 auto; padding-right: calc(var(--rail) + var(--cv-gutter)); }
+  .mode-full .cv-hero { position: absolute; left: 0; right: var(--rail); top: clamp(84px, 13vh, 132px); padding-top: 0; padding-bottom: 0; }
+  .mode-full .cv-product { position: absolute; left: 0; right: var(--rail); top: clamp(84px, 11vh, 110px); padding-bottom: 0; transform: translateY(var(--peek, 0px)); }
+  .mode-full .cv-demo-wrap { width: min(100%, calc((100vh - clamp(84px, 11vh, 110px) - 170px) * 2.13)); margin: clamp(20px, 3vh, 36px) auto 0; }
+  .mode-full .cv-rest { display: block; }
+
+  /* --- The rest of the page in this prototype: CareVisor's ground carries on --- */
+  .cv-rest {
+    position: relative;
+    height: 100vh;
+    background: #e9f0fa;
+    color: #465062;
+    overflow: hidden;
+    display: none;
+  }
+  .cv-rest::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)), url(../../shots/carevisor/prism.webp) center / cover;
+    transform: scaleY(-1);
+  }
+  .cv-rest p {
+    position: absolute;
+    left: 0;
+    right: var(--rail);
+    bottom: 40px;
+    text-align: center;
+    font: 600 12px/1.5 ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #465062;
+  }
+
+  /* --- The burn (full mode): a canvas over the print --- */
+  .burn { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; display: none; }
+  .mode-full .burn { display: block; }
+
+  /* --- The progress rail, mocked: cream on the film, CareVisor ink once the light reaches it --- */
+  .rail { display: none; }
+  .mode-full .rail {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    z-index: 6;
+    display: block;
+    transform: translateY(-50%);
+  }
+  .rail ol { display: grid; }
+  .rail a { display: flex; align-items: center; justify-content: center; width: 24px; min-height: 28px; }
+  .rail i { position: relative; display: block; width: 3px; height: 22px; }
+  .rail i::before { content: ''; position: absolute; left: 1px; top: 0; width: 1px; height: 100%; background: var(--tick, var(--cream)); opacity: 0.55; }
+  .rail i::after { content: ''; position: absolute; inset: 0; border-radius: 2px; background: var(--tick, var(--cream)); transform: scaleY(0); transform-origin: 50% 0; }
+  .rail .is-current i::after { transform: none; }
+  .rail i.lit { --tick: #000918; }
+  .rail a:focus-visible { outline-color: currentColor; }
+
+  /* --- Print --- */
+  @media print {
+    html, body, .intro { background: #fff !important; color: #101114 !important; }
+    .intro__gate, .intro__mask, .intro__grain, .intro__print, .intro__canvas, .joy-halo, .burn, .rail, .still, .playhead, .stop-anchor { display: none !important; }
+    .intro *, .title__first { text-shadow: none !important; color: #101114 !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#carevisor">Skip to chapter 01</a>
+
+<div class="stage" id="stage">
+  <section class="intro" id="top" data-section="intro" aria-labelledby="intro-title">
+    <!-- The picture: chapter 01's first frame, as a negative. JS clones the real frame in (full mode). -->
+    <div class="intro__gate">
+      <div class="intro__lamp">
+        <div class="intro__plate" aria-hidden="true" data-plate></div>
+        <i class="intro__tone"></i>
+        <i class="intro__scrim"></i>
+      </div>
+      <i class="intro__dim" data-g="dim"></i>
+    </div>
+
+    <div class="intro__mask" aria-hidden="true">
+      <i class="bar bar--top"></i>
+      <i class="bar bar--bottom"></i>
+      <i class="matte matte--top"></i>
+      <i class="matte matte--bottom"></i>
+    </div>
+    <div class="intro__grain" aria-hidden="true"><i></i></div>
+
+    <header class="intro__top">
+      <div class="top-in">
+        <p class="kicker" data-cover>A film in seven interfaces</p>
+        <div class="top-right">
+          <button class="still" type="button" data-still data-cover>
+            <svg class="i-pause" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="0.5" width="2.6" height="9" rx="0.6"/><rect x="6.4" y="0.5" width="2.6" height="9" rx="0.6"/></svg>
+            <svg class="i-play" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 0.8v8.4L9.2 5z"/></svg>
+            <span class="t-pause">Pause motion</span><span class="t-play">Play motion</span>
+          </button>
+          <ul class="links">
+            <li><a href="https://github.com/AR13X3" target="_blank" rel="noopener noreferrer" data-cover>GitHub<span class="vh"> (opens in a new tab)</span></a></li>
+            <li><a href="https://www.linkedin.com/in/toufiqahmedjoy" target="_blank" rel="noopener noreferrer" data-cover>LinkedIn<span class="vh"> (opens in a new tab)</span></a></li>
+            <li><a href="mailto:joytoufiqahmed@gmail.com" data-cover>Email</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="intro__card">
+      <h1 class="title" id="intro-title">
+        <span class="title__first"><span class="in">Toufiq Ahmed</span></span>
+        <span class="title__joy"><span class="joy-halo" aria-hidden="true">Joy</span><span class="joy-text">Joy</span><span class="vh">,</span><span class="stop" aria-hidden="true" data-g="stop"><span class="stop-in"><i class="stop-anchor"><i class="stop-bloom" data-g="bloom"></i><i class="stop-ember"></i><i class="stop-amber" data-g="amber"></i><i class="stop-hot" data-g="hot"></i></i>.</span></span></span>
+        <span class="title__aside">
+          <span class="title__role"><span class="in">Product Design Lead <span aria-hidden="true">·</span><span class="vh"> in</span> Sydney<span class="vh">.</span></span></span>
+          <span class="title__log"><span class="in">I design websites and web app UI/UX, and I build automations.</span></span>
+        </span>
+      </h1>
+    </div>
+
+    <div class="intro__reel">
+      <div class="strip">
+        <div class="reel-head">
+          <p class="reel-lead" aria-hidden="true" data-lead>
+            <span class="lead-default">In order<br>of appearance</span>
+            <span class="lead-hover"><b data-lead-name></b><span data-lead-role></span></span>
+          </p>
+          <p class="cue" aria-hidden="true" data-g="cue"><span class="cue-in">Scroll<span class="cue-long"> to roll</span> <span class="cue-arrow">↓</span></span></p>
+        </div>
+        <div class="frames-wrap">
+          <ol class="frames" aria-label="Chapters, in order of appearance" data-frames>
+            <li style="--n:0"><a class="frame" href="#carevisor" data-cover data-role="Designed the website and the product UI" style="--panel-bg:#e9f0fa;--panel-art:linear-gradient(180deg, rgb(233 240 250 / 0) 38%, rgb(233 240 250 / 0.92) 78%), url(../../shots/carevisor/panel.webp);--panel-fg:#000918;--panel-font:'Plus Jakarta Sans FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">01</span><span class="vh">01 </span><span class="frame-name">CareVisor</span></span></a></li>
+            <li style="--n:1"><a class="frame" href="#halation" data-cover data-role="Designed and built it" style="--panel-bg:#08080a;--panel-art:linear-gradient(180deg, rgb(8 8 10 / 0) 30%, rgb(8 8 10 / 0.72) 72%, rgb(8 8 10 / 0.86)), url(../../shots/halation/coral-reeds-frost.webp);--panel-fg:#f4f2ee;--panel-font:'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">02</span><span class="vh">02 </span><span class="frame-name">Halation</span></span></a></li>
+            <li style="--n:2"><a class="frame" href="#sitescore" data-cover data-role="Designed and built it" style="--panel-bg:#efefed;--panel-art:linear-gradient(180deg, rgb(239 239 237 / 0.1) 30%, rgb(239 239 237 / 0.96) 76%), url(../../shots/sitescore/panel.webp);--panel-fg:#161616;--panel-font:'Inter FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">03</span><span class="vh">03 </span><span class="frame-name">SiteScore</span></span></a></li>
+            <li style="--n:3"><a class="frame" href="#nasa" data-cover data-role="In progress · Built the app, its NASA data features and the docs so far" style="--panel-bg:#6ba7a9;--panel-art:linear-gradient(180deg, rgb(55 47 42 / 0) 22%, rgb(55 47 42 / 0.82) 92%), url(../../shots/nasa/panel.webp);--panel-fg:#fbf8f2;--panel-font:'Lato FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">04</span><span class="vh">04 </span><span class="frame-name">NASA Space Apps Challenge</span><span class="vh">, in progress</span></span></a></li>
+            <li style="--n:4"><a class="frame" href="#bloodline" data-cover data-role="Led product and UI design" style="--panel-bg:#06110c;--panel-art:linear-gradient(180deg, rgb(6 17 12 / 0.8), rgb(6 17 12 / 0.93)), url(../../shots/bloodline/bg-poster.webp);--panel-fg:#eaf2ec;--panel-font:'Urbanist FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">05</span><span class="vh">05 </span><span class="frame-name">BloodLine</span></span></a></li>
+            <li style="--n:5"><a class="frame" href="#airpoint" data-cover data-role="Designed and built it" style="--panel-bg:#0d0f14;--panel-art:linear-gradient(180deg, rgb(13 15 20 / 0) 40%, rgb(13 15 20 / 0.92) 82%), url(../../shots/airpoint/panel.webp);--panel-fg:#f4f4f1;--panel-font:'Sora FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">06</span><span class="vh">06 </span><span class="frame-name">Airpoint</span></span></a></li>
+            <li style="--n:6"><a class="frame" href="#comparebestai" data-cover data-role="Led the visual identity, the UX and how comparisons are structured" style="--panel-bg:#f7f9fc;--panel-art:linear-gradient(180deg, rgb(247 249 252 / 0) 40%, rgb(247 249 252 / 0.94) 80%), url(../../shots/comparebestai/panel.webp);--panel-fg:#0a1020;--panel-font:'Montserrat FS', sans-serif"><span class="frame-in"><span class="frame-num" aria-hidden="true">07</span><span class="vh">07 </span><span class="frame-name">Compare Best AI</span></span></a></li>
+            <li class="playhead-wrap" aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;animation:none"><span class="playhead-in" style="position:absolute;inset:0;display:block"><i class="playhead"></i></span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro__print" aria-hidden="true" data-print-lite></div>
+    <canvas class="intro__canvas" aria-hidden="true" data-canvas-lite></canvas>
+  </section>
+
+  <!-- Chapter 01, its first frame: what the full stop burns through to. -->
+  <section class="cv" id="carevisor" aria-labelledby="carevisor-title" data-cv>
+    <div class="cv-frame" data-frame>
+      <header class="cv-nav">
+        <span class="cv-brand">
+          <svg class="cv-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false" data-mark>
+            <rect width="64" height="64" rx="13" fill="#3567ba"></rect>
+            <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path pathLength="1" d="M6 38.6H13.4C15 38.6 15.6 33 16.6 33S17.9 38.9 18.8 38.9H20L28.2 15L35.8 38.9H40.6C42.6 38.9 43.9 31.7 45.2 31.7S46.9 38.9 48.4 38.9H58" data-mark-line></path>
+              <path pathLength="1" d="M38.2 22.4V38.6" data-mark-line></path>
+            </g>
+            <path d="M25 27.6H31.6" stroke="#a9c1ea" stroke-width="2.4" stroke-linecap="round" data-mark-bit></path>
+            <circle cx="38.2" cy="17.4" r="2" fill="#5ea2f2" data-mark-bit></circle>
+          </svg>
+          <span class="cv-brand__name">Care<span>Visor</span></span>
+          <span class="cv-brand__sep" aria-hidden="true"></span>
+          <span class="cv-brand__tag">NDIS service provider platform</span>
+        </span>
+        <p class="cv-nav__meta"><span>01 · Work</span><span>ReSkill AI</span><span>Since Oct 2025</span><span>NDIS software</span></p>
+        <a class="cv-btn cv-btn--solid cv-btn--sm" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer">Visit the site<span class="vh"> (opens in a new tab)</span></a>
+      </header>
+
+      <div class="cv-hero">
+        <p class="cv-hero__meta" aria-hidden="true">01 · Work · ReSkill AI · Since Oct 2025 · NDIS software</p>
+        <h2 class="cv-hero__title" id="carevisor-title" tabindex="-1">The complete NDIS compliance and <br class="cv-br"><span class="cv-blue">Audit&#8209;Ready</span> platform.</h2>
+        <p class="cv-hero__lede">The NDIS service provider platform, built in Australia. It takes a provider’s team from participant intake to payroll, with every shift, document, incident and claim connected.</p>
+        <p class="cv-hero__role"><span>My role</span>Designed the website and the product UI</p>
+        <div class="cv-hero__ctas">
+          <a class="cv-btn cv-btn--solid" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer">Visit carevisor.com.au<span class="vh"> (opens in a new tab)</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="cv-product">
+        <ol class="cv-tabs" aria-label="The six modules of the hero demo">
+          <li class="cv-tab is-on"><span class="cv-tab__tile" style="--tile:#e8f0fe;--tile-ink:#0052cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></span><span class="cv-tab__caption">Guided onboarding</span><span class="cv-tab__title">Participant Intake</span><span class="cv-tab__track" aria-hidden="true"><i data-track></i></span></li>
+          <li class="cv-tab"><span class="cv-tab__tile" style="--tile:#efe9fe;--tile-ink:#6d4aff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.170 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="cv-tab__caption">Compliance-first hiring</span><span class="cv-tab__title">Staff Intake</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+          <li class="cv-tab"><span class="cv-tab__tile" style="--tile:#fef3e2;--tile-ink:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg></span><span class="cv-tab__caption">Roster on autopilot</span><span class="cv-tab__title">Shift Management</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+          <li class="cv-tab"><span class="cv-tab__tile" style="--tile:#e0f5f1;--tile-ink:#0f9d8f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18.226 5.226-2.52-2.52A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-.351"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span><span class="cv-tab__caption">Smart templates</span><span class="cv-tab__title">Document Builder</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+          <li class="cv-tab"><span class="cv-tab__tile" style="--tile:#fdeaea;--tile-ink:#e05252"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="cv-tab__caption">Audit-ready workflows</span><span class="cv-tab__title">Incident Management</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+          <li class="cv-tab"><span class="cv-tab__tile" style="--tile:#e6f6ea;--tile-ink:#1d9d55"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span><span class="cv-tab__caption">Claims without chaos</span><span class="cv-tab__title">Billing &amp; Payroll</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+        </ol>
+
+        <div class="cv-demo-wrap">
+          <figure class="cvd" role="img" aria-label="Recreated CareVisor hero demo on the Participant Intake tab: a browser window on app.carevisor.com with the app sidebar, where a new participant, Liam Carter, is typed in and made ready for a service agreement.">
+            <div class="cvd-glow" aria-hidden="true"></div>
+            <div class="cvd-app">
+              <div class="cvd-chrome">
+                <span class="cvd-light" style="--c:#f0645c"></span><span class="cvd-light" style="--c:#f5bd4f"></span><span class="cvd-light" style="--c:#61c454"></span>
+                <span class="cvd-url">app.carevisor.com</span><span class="cvd-spacer"></span>
+              </div>
+              <div class="cvd-body">
+                <div class="cvd-side">
+                  <div class="cvd-org">
+                    <span class="cvd-org__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/><path d="M3.220 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg></span>
+                    <span><span class="cvd-org__name">Sunrise Care</span><span class="cvd-org__who">Aisha · Admin</span></span>
+                  </div>
+                  <div class="cvd-nav">
+                    <i class="cvd-nav__pill"></i>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Dashboard</span>
+                    <span class="cvd-nav__item is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Participants</span>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>Team</span>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>Roster</span>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Documents</span>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Incidents</span>
+                    <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>Billing</span>
+                  </div>
+                </div>
+                <div class="cvd-stage">
+                  <div class="cvd-inner">
+                    <div class="cvd-head">
+                      <div><span class="cvd-h">Participants</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+                      <span class="cvd-btn">+ New participant</span>
+                    </div>
+                    <div class="cvd-rows">
+                      <div class="cvd-row"><span class="cvd-ava">LC</span><span class="cvd-stack"><i class="cvd-skel" style="--w:112"></i><i class="cvd-skel cvd-skel--thin" style="--w:64"></i></span></div>
+                      <div class="cvd-row"><span class="cvd-ava">MT</span><span class="cvd-stack"><i class="cvd-skel" style="--w:96"></i><i class="cvd-skel cvd-skel--thin" style="--w:64"></i></span></div>
+                      <div class="cvd-row"><span class="cvd-ava">AR</span><span class="cvd-stack"><i class="cvd-skel" style="--w:128"></i><i class="cvd-skel cvd-skel--thin" style="--w:64"></i></span></div>
+                    </div>
+                    <div class="cvd-card cvd-form">
+                      <span class="cvd-card__title">New participant</span>
+                      <span class="cvd-label">Full name</span><span class="cvd-field">Liam Carter</span>
+                      <span class="cvd-label">NDIS number</span><span class="cvd-field">430 512 887</span>
+                      <span class="cvd-tags"><span class="cvd-tag">Plan 12 Mar → 11 Sep</span><span class="cvd-tag">Core + Capacity</span></span>
+                      <span class="cvd-chip">✓ Ready for service agreement</span>
+                    </div>
+                    <div class="cvd-tip"><span class="cvd-tip__who"><span class="cvd-tip__ini">A</span>Adelaide · Intake lead</span><span class="cvd-tip__text">Capture details once, they sync to rosters, documents and billing.</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <canvas class="burn" aria-hidden="true" data-burn></canvas>
+
+  <nav class="rail" aria-label="Chapters (prototype mock of the progress rail)">
+    <ol>
+      <li><a href="#carevisor" data-tick><span class="vh">01 CareVisor</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">02 Halation</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">03 SiteScore</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">04 NASA Space Apps Challenge</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">05 BloodLine</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">06 Airpoint</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">07 Compare Best AI</span><i></i></a></li>
+      <li><a href="#carevisor" data-tick><span class="vh">Contact</span><i></i></a></li>
+    </ol>
+  </nav>
+</div>
+
+<section class="cv-rest" aria-label="End of the prototype">
+  <p>Prototype ends here · chapter 01 carries on in the site</p>
+</section>
+
+<script>
+  // Before first paint in full mode: lay CareVisor out (its product peeks under the hero), then
+  // clone that exact frame into the intro as the negative. Same markup, same box: pixel-aligned.
+  (function () {
+    var h = document.documentElement;
+    if (!h.classList.contains('mode-full')) return;
+    var stage = document.getElementById('stage');
+    var frame = document.querySelector('[data-frame]');
+    var plate = document.querySelector('[data-plate]');
+    function peek() {
+      var hero = frame.querySelector('.cv-hero');
+      var product = frame.querySelector('.cv-product');
+      var p = Math.max(0, hero.offsetTop + hero.offsetHeight + 40 - product.offsetTop);
+      stage.style.setProperty('--peek', p + 'px');
+    }
+    peek();
+    var neg = frame.cloneNode(true);
+    neg.removeAttribute('data-frame');
+    neg.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+    neg.querySelectorAll('[aria-label],[role]').forEach(function (n) { n.removeAttribute('aria-label'); n.removeAttribute('role'); });
+    neg.setAttribute('inert', '');
+    plate.appendChild(neg);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(peek);
+  })();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function () {
+  var html = document.documentElement;
+  var mode = html.classList.contains('mode-full') ? 'full' : html.classList.contains('mode-lite') ? 'lite' : 'reduced';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  var stage = $('#stage');
+  var intro = $('#top');
+  var cv = $('#carevisor');
+
+  /* ---------- Pause control: one switch for every looping motion ---------- */
+  var still = $('[data-still]');
+  if (still) {
+    still.addEventListener('click', function () {
+      var on = !html.classList.contains('is-still');
+      html.classList.toggle('is-still', on);
+      try { localStorage.setItem('fs-still', on ? '1' : '0'); } catch (e) {}
+    });
+  }
+
+  /* ---------- Off-screen: idle motion stops ---------- */
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { intro.classList.toggle('is-off', !e.isIntersecting); });
+    }).observe(intro);
+  }
+
+  /* ---------- Reel: the playhead follows hover and focus; the leader reads out the role ---------- */
+  var framesOl = $('[data-frames]');
+  var lead = $('[data-lead]');
+  var leadName = $('[data-lead-name]');
+  var leadRole = $('[data-lead-role]');
+  var frames = $$('.frame');
+  frames.forEach(function (a, i) {
+    function on() {
+      framesOl.style.setProperty('--ph', i);
+      leadName.textContent = String(i + 1).padStart(2, '0') + ' · ' + a.querySelector('.frame-name').textContent;
+      leadRole.textContent = a.dataset.role;
+      lead.classList.add('is-reading');
+    }
+    function off() {
+      framesOl.style.setProperty('--ph', 0);
+      lead.classList.remove('is-reading');
+    }
+    a.addEventListener('mouseenter', on);
+    a.addEventListener('focus', on);
+    a.addEventListener('mouseleave', off);
+    a.addEventListener('blur', off);
+  });
+
+  if (mode === 'reduced' || !window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ---------- Geometry helpers ---------- */
+  function offsetWithin(el, ancestor) {
+    var x = 0, y = 0, n = el;
+    while (n && n !== ancestor) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    return { x: x, y: y };
+  }
+  function farthest(ox, oy, rect) {
+    var dx = Math.max(Math.abs(rect.left - ox), Math.abs(rect.right - ox));
+    var dy = Math.max(Math.abs(rect.top - oy), Math.abs(rect.bottom - oy));
+    return Math.hypot(dx, dy);
+  }
+  function nearest(ox, oy, rect) {
+    var dx = Math.max(rect.left - ox, 0, ox - rect.right);
+    var dy = Math.max(rect.top - oy, 0, oy - rect.bottom);
+    return Math.hypot(dx, dy);
+  }
+  function smooth(a, b, x) { var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+
+  /* ---------- The burn front: an organic hole, drawn per frame at constant thickness ---------- */
+  // Low lobes give the hole its shape; they drift with the radius, so the front seethes as it grows.
+  var LOBES = [[2, 0.42, 0.7, 0.55], [3, 0.3, 2.9, -0.8], [5, 0.17, 4.4, 1.1], [7, 0.11, 1.6, -1.4]];
+  var FINE = [[11, 0.36, 0.3, 1.9], [17, 0.26, 2.2, -2.4], [29, 0.18, 5.1, 2.8], [47, 0.12, 1.2, -3.3], [71, 0.08, 3.7, 3.9]];
+  function wave(T, t, s) { var v = 0, n = 0; for (var i = 0; i < T.length; i++) { v += T[i][1] * Math.sin(T[i][0] * t + T[i][2] + s * T[i][3]); n += T[i][1]; } return v / n; }
+  var LOBE = 0.07;
+  // A small hole is round, like a coal; it grows its lobes as it spreads.
+  function lobe(r) { return LOBE * smooth(24, 180, r); }
+  function blobR(t, r) { return r * (1 + lobe(r) * wave(LOBES, t, r / 140)); }
+  var TAU = Math.PI * 2;
+  function blobPoints(x, y, r, N) {
+    var pts = new Array(N);
+    for (var i = 0; i < N; i++) { var t = (i / N) * TAU, rr = blobR(t, r); pts[i] = [x + Math.cos(t) * rr, y + Math.sin(t) * rr]; }
+    return pts;
+  }
+  function clipFor(x, y, r) {
+    var pts = blobPoints(x, y, r, 180), out = new Array(pts.length);
+    for (var i = 0; i < pts.length; i++) out[i] = pts[i][0].toFixed(1) + 'px ' + pts[i][1].toFixed(1) + 'px';
+    return 'polygon(' + out.join(',') + ')';
+  }
+
+  // The glow outside the hole, as many thin translucent bands, far to near:
+  // an amber bloom on the film, a red fringe, then orange and yellow into the white-hot front.
+  var GLOW = [[0, [255, 132, 64]], [0.42, [240, 52, 44]], [0.78, [255, 96, 52]], [1, [255, 186, 110]]];
+  function glowColour(f) {
+    for (var i = 1; i < GLOW.length; i++) {
+      if (f <= GLOW[i][0]) {
+        var a = GLOW[i - 1], b = GLOW[i], u = (f - a[0]) / (b[0] - a[0]);
+        return [0, 1, 2].map(function (c) { return Math.round(a[1][c] + (b[1][c] - a[1][c]) * u); }).join(',');
+      }
+    }
+    return GLOW[GLOW.length - 1][1].join(',');
+  }
+  var OUT = [];
+  for (var k = 0; k < 11; k++) {
+    var f = k / 10;
+    OUT.push([2 * Math.pow(1 - f, 1.3) + 0.08, glowColour(f), (0.045 + 0.15 * Math.pow(f, 1.6)).toFixed(3)]);
+  }
+
+  // Two canvases: the soft heat at a third of the resolution (it is a blur anyway, and cheap to fill),
+  // and the crisp white-hot front at full resolution (three thin strokes).
+  var GLOW_SCALE = 0.34;
+  function Burn(canvas) {
+    var glowCanvas = canvas.cloneNode(false);
+    glowCanvas.removeAttribute('data-burn');
+    glowCanvas.removeAttribute('data-canvas-lite');
+    canvas.parentNode.insertBefore(glowCanvas, canvas);
+    var ctx = canvas.getContext('2d');
+    var gtx = glowCanvas.getContext('2d');
+    var W = 0, Hh = 0, dpr = 1;
+    function path(pts) {
+      var h = new Path2D();
+      h.moveTo(pts[0][0], pts[0][1]);
+      for (var i = 1; i < pts.length; i++) h.lineTo(pts[i][0], pts[i][1]);
+      h.closePath();
+      return h;
+    }
+    return {
+      size: function (w, h) {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = w; Hh = h;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        glowCanvas.width = Math.round(w * GLOW_SCALE); glowCanvas.height = Math.round(h * GLOW_SCALE);
+        glowCanvas.style.width = w + 'px'; glowCanvas.style.height = h + 'px';
+      },
+      clear: function () {
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height);
+        gtx.setTransform(1, 0, 0, 1, 0, 0); gtx.clearRect(0, 0, glowCanvas.width, glowCanvas.height);
+      },
+      draw: function (x, y, r, alpha) {
+        this.clear();
+        if (r <= 0) return;
+
+        // The heat on the film, following the hole's own shape (low resolution, upscaled soft).
+        var hole = path(blobPoints(x, y, r, 160));
+        gtx.setTransform(GLOW_SCALE, 0, 0, GLOW_SCALE, 0, 0);
+        gtx.globalAlpha = alpha;
+        gtx.lineJoin = 'round';
+        var ob = Math.min(78, 14 + r * 0.13);
+        var outside = new Path2D();
+        outside.rect(-20, -20, W + 40, Hh + 40);
+        outside.addPath(hole);
+        gtx.save();
+        gtx.clip(outside, 'evenodd');
+        for (var b = 0; b < OUT.length; b++) {
+          gtx.lineWidth = ob * OUT[b][0];
+          gtx.strokeStyle = 'rgba(' + OUT[b][1] + ',' + OUT[b][2] + ')';
+          gtx.stroke(hole);
+        }
+        gtx.restore();
+        // Inside: a thin overexposed rim where the light comes through hottest.
+        // (A young hole is mostly glare: a white-hot coal where the full stop was.)
+        var ib = Math.min(14, 4 + r * 0.04) + 0.7 * r * (1 - smooth(30, 140, r));
+        gtx.save();
+        gtx.clip(hole);
+        gtx.lineWidth = ib * 2.2; gtx.strokeStyle = 'rgba(255,238,212,0.22)'; gtx.stroke(hole);
+        gtx.lineWidth = ib; gtx.strokeStyle = 'rgba(255,242,222,0.4)'; gtx.stroke(hole);
+        gtx.restore();
+
+        // The front: yellow into white-hot, and a thin seething line that never sits still.
+        var N = Math.max(64, Math.min(520, Math.round(TAU * r / 7)));
+        var front = path(blobPoints(x, y, r, N));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.globalAlpha = alpha;
+        ctx.lineJoin = 'round';
+        var out = new Path2D();
+        out.rect(-20, -20, W + 40, Hh + 40);
+        out.addPath(front);
+        ctx.save();
+        ctx.clip(out, 'evenodd');
+        ctx.lineWidth = 13; ctx.strokeStyle = 'rgba(255,196,128,0.92)'; ctx.stroke(front);
+        ctx.restore();
+        ctx.lineWidth = 5.2; ctx.strokeStyle = 'rgba(255,246,230,1)'; ctx.stroke(front);
+        var amp = Math.min(1.1, 0.5 + r * 0.0015), s2 = r / 45;
+        ctx.beginPath();
+        for (var j = 0; j <= N; j++) {
+          var t = (j / N) * TAU, rr = blobR(t, r) + amp * wave(FINE, t, s2);
+          var px = x + Math.cos(t) * rr, py = y + Math.sin(t) * rr;
+          if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+        }
+        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = '#fffdf8';
+        ctx.stroke();
+      },
+    };
+  }
+
+  /* ---------- One story for both modes: the dot heats, then burns through ---------- */
+  var stop = $('[data-g="stop"]');
+  var hot = $('[data-g="hot"]');
+  var amber = $('[data-g="amber"]');
+  var bloom = $('[data-g="bloom"]');
+  var dim = $('[data-g="dim"]');
+  var cue = $('[data-g="cue"]');
+  var proxy = { p: 0 };
+  var G = null;
+  var print, box, burn, covers, ticks, markLines, markBits, track;
+
+  if (mode === 'full') {
+    print = cv;
+    box = stage;
+    burn = Burn($('[data-burn]'));
+    ticks = $$('.rail i');
+    markLines = $$('[data-mark-line]', cv);
+    markBits = $$('[data-mark-bit]', cv);
+    track = $('[data-track]', cv);
+  } else {
+    print = $('[data-print-lite]');
+    box = intro;
+    print.style.display = 'block';
+    print.style.clipPath = 'polygon(0 0, 0 0, 0 0)';
+    $('[data-canvas-lite]').style.display = 'block';
+    burn = Burn($('[data-canvas-lite]'));
+    ticks = []; markLines = []; markBits = [];
+  }
+  covers = $$('[data-cover]', intro);
+
+  function measure() {
+    var W = box.clientWidth, Hh = box.clientHeight;
+    var o = offsetWithin(hot, box);
+    var ox = o.x + hot.offsetWidth / 2, oy = o.y + hot.offsetHeight / 2;
+    var r0 = Math.max(hot.offsetWidth, hot.offsetHeight) * 0.56;
+    // Big enough that even the hole's deepest lobe clears the farthest corner.
+    var R = (Math.hypot(Math.max(ox, W - ox), Math.max(oy, Hh - oy)) + 30) / (1 - LOBE);
+    var bRect = box.getBoundingClientRect();
+    function rel(el) { var r = el.getBoundingClientRect(); return { left: r.left - bRect.left, right: r.right - bRect.left, top: r.top - bRect.top, bottom: r.bottom - bRect.top }; }
+    G = {
+      W: W, H: Hh, ox: ox, oy: oy, r0: r0, R: R,
+      covers: covers.map(function (el) { return { el: el, d: farthest(ox, oy, rel(el)) }; }),
+      ticks: ticks.map(function (el) { var q = rel(el), cx = (q.left + q.right) / 2 - ox, cy = (q.top + q.bottom) / 2 - oy; return { el: el, d: Math.hypot(cx, cy), t: Math.atan2(cy, cx) }; }),
+      mark: markLines.length ? (function () { var q = rel(markLines[0].ownerSVGElement), cx = (q.left + q.right) / 2 - ox, cy = (q.top + q.bottom) / 2 - oy; return { d: Math.hypot(cx, cy), t: Math.atan2(cy, cx) }; })() : null,
+    };
+    burn.size(W, Hh);
+  }
+
+  function radius(p) { return G.r0 + (G.R - G.r0) * Math.pow(p, 1.7); }
+
+  function render() {
+    if (!G) return;
+    var p = proxy.p;
+    if (p <= 0) {
+      print.style.clipPath = 'polygon(0 0, 0 0, 0 0)';
+      burn.clear();
+      G.covers.forEach(function (c) { c.el.style.visibility = ''; });
+      G.ticks.forEach(function (t) { t.el.classList.remove('lit'); });
+      setMark(0);
+      return;
+    }
+    if (p >= 1) {
+      print.style.clipPath = 'none';
+      burn.clear();
+      G.covers.forEach(function (c) { c.el.style.visibility = 'hidden'; });
+      G.ticks.forEach(function (t) { t.el.classList.add('lit'); });
+      setMark(1);
+      return;
+    }
+    var r = radius(p);
+    print.style.clipPath = clipFor(G.ox, G.oy, r);
+    burn.draw(G.ox, G.oy, r, 1 - 0.4 * smooth(0.55, 1, p));
+    // Keyboard focus never sits under the light: each control leaves the tab order once it is covered.
+    var rMin = r * (1 - lobe(r)) - 4;
+    G.covers.forEach(function (c) { c.el.style.visibility = rMin > c.d ? 'hidden' : ''; });
+    // The rail turns to CareVisor's ink tick by tick, as the light reaches it.
+    G.ticks.forEach(function (t) { t.el.classList.toggle('lit', blobR(t.t, r) > t.d + 6); });
+    // CareVisor's heartbeat mark draws itself when the light gets to it.
+    setMark(G.mark ? smooth(G.mark.d - 20, G.mark.d + 240, blobR(G.mark.t, r)) : 1);
+  }
+
+  function setMark(m) {
+    markLines.forEach(function (l, i) { l.style.strokeDasharray = '1'; l.style.strokeDashoffset = String(1 - Math.min(1, Math.max(0, m * 1.25 - i * 0.25))); });
+    markBits.forEach(function (b) { b.style.opacity = String(smooth(0.6, 1, m)); });
+  }
+
+  var tl;
+  if (mode === 'full') {
+    // 3.0 units over 1.05 viewport heights of scroll (945px at 900 tall).
+    tl = gsap.timeline({ paused: true, onUpdate: render });
+    tl.to(cue, { autoAlpha: 0, y: 6, duration: 0.25, ease: 'power1.in' }, 0);
+    // The hot spot: the first wheel tick gets an answer. The picture dims; the full stop goes white-hot.
+    tl.fromTo(dim, { opacity: 0 }, { opacity: 0.16, duration: 0.42, ease: 'power1.in' }, 0);
+    tl.fromTo(amber, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power1.in' }, 0);
+    tl.fromTo(hot, { opacity: 0 }, { opacity: 1, duration: 0.24, ease: 'power1.in' }, 0.16);
+    tl.fromTo(bloom, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 2.6, duration: 0.42, ease: 'power2.in' }, 0);
+    // Ignition: the square dot gives way to a round hole, and the hole runs.
+    tl.to(proxy, { p: 1, duration: 2.0, ease: 'none' }, 0.38);
+    tl.to(stop, { autoAlpha: 0, duration: 0.12, ease: 'none' }, 0.4);
+    tl.set(intro, { autoAlpha: 0 }, 2.4);
+    // In CareVisor: its first module tab starts its run, as the chapter's own story does.
+    tl.fromTo(track, { scaleX: 0 }, { scaleX: 1, duration: 0.56, ease: 'power1.inOut' }, 2.42);
+    tl.to({}, { duration: 0.02 }, 2.98);
+
+    ScrollTrigger.create({
+      animation: tl,
+      trigger: stage,
+      start: 'top top',
+      end: function () { return '+=' + Math.round(window.innerHeight * 1.05); },
+      pin: true,
+      scrub: 0.8,
+      invalidateOnRefresh: true,
+      onUpdate: function (self) { intro.classList.toggle('is-off', self.progress > 0.82); },
+    });
+    window.__fs = { tl: tl, proxy: proxy, render: render }; // for timing in devtools
+
+    // Focus inside the chapter before the film has burnt: roll to the moment it shows.
+    cv.addEventListener('focusin', function () {
+      if (proxy.p < 1) { var st = ScrollTrigger.getAll()[0]; window.scrollTo(0, st.end); }
+    });
+    // A frame on the reel rolls the film: the scroll runs through the burn to the chapter.
+    frames.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var st = ScrollTrigger.getAll()[0];
+        window.scrollTo({ top: st.end + 2, behavior: 'smooth' });
+      });
+    });
+  } else {
+    // Lite: no pin. The burn is scrubbed while the intro scrolls away, and the hole travels with it.
+    tl = gsap.timeline({ paused: true, onUpdate: render });
+    tl.to(cue, { autoAlpha: 0, duration: 0.06 }, 0);
+    tl.fromTo(dim, { opacity: 0 }, { opacity: 0.16, duration: 0.12, ease: 'power1.in' }, 0);
+    tl.fromTo(amber, { opacity: 0 }, { opacity: 1, duration: 0.07, ease: 'power1.in' }, 0);
+    tl.fromTo(hot, { opacity: 0 }, { opacity: 1, duration: 0.07, ease: 'power1.in' }, 0.05);
+    tl.fromTo(bloom, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 2.6, duration: 0.12, ease: 'power2.in' }, 0);
+    tl.to(proxy, { p: 1, duration: 0.9, ease: 'none' }, 0.1);
+    tl.to(stop, { autoAlpha: 0, duration: 0.04 }, 0.11);
+    ScrollTrigger.create({ animation: tl, trigger: intro, start: 'top top', end: 'bottom 30%', scrub: 0.5, invalidateOnRefresh: true });
+  }
+
+  ScrollTrigger.addEventListener('refresh', function () { measure(); render(); });
+  measure();
+  render();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ScrollTrigger.refresh(); });
+  // Resizing across a mode boundary re-chooses the mode, as the engine does.
+  var startMode = mode;
+  window.addEventListener('resize', function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var m = reduce ? 'reduced' : window.innerWidth >= 1024 && window.innerHeight >= 600 ? 'full' : 'lite';
+    if (m !== startMode) location.reload();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+---
+/**
+ * Generic chapter template: head on the left, device frames on the right, decision
+ * notes swapping in. A starting point for scaffolding; finished chapters build their
+ * own world inside ChapterSection instead.
+ */
+import type { Chapter } from '../chapters/types';
+import ChapterSection from './ChapterSection.astro';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  /** Slug of the section after this one ("contact" for the last chapter). */
+  next: string;
+  class?: string;
+}
+
+const { chapter, index, next, class: className } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+---
+
+<ChapterSection chapter={chapter} next={next} class={className}>
+  <div class="chapter-generic chapter__frame">
+    <header class="chapter__head">
+      <p class="chapter__kicker" data-anim="kicker">
+        <span class="chapter__num">{num}</span>
+        {chapter.meta.map((m) => <span>{m}</span>)}
+        {chapter.status && <span class="chapter__status">{chapter.status}</span>}
+      </p>
+      <h2 class="chapter__title" id={`${chapter.slug}-title`} tabindex="-1" data-anim="title" data-focus>{chapter.name}</h2>
+      <div class="chapter__swap">
+        <div class="chapter__intro" data-anim="intro">
+          <p class="chapter__lede">{chapter.oneLiner}</p>
+          <p class="chapter__role"><span class="chapter__label">My role</span>{chapter.role}</p>
+        </div>
+        <div class="chapter__notes">
+          <h3 class="chapter__label" data-anim="notes-head">Design decisions</h3>
+          <ol>
+            {
+              chapter.decisions.map((d, i) => (
+                <li class="chapter__note" data-anim="note">
+                  <span class="chapter__note-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h4>{d.title}</h4>
+                    <p>{d.body}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+      {
+        chapter.links.length > 0 && (
+          <p class="chapter__links" data-anim="links">
+            {chapter.links.map((l) => (
+              <a href={l.href} target="_blank" rel="noopener noreferrer">
+                {l.label}
+                <span class="visually-hidden"> (opens in a new tab)</span>
+                <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10">
+                  <path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </a>
+            ))}
+          </p>
+        )
+      }
+    </header>
+    <div class="chapter__stage" data-anim="stage">
+      <slot />
+    </div>
+  </div>
+</ChapterSection>

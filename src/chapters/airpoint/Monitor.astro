@@ -1,0 +1,217 @@
+---
+/**
+ * The PC side, recreated from the app's own drawing of it (OnboardingScreen.kt DesktopArt):
+ * a sunken screen, a taskbar with the Airpoint tray icon and a clock, and the pairing PIN
+ * bubble that pops from the tray. The tray icon follows desktop/airpoint/tray.py: the small
+ * cut of the Loop, a neutral stroke and a point that carries the status. The cursor is a
+ * plain Windows arrow that the motion code moves with the pen.
+ */
+import Loop from './Loop.astro';
+import { ARROW, GESTURE_A, GESTURE_B, PC, TRAIL_LAYERS, pcPoint, smooth } from './geometry';
+
+interface Props {
+  /** The pairing PIN shown in the bubble (matches the phone's paired screenshot). */
+  pin: string;
+  class?: string;
+}
+const { pin, class: className } = Astro.props;
+const [sx, sy] = pcPoint(GESTURE_A[0]);
+// The gesture as the PC receives it; its trail echoes the live pad's so the two read as one motion.
+const pathA = smooth(GESTURE_A.map(pcPoint));
+const pathB = smooth(GESTURE_B.map(pcPoint));
+const trail = `${pathA} ${pathB.replace(/^M[^C]+/, '')}`;
+---
+
+<figure
+  class:list={['ap-pc', className]}
+  data-ap="pc"
+  data-clear
+  role="img"
+  aria-label={`Recreated Windows desktop: the Airpoint loop icon in the system tray, whose point shows the status, a bubble showing the pairing PIN ${pin}, and the mouse cursor the pen moves.`}
+>
+  <div class="ap-pc__screen">
+    <div class="ap-pc__bubble" data-ap="bubble">
+      <span class="ap-pc__bubble-label">Pairing PIN</span>
+      <b class="ap-pc__bubble-pin">{pin}</b>
+    </div>
+    <div class="ap-pc__taskbar">
+      <span class="ap-pc__apps" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="ap-pc__tray" data-ap="tray">
+        <span class="ap-pc__tray-ring" data-ap="tray-ring"></span>
+        <Loop cut="small" class="ap-pc__tray-mark" />
+      </span>
+      <span class="ap-pc__clock">9:41</span>
+    </div>
+    <svg class="ap-pc__desk" viewBox={`0 0 ${PC.w} ${PC.h}`} aria-hidden="true" focusable="false">
+      <path class="ap-pc__guide" d={pathA} data-ap="pc-path-a"></path>
+      <path class="ap-pc__guide" d={pathB} data-ap="pc-path-b"></path>
+      <g class="ap-pc__trail" data-ap="pc-trail">
+        {TRAIL_LAYERS.map((l) => <path d={trail} stroke-width={l.width * 2.4} stroke-opacity={l.alpha * 0.8} data-window={l.window} />)}
+      </g>
+      <circle class="ap-pc__ripple" data-ap="pc-ripple" r="24" cx="0" cy="0"></circle>
+      <g data-ap="pc-cursor" transform={`translate(${sx.toFixed(1)} ${sy.toFixed(1)})`}>
+        <path class="ap-pc__arrow" d={ARROW} transform="scale(3.6)"></path>
+      </g>
+    </svg>
+  </div>
+  <span class="ap-pc__stand" aria-hidden="true"></span>
+</figure>
+
+<style>
+  /* Sizes are in container units so the whole desk scales with the monitor. */
+  .ap-pc {
+    position: relative;
+    width: 100%;
+    container-type: inline-size;
+  }
+
+  .ap-pc__screen {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: clamp(14px, 3.4cqw, 22px);
+    /* DesktopArt's sunken screen, with a faint Electric bloom so it reads as a lit display. */
+    background:
+      radial-gradient(110% 90% at 80% 12%, rgb(59 105 255 / 0.13), transparent 62%),
+      var(--sunken);
+    box-shadow: inset 0 0 0 1.5px var(--outline-strong);
+    overflow: hidden;
+  }
+
+  .ap-pc__desk {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .ap-pc__arrow {
+    fill: #fff;
+    stroke: #0d0f14;
+    stroke-width: 0.9;
+    stroke-linejoin: round;
+  }
+
+  .ap-pc__guide {
+    fill: none;
+    stroke: none;
+  }
+
+  /* Only the scrubbed story moves the cursor, so the trail only exists there. */
+  .ap-pc__trail {
+    display: none;
+  }
+
+  :global(html.mode-full) .ap-pc__trail {
+    display: inline;
+  }
+
+  .ap-pc__trail path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ap-pc__ripple {
+    fill: none;
+    stroke: var(--live);
+    stroke-width: 4;
+    opacity: 0;
+  }
+
+  /* Taskbar with the tray icon (DesktopArt: surfaceRaised, four app tiles, the Loop, the time). */
+  .ap-pc__taskbar {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    height: 7cqw;
+    padding: 0 2.6cqw;
+    background: var(--raised);
+    border-top: 1px solid var(--outline);
+  }
+
+  .ap-pc__apps {
+    display: flex;
+    gap: 1.4cqw;
+    margin-right: auto;
+  }
+
+  .ap-pc__apps i {
+    width: 2.6cqw;
+    height: 2.6cqw;
+    border-radius: 0.8cqw;
+    background: var(--outline-strong);
+  }
+
+  .ap-pc__tray {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 4.4cqw;
+    height: 4.4cqw;
+  }
+
+  .ap-pc__tray :global(.ap-pc__tray-mark) {
+    width: 100%;
+    height: 100%;
+    --loop-stroke: var(--text);
+    --loop-dot: #6e92ff;
+  }
+
+  .ap-pc__tray-ring {
+    position: absolute;
+    inset: -0.6cqw;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  .ap-pc__clock {
+    font: 600 clamp(10px, 2.1cqw, 14px) / 1 var(--sora);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-2);
+  }
+
+  /* The PIN bubble (DesktopArt): it springs out of the tray, so it grows from its lower right. */
+  .ap-pc__bubble {
+    position: absolute;
+    right: 3.4cqw;
+    bottom: calc(7cqw + 2.4cqw);
+    display: grid;
+    gap: 0.4cqw;
+    padding: 1.6cqw 2.2cqw 1.7cqw;
+    border-radius: clamp(10px, 2.3cqw, 16px);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--outline),
+      0 18px 40px -20px rgb(0 0 0 / 0.8);
+    transform-origin: 85% 100%;
+  }
+
+  .ap-pc__bubble-label {
+    font: 500 clamp(9px, 1.75cqw, 12px) / 1.25 var(--roboto);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .ap-pc__bubble-pin {
+    font: 600 clamp(16px, 3.9cqw, 26px) / 1.1 var(--sora);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--accent-text);
+  }
+
+  .ap-pc__stand {
+    display: block;
+    width: 16cqw;
+    height: 1.3cqw;
+    margin: 1.2cqw auto 0;
+    border-radius: 99px;
+    background: var(--outline-strong);
+  }
+</style>

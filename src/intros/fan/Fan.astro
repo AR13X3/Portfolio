@@ -1,0 +1,185 @@
+---
+/**
+ * The Fan: the six products fanned out like a swatch deck, pinned through the dot of the i in the
+ * name. On desktop the deck parts under the pointer and the intro pins and scrubs (the Fan Deck);
+ * on phones it is riffled with the thumb (the Thumb Riffle). Blade 01's chip opens into chapter
+ * 01's room and carries its window in (motion.ts).
+ *
+ * This is also the page without JavaScript: the poster on wide screens, a list of the six on
+ * phones, every blade a link to its chapter. All behaviour is in motion.ts (no <script> here:
+ * Astro would run it on every page). Styles: fan.css, every rule under .fan.
+ */
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/urbanist';
+import '@fontsource-variable/sora';
+import '@fontsource-variable/montserrat';
+import './fan.css';
+import type { Chapter } from '../../chapters/types';
+import { site } from '../../data/site';
+import Switch from '../Switch.astro';
+import Chip from './Chip.astro';
+import { countWord, fanBlades, tokens } from './parts';
+
+interface Props {
+  chapters: Chapter[];
+}
+const { chapters } = Astro.props;
+const blades = fanBlades(chapters);
+const first = blades[0];
+const count = countWord(blades.length);
+const few = count.toLowerCase();
+
+// The name's two lines; the rivet is the dot of the first i of the first.
+const [given, ...family] = site.name.split(' ');
+const iAt = given.indexOf('i');
+if (iAt < 0) throw new Error('The Fan pins its deck through the dot of an i in the first name.');
+const before = given.slice(0, iAt);
+const after = given.slice(iAt + 1);
+
+const vars = (b: (typeof blades)[number], i: number) =>
+  `--i:${i};--a:${b.angle}deg;--ap:${b.thumb}deg;--bg:${b.bg};--acc:${b.accent};--face:${b.face};--w:${b.weight}`;
+// Chapter 01's ground, painted in the room exactly as its background layer paints it.
+const room = `--room-bg:${chapters[0].theme.bg};--room-art:${chapters[0].theme.bgArt ?? 'none'}`;
+---
+
+<div class="fan" data-intro-route="fan" style={room}>
+  <div class="fan__stick" data-stick>
+    <i class="fan__grain" aria-hidden="true" data-grain></i>
+    <header class="fan__bar" data-out>
+      <div class="in">
+        <div class="bar__end">
+          <Switch current="fan" class="bar__switch" />
+          <i class="bar__rule" aria-hidden="true"></i>
+          <ul class="bar__links">
+            <li><a href={site.links.github} target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+            <li><a href={site.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+            <li><a href={`mailto:${site.email}`}>Email</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="fan__lockup">
+      <p class="label fan__kicker" data-out><span class="in">A portfolio in {few} design languages, by</span></p>
+      <h1 class="fan__title" id="intro-title" tabindex="-1" data-intro-focus>
+        <span class="visually-hidden">{site.name}, {site.role}, {site.location}</span>
+        <span class="name" aria-hidden="true">
+          <span class="line"><span class="line__rise" style="--n: 0"><span class="line__out" data-line>{before}<span class="i" data-i><span class="i__full">ı</span><span class="i__lite">i</span></span>{after}</span></span></span>
+          <span class="line"><span class="line__rise" style="--n: 1"><span class="line__out" data-line>{family.join(' ')}</span></span></span>
+        </span>
+        <span class="role" aria-hidden="true" data-out><span class="in">{site.role}, {site.location}</span></span>
+      </h1>
+    </div>
+
+    <div class="fan__sub" data-out>
+      <div class="swap"><p class="in">{site.statement} Every product gets its own voice; I keep them in one deck.</p></div>
+    </div>
+
+    {/* Desktop: what the blade under the pointer (or focus) is. The links carry the same words. */}
+    <div class="fan__readout" aria-hidden="true" data-out>
+      <div class="readout">
+        <div class="readout__vis">
+          <div class="readout__swap" data-readout>
+            <p class="readout__idle" data-readout-idle><span class="readout__how">Hover to part the deck.</span></p>
+            <div class="readout__blade" data-readout-blade hidden>
+              <div class="readout__head"><span class="readout__num" data-r-num></span><span class="readout__name" data-r-name></span></div>
+              <p class="label readout__meta" data-r-meta></p>
+              <p class="readout__line" data-r-line></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Phones: the same, in the slot under the kicker, once the deck has been touched. */}
+    <div class="fan__tout" aria-hidden="true" data-tout data-out-t>
+      <div class="tout__in" data-tout-in>
+        <p class="tout__head">
+          <span class="tout__num" data-t-num>{first.num}</span><span class="tout__name" data-t-name>{first.name}</span><span class="tout__sw"><i data-t-bg></i><i data-t-acc></i></span>
+        </p>
+        <p class="label tout__meta" data-t-meta>{first.meta}</p>
+        <p class="tout__line" data-t-line>{first.blurb}</p>
+      </div>
+    </div>
+
+    <p class="fan__cue" data-out>
+      <span class="in">
+        <svg class="cue__arrow" viewBox="0 0 24 14" aria-hidden="true"><path d="M2 2c2 7 9 10 19 9M17 7l4 4-4 3"></path></svg>
+        <span class="cue--rest">Scroll, or pick a blade</span>
+        <span class="cue--full">Scroll to open {first.num} {first.name} ↓</span>
+        <span class="cue--touch">Tap a blade to open it</span>
+        <span class="cue--thumb" aria-hidden="true" data-cue-thumb>Swipe the fan. Tap the raised blade to open it.</span>
+        <span class="cue--part" aria-hidden="true">Slide across the fan. Tap a blade, then tap again to open it.</span>
+        <span class="cue--mouse" aria-hidden="true">Hover to part the deck. Click a blade to open it.</span>
+      </span>
+    </p>
+
+    {/* The rivet: the dot of the i, and the pin the whole deck turns on. */}
+    <span class="rivet" aria-hidden="true" data-rivet><span class="rivet__out" data-rivet-out><span class="rivet__head" data-rivet-head></span></span></span>
+
+    <div class="deck" data-deck>
+      <div class="deck__jolt" data-jolt>
+        <ol class="deck__list" aria-label="Chapters">
+          {
+            blades.map((b, i) => (
+              <li class="blade-item" style={vars(b, i)} data-slug={b.slug} data-name={b.name} data-meta={b.meta} data-blurb={b.blurb}>
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href={`#${b.slug}`} draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body>
+                      <span class="blade__hex">{tokens(b).bg}</span>
+                    </span>
+                    <span class="blade__card" aria-hidden="true" data-body />
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <Chip blade={b} />
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body>
+                      <span class="band__acc">
+                        <i />
+                        {tokens(b).accent}
+                      </span>
+                      <span class="band__num">{b.num}</span>
+                    </span>
+                    <span class="blade__text" aria-hidden="true">
+                      <span class="num">{b.num}</span>
+                      <span class="nm">{b.name}</span>
+                      <span class="mt">{b.meta}</span>
+                      <span class="ln">{b.line}</span>
+                    </span>
+                    <span class="visually-hidden">
+                      {b.num} {b.name}. {b.said}
+                    </span>
+                  </a>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="deck__tips" aria-hidden="true">
+          {
+            blades.map((b, i) => (
+              <span class="tip" style={`--i:${i};--a:${b.angle}deg;--face:${b.face};--w:${b.weight}`}>
+                <span class="in">
+                  <b>{b.num}</b>
+                  <span class="nm">{b.name}</span>
+                </span>
+              </span>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    {/* Blade 01's chip opens into chapter 01's room: a viewport mask and its counter-scaled ground,
+        with the chapter's window flying in it (motion.ts). */}
+    <div class="fan__room" aria-hidden="true" data-room>
+      <div class="fan__room-in" data-room-in>
+        <div class="fan__ground" data-room-ground></div>
+        <div class="fan__win" data-win></div>
+      </div>
+    </div>
+
+    {/* Phones: the ghost of a thumb, once, during the first hint riffle. */}
+    <i class="fan__ghost" aria-hidden="true" data-ghost></i>
+  </div>
+</div>

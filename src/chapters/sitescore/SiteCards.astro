@@ -1,0 +1,54 @@
+---
+/**
+ * The workspace's site cards (frontend/src/components/SiteCards.tsx): 36-month revenue and its
+ * P10–P90 range drawn on one scale shared by every card, so the ranges compare at a glance.
+ * The selected card is inverted to ink with a red dot; each card has its numbered site key.
+ */
+import { SITES } from './data';
+import { money, pct } from './format';
+
+interface Props {
+  selected: number;
+}
+const { selected } = Astro.props;
+const lo = Math.min(...SITES.map((s) => Math.min(s.p10, s.total)));
+const hi = Math.max(...SITES.map((s) => Math.max(s.p90, s.total)));
+const at = (v: number) => ((v - lo) / (hi - lo)) * 100;
+---
+
+<ol class="ss-sites" aria-label="Demo sites, 36-month revenue with P10–P90 range">
+  {
+    SITES.map((s, i) => (
+      <li class:list={['ss-site', { 'is-selected': i === selected }]} data-ss="site">
+        <div class="ss-site__meta ss-mono">
+          <span>Site {i + 1}</span>
+          <span>
+            Rank {s.rank} of {SITES.length}
+          </span>
+          <span>
+            {money(s.p10)}–{money(s.p90)}
+          </span>
+        </div>
+        <div class="ss-site__main">
+          <span class="ss-site__value">{money(s.total)}</span>
+          <span class="ss-site__range" aria-hidden="true">
+            <span class="ss-site__ci" style={`left:${at(s.p10)}%;width:${at(s.p90) - at(s.p10)}%`} data-ss="ci" />
+            <span class="ss-site__dot" style={`left:${at(s.total)}%`} data-ss="cidot" />
+          </span>
+          <span class="ss-site__aux">
+            <strong>{pct(s.probBest)}</strong> best
+          </span>
+        </div>
+        <div class="ss-site__foot">
+          <span class:list={['ss-key', { 'is-selected': i === selected }]} aria-hidden="true">
+            {s.n}
+          </span>
+          <span class="ss-site__name">{s.label}</span>
+          <svg class="ss-site__x" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </div>
+      </li>
+    ))
+  }
+</ol>

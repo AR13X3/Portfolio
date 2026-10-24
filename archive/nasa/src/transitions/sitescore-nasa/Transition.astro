@@ -1,0 +1,323 @@
+---
+/**
+ * SiteScore → NASA Space Apps. SiteScore's street-level hex map of Parramatta pulls back off
+ * its paper to an orbital view of New South Wales (NASA MODIS), flies west and settles over a
+ * target that stays classified: a box draws around it and inks in like the NASA chapter's
+ * redaction bars, while the readout's coordinates are blacked out. The project is in
+ * progress, so the target is an arbitrary point and nothing more specific is shown.
+ * Imagery: NASA MODIS Aqua (11 Sep 2026) for the state and NASA HLS (Aug–Oct 2026, 30 m) for
+ * the target's surroundings, both via NASA GIBS.
+ */
+import '@fontsource-variable/jetbrains-mono';
+import '@fontsource/lato/700.css';
+import '@fontsource/lato/900.css';
+import '@fontsource/lato/400.css';
+import RedactedText from '../../components/RedactedText.astro';
+import { HEAT_H, HEAT_POINTS, HEAT_W } from '../../chapters/sitescore/heat';
+import { SITES } from '../../chapters/sitescore/data';
+import { HEAT, NSW, TARGET, boxKm, type Box } from './geo';
+
+interface Props {
+  from: string;
+  to: string;
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const geo = (b: Box) => JSON.stringify(boxKm(b));
+const selected = SITES.findIndex((s) => s.rank === 1);
+---
+
+<div class="s2n" data-s2n="root">
+  <div class="s2n__layer" data-s2n="layer" data-key="nsw" data-geo={geo(NSW)} data-nw="1800">
+    <img src={`${base}shots/sitescore/tx-modis-nsw.webp`} alt="" width="1800" height="1012" loading="lazy" decoding="async" />
+  </div>
+
+  <!-- The target's surroundings at 30 m: the camera comes down onto clear ground. -->
+  <div class="s2n__layer" data-s2n="layer" data-key="hls" data-geo={geo(TARGET)} data-nw="2880">
+    <img src={`${base}shots/sitescore/tx-hls-target.webp`} alt="" width="2880" height="1541" loading="lazy" decoding="async" />
+  </div>
+
+  <div class="s2n__paper" data-s2n="paper"></div>
+
+  <div class="s2n__layer" data-s2n="layer" data-key="heat" data-geo={geo(HEAT)} data-nw="1600">
+    <svg viewBox={`0 0 ${HEAT_W} ${HEAT_H}`} preserveAspectRatio="none">
+      {HEAT_POINTS.map((ring, g) => ring.map((points, b) => points && <use href={`#ss-heat-${g}-${b}`} />))}
+    </svg>
+    {
+      SITES.map((s, i) => (
+        <span class:list={['s2n__pin', { 'is-selected': i === selected }]} style={`left:${(s.x / HEAT_W) * 100}%;top:${(s.y / HEAT_H) * 100}%`} data-s2n="pin">
+          <span>
+            <b>{i + 1}</b>
+          </span>
+        </span>
+      ))
+    }
+  </div>
+
+  <!-- The classified target: a dashed box draws in, then inks over like a redaction bar. -->
+  <div class="s2n__target" data-s2n="target">
+    <svg viewBox="0 0 100 62" preserveAspectRatio="none">
+      <rect x="0.6" y="0.6" width="98.8" height="60.8" data-s2n="target-dash"></rect>
+    </svg>
+    <span class="s2n__target-ink" data-s2n="target-ink"></span>
+    <span class="s2n__target-label" data-s2n="target-label">Redacted while in progress</span>
+  </div>
+
+  <div class="s2n__hud" data-s2n="hud">
+    <p class="s2n__strip" data-s2n="strip">
+      <span class="s2n__path"><span data-s2n="path">sitescore/parramatta/cafe</span><i></i></span>
+      <span>lat <b data-s2n="lat">-33.807</b></span>
+      <span>lon <b data-s2n="lon">151.023</b></span>
+      <span>view <b data-s2n="view">13 km</b></span>
+      <span>layer <b data-s2n="src">heat.cells</b></span>
+    </p>
+    <div class="s2n__card" data-s2n="card">
+      <span class="s2n__sat">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 7 9 3 5 7l4 4M17 11l4 4-4 4-4-4M8 12l4 4M16 8l-4 4M3 21a8 8 0 0 0 8-8"></path></svg>
+        NASA HLS · Sep 2026
+      </span>
+      <p class="s2n__title"><RedactedText text="[[10]]" /></p>
+      <p class="s2n__sub">Details stay redacted until the challenge.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .s2n {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    contain: strict;
+  }
+
+  .s2n__layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+
+  .s2n__layer img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .s2n__layer svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* SiteScore's paper (frontend/src/styles.css .splash): the colour plus the 28px grid. */
+  .s2n__paper {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    will-change: opacity;
+    background-color: #efefed;
+    background-image:
+      linear-gradient(rgb(0 0 0 / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(0 0 0 / 0.055) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* SiteScore's map pins: a surface rim around an ink hex cell (styles.css .site-pin). */
+  .s2n__pin {
+    position: absolute;
+    width: 38px;
+    height: 44px;
+    margin: -44px 0 0 -19px;
+    transform-origin: 50% 100%;
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.3));
+  }
+
+  .s2n__pin > span {
+    --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    clip-path: var(--hex);
+    background: #fff;
+  }
+
+  .s2n__pin b {
+    display: grid;
+    place-items: center;
+    width: calc(100% - 5px);
+    height: calc(100% - 5px);
+    clip-path: var(--hex);
+    background: #1d1d1d;
+    color: #fff;
+    font: 600 12px/1 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  .s2n__pin.is-selected b {
+    background: #d03b3b;
+    font-size: 14px;
+  }
+
+  /* The classified target, centred on the descent's end. */
+  .s2n__target {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(34vw, 460px);
+    aspect-ratio: 100 / 62;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .s2n__target svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .s2n__target rect {
+    fill: none;
+    stroke: #fff8ea;
+    stroke-width: 2px;
+    stroke-dasharray: 6 5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .s2n__target-ink {
+    position: absolute;
+    inset: 6%;
+    border-radius: 3px;
+    background: #1d1a17;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .s2n__target-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fbf8f2;
+    color: #372f2a;
+    font: 700 13px/1.2 'Lato', system-ui, sans-serif;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+
+  /* Coordinates black out as the camera closes in on the target. */
+  .s2n__strip b.is-redacted {
+    color: transparent;
+    background: #f1f1ef;
+    border-radius: 2px;
+  }
+
+  .s2n__hud {
+    position: absolute;
+    left: clamp(16px, 2.4vw, 32px);
+    bottom: clamp(16px, 3.4vh, 36px);
+    max-width: calc(100% - 32px);
+  }
+
+  /* SiteScore's terminal strip (styles.css .strip), as a floating readout. */
+  .s2n__strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 18px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: #0d0d0d;
+    color: #8f8f8a;
+    font: 12px/1 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    white-space: nowrap;
+    opacity: 0;
+  }
+
+  .s2n__strip b {
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .s2n__path {
+    color: #fff;
+  }
+
+  .s2n__path i {
+    display: inline-block;
+    width: 0.6em;
+    height: 0.95em;
+    margin-left: 3px;
+    vertical-align: -0.12em;
+    background: #e5484d;
+  }
+
+  /* The NASA chapter's card, in the app's own style, with its satellite pill. */
+  .s2n__card {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: max-content;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 16px 20px 18px;
+    border: 1px solid rgb(55 47 42 / 0.12);
+    border-radius: 14px;
+    background: #fbf8f2;
+    box-shadow:
+      0 4px 16px -6px rgb(55 47 42 / 0.18),
+      0 1px 3px rgb(55 47 42 / 0.08);
+    color: #372f2a;
+    font: 400 14px/1.45 'Lato', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    opacity: 0;
+  }
+
+  .s2n__sat {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #e7e8d0;
+    color: #5f6a2c;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .s2n__sat path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .s2n__title {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .s2n__sub {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #5b524a;
+  }
+
+  @media (max-width: 700px) {
+    .s2n__strip span:nth-child(n + 4) {
+      display: none;
+    }
+  }
+</style>

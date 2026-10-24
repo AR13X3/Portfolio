@@ -1,0 +1,43 @@
+---
+/**
+ * 02 Halation: the editor, its canvas and dock. The dot lands over the playhead and drags it
+ * through the take; on phones it rides up the hook and is flicked onto CareVisor's button.
+ * The looks are small cuts of the loops' posters (public/intros/machine/), not the 1600px originals.
+ */
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const look = (name: string) => `${base}intros/machine/halation-${name}.webp`;
+---
+
+<svg class="jm-art" viewBox="0 0 186 120">
+  <defs><clipPath id="jm-hx-clip"><rect x="6" y="20" width="174" height="72" rx="4" /></clipPath></defs>
+  <rect width="186" height="120" rx="10" fill="#08080a" />
+  <circle cx="12" cy="10.5" r="3" fill="#55555c" /><circle data-r="rec-dot" cx="12" cy="10.5" r="3" fill="#ff3438" opacity="0" />
+  <text x="19" y="13.6" class="jm-tm" font-size="8.5" font-weight="600" fill="#8e8e95">REC</text>
+  <text data-r="rec-txt" x="19" y="13.6" class="jm-tm" font-size="8.5" font-weight="600" fill="#ff3438" opacity="0">REC</text>
+  <text data-r="name-coral" x="174" y="13.6" text-anchor="end" class="jm-t" font-size="8.5" font-weight="600" fill="#c5c3c0">Coral Reeds</text>
+  <text data-r="name-emerald" x="174" y="13.6" text-anchor="end" class="jm-t" font-size="8.5" font-weight="600" fill="#c5c3c0" opacity="0">Emerald Pour</text>
+  <text data-r="name-indigo" x="174" y="13.6" text-anchor="end" class="jm-t" font-size="8.5" font-weight="600" fill="#c5c3c0" opacity="0">Indigo Harp</text>
+  <g clip-path="url(#jm-hx-clip)">
+    <image href={look('coral-reeds')} x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice" />
+    <image data-r="look-emerald" href={look('emerald-pour')} x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice" opacity="0" />
+    <image data-r="look-indigo" href={look('indigo-harp')} x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice" opacity="0" />
+    <rect x="6" y="60" width="174" height="32" fill="#fff" fill-opacity=".1" />
+    <path d="M6 60.5H180" stroke="#fff" stroke-opacity=".28" />
+  </g>
+  <path d="M10 100.5v11l8-5.5z" fill="#f4f2ee" />
+  <g class="jm-hx-run"><text x="23" y="109.6" class="jm-tm" font-size="8.5" font-weight="600" fill="#f4f2ee"><tspan data-r="hx-time">1.6</tspan><tspan fill="#8e8e95"> / 10 s</tspan></text></g>
+  <rect x="74" y="104.8" width="104" height="2.5" rx="1.25" fill="#2b2b31" />
+  <rect class="jm-hx-run" data-r="scrub-fill" x="74" y="104.8" width="104" height="2.5" rx="1.25" fill="#f4f2ee" fill-opacity=".85" transform="matrix(0.16 0 0 1 62.16 0)" />
+  <g class="jm-hx-hover"><g class="jm-hx-nudge"><g class="jm-hx-run" data-r="playhead" transform="translate(16.64 0)">
+    <rect x="70.5" y="99" width="7" height="14" rx="2" fill="#ff3438" opacity=".25" />
+    <rect x="72.5" y="99.5" width="3" height="13" rx="1" fill="#ff3438" />
+  </g></g></g>
+  {/* Without the run (the still column, print): the take as the dot leaves it, at 9.6 s. */}
+  <g class="jm-hx-set" opacity="0">
+    <text x="23" y="109.6" class="jm-tm" font-size="8.5" font-weight="600" fill="#f4f2ee">9.6<tspan fill="#8e8e95"> / 10 s</tspan></text>
+    <rect x="74" y="104.8" width="99.84" height="2.5" rx="1.25" fill="#f4f2ee" fill-opacity=".85" />
+    <rect x="170.34" y="99" width="7" height="14" rx="2" fill="#ff3438" opacity=".25" />
+    <rect x="172.34" y="99.5" width="3" height="13" rx="1" fill="#ff3438" />
+  </g>
+  <path d="M164 0h8c9 0 15-4 19-11l3 1.6c-5 8.6-12 12.4-22 12.4h-8z" fill="#101114" />
+</svg>

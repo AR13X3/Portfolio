@@ -1,0 +1,25 @@
+---
+/**
+ * Halation's mark (halation/assets/logo-mark-light.svg): "a light, half seen directly,
+ * half through fluted glass", split by the red seam. Decorative.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+const id = `hx-disc-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<svg class:list={['hx-mark', className]} viewBox="16 10 68 80" aria-hidden="true" focusable="false" data-hx-mark>
+  <defs>
+    <clipPath id={id}><circle cx="50" cy="50" r="30"></circle></clipPath>
+  </defs>
+  <path d="M50 20 A30 30 0 0 0 50 80 Z" fill="#f4f2ee" data-hx-mark-half></path>
+  <g clip-path={`url(#${id})`} fill="#f4f2ee">
+    <rect x="54" y="0" width="4" height="100" data-hx-mark-flute></rect>
+    <rect x="62" y="0" width="4" height="100" data-hx-mark-flute></rect>
+    <rect x="70" y="0" width="4" height="100" data-hx-mark-flute></rect>
+    <rect x="78" y="0" width="4" height="100" data-hx-mark-flute></rect>
+  </g>
+  <rect x="48.75" y="12" width="2.5" height="76" rx="1.25" fill="#ff3438" data-hx-mark-seam></rect>
+</svg>

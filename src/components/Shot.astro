@@ -1,0 +1,48 @@
+---
+/**
+ * A screenshot from public/shots. If a "-1440" variant exists next to a 2x
+ * capture it is offered in srcset so 1x screens download half the pixels.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  /** Path inside public/, e.g. "shots/bloodline/desktop-hero.webp". */
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  sizes?: string;
+  eager?: boolean;
+  /** Full-page capture that scrolls inside its frame. */
+  scroll?: boolean;
+  class?: string;
+}
+
+const { src, alt, width, height, sizes = '(min-width: 1024px) 56vw, 92vw', eager = false, scroll = false, class: className } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const url = (p: string) => `${base}${p}`;
+const small = src.replace(/\.webp$/, '-1440.webp');
+const hasSmall = small !== src && fs.existsSync(path.join(process.cwd(), 'public', small));
+const srcset = hasSmall ? `${url(small)} 1440w, ${url(src)} ${width}w` : undefined;
+---
+
+<img
+  class:list={['shot', className]}
+  src={url(src)}
+  srcset={srcset}
+  sizes={srcset ? sizes : undefined}
+  alt={alt}
+  width={width}
+  height={height}
+  loading={eager ? 'eager' : 'lazy'}
+  decoding="async"
+  data-scroll={scroll ? '' : undefined}
+/>
+
+<style>
+  .shot {
+    width: 100%;
+    height: auto;
+  }
+</style>

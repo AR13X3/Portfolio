@@ -1,0 +1,14 @@
+---
+/**
+ * Text with redactions. Write [[n]] where n characters are hidden, e.g. "Plain words for [[7]]."
+ * The hidden words are never in the source or the page; only bars of roughly their length.
+ */
+import Redacted from './Redacted.astro';
+
+interface Props {
+  text: string;
+}
+const parts = Astro.props.text.split(/\[\[(\d+)\]\]/);
+---
+
+{parts.map((part, i) => (i % 2 ? <Redacted chars={Number(part)} label="redacted" /> : part))}

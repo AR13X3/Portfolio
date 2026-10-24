@@ -1,0 +1,113 @@
+---
+import { gallery } from '../data/gallery';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+
+<section id="gallery" class="gallery" data-section="gallery" aria-labelledby="gallery-title">
+  <div class="gallery__frame">
+    <header class="gallery__head" data-reveal>
+      <p class="label gallery__label">Personal work</p>
+      <h2 class="gallery__title" id="gallery-title" tabindex="-1" data-focus>Drawings and photography</h2>
+    </header>
+    <ul class="gallery__grid">
+      {
+        gallery.map((item, i) => (
+          <li class:list={['gallery__item', `gallery__item--${i % 3}`]} data-reveal>
+            <figure>
+              {item.src ? (
+                <img src={`${base}${item.src}`} alt={item.alt} width={item.width} height={item.height} loading="lazy" decoding="async" />
+              ) : (
+                <div class="gallery__placeholder" role="img" aria-label={item.alt}>
+                  <span>{item.alt}</span>
+                </div>
+              )}
+              <figcaption>
+                <span class="label">{item.kind}</span>
+                {item.caption && <span>{item.caption}</span>}
+              </figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .gallery {
+    position: relative;
+    min-height: 100svh;
+    padding: clamp(96px, 16vh, 160px) var(--gutter) clamp(72px, 10vh, 120px);
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  html.mode-full .gallery {
+    min-height: 100vh;
+    padding-right: calc(var(--rail) + var(--gutter));
+  }
+
+  .gallery__frame {
+    max-width: 1360px;
+    margin: 0 auto;
+  }
+
+  .gallery__label {
+    color: var(--ink-2);
+  }
+
+  .gallery__title {
+    margin-top: 14px;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.4vw, 3.75rem);
+    font-weight: 560;
+    font-stretch: 118%;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    outline: none;
+  }
+
+  .gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: clamp(12px, 1.6vw, 22px);
+    margin-top: clamp(32px, 6vh, 56px);
+  }
+
+  .gallery__item figure {
+    display: grid;
+    gap: 10px;
+  }
+
+  .gallery__item img,
+  .gallery__placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+
+  .gallery__item--1 img,
+  .gallery__item--1 .gallery__placeholder {
+    aspect-ratio: 1;
+  }
+
+  .gallery__placeholder {
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    border: 1px dashed rgb(16 17 20 / 0.28);
+    background: rgb(16 17 20 / 0.03);
+    color: var(--ink-2);
+    font: 500 0.8125rem/1.4 var(--font-mono);
+    text-align: center;
+  }
+
+  .gallery__item figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    color: var(--ink-2);
+    font-size: 0.875rem;
+  }
+</style>

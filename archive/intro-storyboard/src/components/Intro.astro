@@ -1,0 +1,375 @@
+---
+import type { Chapter } from '../chapters/types';
+import { site } from '../data/site';
+
+interface Props {
+  chapters: Chapter[];
+}
+const { chapters } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+const count = words[chapters.length] ?? String(chapters.length);
+---
+
+<section id="top" class="intro" data-section="intro" aria-labelledby="intro-title">
+  <header class="intro__bar" data-intro>
+    <p class="intro__who">
+      <span class="intro__name">{site.name}</span>
+      <span class="intro__role">{site.role}, {site.location}</span>
+    </p>
+    <ul class="intro__links">
+      <li><a href={site.links.github} target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+      <li><a href={site.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+      <li><a href={`mailto:${site.email}`}>Email</a></li>
+    </ul>
+  </header>
+
+  <div class="intro__hero">
+    <h1 class="intro__statement" id="intro-title" data-intro>
+      <span class="visually-hidden">{site.name}, {site.role}. </span><span class="intro__statement-text">{site.statement}</span>
+    </h1>
+
+    <!-- A live canvas from Halation, the editor in chapter 05: Mercury Silk, recorded with its own export. -->
+    <figure class="intro__art" data-intro>
+      <div class="intro__canvas">
+        <video
+          src={`${base}shots/intro/mercury-silk.mp4`}
+          poster={`${base}shots/intro/mercury-silk-poster.webp`}
+          width="1600"
+          height="900"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-label="Mercury Silk: liquid silver folding over itself, a look from Halation."
+          data-intro-video></video>
+      </div>
+      <figcaption class="intro__caption">
+        <span>Mercury Silk</span>
+        <a href="#halation">Made with Halation, my open-source editor</a>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div class="intro__board">
+    <div class="intro__board-head" data-intro>
+      <p class="label">Storyboard · {count} chapters</p>
+      <p class="label intro__cue">Scroll to play <span aria-hidden="true">↓</span></p>
+    </div>
+    <ol class="board">
+      {
+        chapters.map((c, i) => (
+          <li class="board__slot">
+            <div
+              class="board__panel"
+              data-panel
+              style={`--panel-bg:${c.theme.bg};--panel-art:${c.panel ?? c.theme.bgArt ?? 'none'};--panel-fg:${c.panelInk?.name ?? c.theme.fg};--panel-muted:${c.panelInk?.meta ?? c.theme.muted};--panel-accent:${c.theme.accentText};--panel-font:${c.theme.display}`}
+            >
+              {/* The chapter's plain ground: the first panel fades to it as it zooms into the chapter. */}
+              <i class="board__ground" data-panel-ground style={`--ground-art:${c.theme.bgArt ?? 'none'}`} />
+              <a href={`#${c.slug}`} class="board__link">
+                <span class="board__num" data-panel-content>{String(i + 1).padStart(2, '0')}</span>
+                <span class="board__name" data-panel-content>{c.name}</span>
+                <span class="board__meta" data-panel-content>{c.status ?? c.meta[0]}</span>
+              </a>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .intro {
+    position: relative;
+    display: grid;
+    /* minmax(0, 1fr): the board scrolls sideways on phones and must not size the column. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    gap: clamp(32px, 6vh, 64px);
+    min-height: 100svh;
+    padding: clamp(20px, 4vh, 36px) var(--gutter) clamp(28px, 6vh, 56px);
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  html.mode-full .intro {
+    height: 100vh;
+    padding-right: calc(var(--rail) + var(--gutter));
+  }
+
+  .intro__bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px 32px;
+  }
+
+  .intro__who {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    align-items: baseline;
+  }
+
+  .intro__name {
+    font-weight: 600;
+  }
+
+  .intro__role {
+    color: var(--ink-2);
+  }
+
+  .intro__links {
+    display: flex;
+    gap: 6px 22px;
+  }
+
+  .intro__links a {
+    display: inline-block;
+    padding: 10px 0;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .intro__links a:hover {
+    text-decoration: underline;
+  }
+
+  /* The statement and the live canvas share the row; on phones the canvas follows the statement. */
+  .intro__hero {
+    position: relative;
+    display: grid;
+    align-items: end;
+    gap: clamp(20px, 3vw, 48px);
+  }
+
+  @media (min-width: 900px) {
+    .intro__hero {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    }
+  }
+
+  .intro__art {
+    margin: 0;
+  }
+
+  /* The load animation lives on the figure's children: the figure itself belongs to GSAP. */
+  .intro__canvas,
+  .intro__caption {
+    animation: rise 1.1s 0.15s var(--ease-out) backwards;
+  }
+
+  .intro__canvas {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #dfe1e6 center / cover;
+    box-shadow:
+      0 0 0 1px rgb(16 17 20 / 0.08),
+      0 30px 60px -30px rgb(16 17 20 / 0.45);
+  }
+
+  .intro__canvas video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .intro__caption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-top: 10px;
+    color: var(--ink-2);
+    font: 500 0.75rem/1.4 var(--font-sans);
+    letter-spacing: 0.04em;
+  }
+
+  .intro__caption span {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .intro__caption a {
+    color: inherit;
+    text-underline-offset: 0.25em;
+  }
+
+  .intro__caption a:hover {
+    color: var(--ink);
+  }
+
+  .intro__statement {
+    align-self: end;
+    max-width: 17ch;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6vw, 6.4rem);
+    font-weight: 560;
+    font-stretch: 118%;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+  }
+
+  /* Load animations live on wrappers; the animated elements themselves belong to GSAP. */
+  .intro__statement-text {
+    display: block;
+    animation: rise 1.1s var(--ease-out) backwards;
+  }
+
+  .intro__board-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    color: var(--ink-2);
+  }
+
+  .board {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: clamp(8px, 1vw, 14px);
+  }
+
+  .board__slot {
+    animation: rise 1.1s var(--ease-out) backwards;
+  }
+
+  .board__panel {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+    background-color: var(--panel-bg);
+    background-image: var(--panel-art);
+    background-size: cover;
+    background-position: center;
+    color: var(--panel-fg);
+    box-shadow: 0 0 0 1px rgb(20 20 19 / 0.08);
+  }
+
+  .board__slot:nth-child(2) { animation-delay: 0.06s; }
+  .board__slot:nth-child(3) { animation-delay: 0.12s; }
+  .board__slot:nth-child(4) { animation-delay: 0.18s; }
+  .board__slot:nth-child(5) { animation-delay: 0.24s; }
+  .board__slot:nth-child(6) { animation-delay: 0.3s; }
+  .board__slot:nth-child(7) { animation-delay: 0.36s; }
+
+  .board__ground {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    /* Longhands: --ground-art can be a list of layers, which the shorthand would reject. */
+    background-color: var(--panel-bg);
+    background-image: var(--ground-art);
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .board__link {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    padding: clamp(10px, 1.1vw, 16px);
+    color: inherit;
+    text-decoration: none;
+    border-radius: inherit;
+  }
+
+  /* The ring sits on the paper outside the panel, so it takes the shell's ink, not the panel's. */
+  .board__link:focus-visible {
+    outline-color: var(--ink);
+  }
+
+  .board__num,
+  .board__meta {
+    font: 500 0.6875rem/1.3 var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--panel-muted);
+  }
+
+  .board__name {
+    align-self: end;
+    font-family: var(--panel-font);
+    font-size: clamp(1rem, 1.7vw, 1.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* Lift the panel's content, not the panel: the panel's transform belongs to the zoom transition. */
+  @media (hover: hover) {
+    .board__link {
+      transition: transform 0.4s var(--ease-out);
+    }
+
+    .board__link:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .board {
+      grid-auto-columns: 42%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 0 var(--gutter) 6px;
+      scrollbar-width: none;
+    }
+
+    .board__slot {
+      scroll-snap-align: start;
+    }
+
+    .intro__cue {
+      display: none;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro__canvas,
+    .intro__caption,
+    .intro__statement-text,
+    .board__slot {
+      animation-name: fade;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+      }
+    }
+  }
+</style>
+
+<script>
+  // The canvas plays while it is on screen, and never under reduced motion (it keeps its poster).
+  const video = document.querySelector<HTMLVideoElement>('[data-intro-video]');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (video) {
+    window.setInterval(() => {
+      const r = video.getBoundingClientRect();
+      const shown = r.bottom > 0 && r.top < innerHeight && Number(getComputedStyle(video.closest('[data-intro]')!).opacity) > 0.05;
+      if (shown && video.paused && !reduce.matches) video.play().catch(() => {});
+      else if (!shown && !video.paused) video.pause();
+    }, 400);
+  }
+</script>

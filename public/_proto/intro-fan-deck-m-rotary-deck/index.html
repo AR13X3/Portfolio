@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Toufiq Ahmed Joy, Product Design Lead, Sydney</title>
+  <meta name="description" content="Prototype: the Fan Deck intro. Seven products, each in its own design language, pinned through the dot of an i." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Geist:wght@100..900&family=Inter:wght@400..800&family=Lato:wght@400;700;900&family=Montserrat:wght@400..800&family=Outfit:wght@400..800&family=Plus+Jakarta+Sans:wght@400..800&family=Sora:wght@400..800&family=Urbanist:wght@400..800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=rd3" />
+  <script>/* ?nojs previews the page as it reads without JavaScript. */ if (!/[?&]nojs/.test(location.search)) document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <a class="skip" href="#carevisor">Skip to the work</a>
+
+  <div class="bg" aria-hidden="true">
+    <i class="bg__layer bg__layer--intro"></i>
+    <i class="bg__layer bg__layer--cv" data-bg-cv></i>
+  </div>
+
+  <!-- The site's progress rail (ProgressNav), mocked as decoration. -->
+  <div class="rail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <main>
+    <div class="stage" data-stage>
+      <!-- Phones and tablets: the track the intro sticks in while the dial closes and 01 opens. Desktop: display: contents. -->
+      <div class="intro-track" data-intro-track>
+      <section id="top" class="intro" data-section="intro" aria-labelledby="intro-title">
+        <i class="intro__grain" aria-hidden="true" data-grain></i>
+        <header class="intro__bar" data-out>
+          <div class="in">
+            <p class="bar__left">Selected work, 2025–26</p>
+            <a class="bar__now" href="#carevisor"><b>Now:</b> <span>redesigning the CareVisor app, three ways</span></a>
+            <ul class="bar__links">
+              <li><a href="https://github.com/AR13X3" target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+              <li><a href="https://www.linkedin.com/in/toufiqahmedjoy" target="_blank" rel="noopener noreferrer">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+              <li><a href="mailto:joytoufiqahmed@gmail.com">Email</a></li>
+            </ul>
+          </div>
+        </header>
+
+        <div class="intro__lockup">
+          <p class="label intro__kicker" data-out><span class="in"><span class="kick__a">A portfolio in </span>seven design languages, by</span></p>
+          <h1 class="intro__title" id="intro-title">
+            <span class="visually-hidden">Toufiq Ahmed Joy, Product Design Lead, Sydney</span>
+            <span class="name" aria-hidden="true">
+              <span class="line"><span class="line__rise" style="--n: 0"><span class="line__out" data-line>Touf<span class="i" data-i><span class="i__full">ı</span><span class="i__lite">i</span></span>q</span></span></span>
+              <span class="line"><span class="line__rise" style="--n: 1"><span class="line__out" data-line>Ahmed Joy</span></span></span>
+            </span>
+            <span class="role" aria-hidden="true" data-out><span class="in">Product Design Lead, Sydney</span></span>
+          </h1>
+        </div>
+
+        <div class="intro__sub" data-out>
+          <div class="swap"><p class="in"><b class="sub__lead">Seven products, seven design languages. </b>I design websites and web app UI/UX, and I build automations.<span class="sub__tail"> Every product gets its own voice; I keep them in one deck.</span></p></div>
+        </div>
+
+        <!-- What the blade under the pointer (or focus) is. The links carry the same words. -->
+        <div class="intro__readout" aria-hidden="true" data-out>
+          <div class="readout">
+            <div class="readout__vis">
+            <div class="readout__swap" data-readout>
+              <p class="readout__idle"><b>Seven products, seven design languages.</b>Hover to part the deck. Each blade is set in its product’s own type and colours.</p>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phones and tablets: the blade standing at the reading position, named in its own face. A pointer-only duplicate of the links. -->
+        <div class="dial-readout" aria-hidden="true">
+          <div class="dial-readout__in" data-dial-readout>
+            <p class="dr__head"><span class="dr__num">01</span><span class="dr__name" style="--face: 'Plus Jakarta Sans', sans-serif; --w: 800">CareVisor</span></p>
+            <p class="dr__meta">ReSkill AI · Since Oct 2025</p>
+            <p class="dr__line">I designed the website and the product UI.</p>
+          </div>
+        </div>
+
+        <p class="intro__cue" data-out>
+          <span class="in">
+            <svg class="cue__arrow" viewBox="0 0 24 14" aria-hidden="true"><path d="M2 2c2 7 9 10 19 9M17 7l4 4-4 3" /></svg>
+            <span class="cue--rest">Scroll, or pick a blade</span>
+            <span class="cue--full">Scroll to open 01 CareVisor ↓</span>
+            <span class="cue--touch">Tap a blade to open it</span>
+            <span class="cue--dial">Swipe the deck · tap a blade to open it</span>
+          </span>
+        </p>
+
+        <!-- The rivet: the dot of the i, and the pin the whole deck turns on. -->
+        <span class="rivet" aria-hidden="true" data-rivet><span class="rivet__out" data-rivet-out><span class="rivet__head" data-rivet-head></span></span></span>
+
+        <div class="deck" data-deck>
+          <div class="deck__jolt" data-jolt>
+            <ol class="deck__list" aria-label="Chapters">
+
+              <li class="blade-item" style="--i: 0; --a: -10deg; --bg: #e9f0fa; --acc: #0052cc; --face: 'Plus Jakarta Sans', sans-serif; --w: 800" data-slug="carevisor" data-name="CareVisor" data-meta="ReSkill AI · Since Oct 2025" data-blurb="ReSkill AI. I designed the website and the product UI.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#carevisor" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">E9F0FA</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag__ground" style="background-image: var(--prism)"></span>
+                        <span class="frag-cv__win" data-mini></span>
+                        <svg class="frag-cv__cursor" viewBox="0 0 11 16" aria-hidden="true"><path d="M1 1v12l3.2-3 2.3 5 2-.9-2.2-4.9H10z" fill="#000918" stroke="#fff" stroke-width="1" stroke-linejoin="round" /></svg>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>0052CC</span><span class="band__num">01</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">01</span><span class="nm">CareVisor</span><span class="mt">ReSkill AI · Since Oct 2025</span><span class="ln">I designed the website and the product UI.</span></span>
+                    <span class="visually-hidden">01 CareVisor. ReSkill AI, since Oct 2025. I designed the website and the product UI.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 1; --a: 5deg; --bg: #08080a; --acc: #ff3438; --face: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif; --w: 700" data-slug="halation" data-name="Halation" data-meta="Open source · WebGL 2" data-blurb="An open-source editor for gradients seen through glass. I designed and built it.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#halation" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">08080A</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag-ha__look"></span>
+                        <span class="frag-ha__glass"></span>
+                        <span class="frag-ha__panel"><b>Halation</b><span class="frag-ha__row">Glass<span class="frag-ha__track"><i class="frag-ha__knob"></i></span></span></span>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>FF3438</span><span class="band__num">02</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">02</span><span class="nm">Halation</span><span class="mt">Open source · WebGL 2</span><span class="ln">An editor for gradients seen through glass. I designed and built it.</span></span>
+                    <span class="visually-hidden">02 Halation. Open source, WebGL 2. An open-source editor for gradients seen through glass. I designed and built it.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 2; --a: 20deg; --bg: #efefed; --acc: #e5484d; --face: 'Inter', sans-serif; --w: 800" data-slug="sitescore" data-name="SiteScore" data-meta="Personal project · Open source" data-blurb="Where to open a business, forecast 36 months out. I designed and built it.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#sitescore" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">EFEFED</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <img class="frag-ss__map" src="hex.svg" alt="" width="120" height="155" />
+                        <span class="frag-ss__pin"></span>
+                        <span class="frag-ss__card"><small>Wentworth Point</small><b>$1.8M</b><span>revenue over 36 months</span><svg viewBox="0 0 64 14" aria-hidden="true"><path d="M0 12 8 11 14 12 20 9 27 10 33 7 40 8 46 5 53 6 58 3 64 2" fill="none" stroke="#161616" stroke-width="1.2" stroke-linejoin="round" /></svg></span>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>E5484D</span><span class="band__num">03</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">03</span><span class="nm">SiteScore</span><span class="mt">Personal project · Open source</span><span class="ln">Where to open a business, forecast 36 months out.</span></span>
+                    <span class="visually-hidden">03 SiteScore. Personal project, open source. Where to open a business, forecast 36 months out. I designed and built it.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 3; --a: 35deg; --bg: #6ba7a9; --acc: #cfb173; --face: 'Lato', sans-serif; --w: 900" data-slug="nasa" data-name="NASA Space Apps" data-meta="In progress" data-blurb="In progress for NASA Space Apps, so the details stay redacted for now.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#nasa" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">6BA7A9</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag-na__sky"></span>
+                        <span class="frag-na__cloud"></span>
+                        <span class="frag-na__hill frag-na__hill--b"></span>
+                        <span class="frag-na__hill"></span>
+                        <span class="frag-na__card"><span class="frag-na__pill">In progress</span><i class="frag-na__bar" style="width: 92%"></i><i class="frag-na__bar" style="width: 74%"></i><i class="frag-na__bar" style="width: 58%"></i></span>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>CFB173</span><span class="band__num">04</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">04</span><span class="nm">NASA Space Apps</span><span class="mt">In progress</span><span class="ln">The details stay redacted for now.</span></span>
+                    <span class="visually-hidden">04 NASA Space Apps Challenge. In progress, so the details stay redacted for now.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 4; --a: 50deg; --bg: #06110c; --acc: #dcebd2; --face: 'Urbanist', sans-serif; --w: 800" data-slug="bloodline" data-name="BloodLine" data-meta="Hack48 Sydney · Oct 2026" data-blurb="A safety net for GPs’ blood results, built in 48 hours. I led product and UI design.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#bloodline" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">06110C</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag-bl__ground"></span>
+                        <span class="frag-bl__card"><small>Haemoglobin</small><b>118<em>g/L</em></b><span class="frag-bl__range"><i class="frag-bl__band"></i><i class="frag-bl__mark"></i></span><span class="frag-bl__ticks"><span>120</span><span>180</span></span></span>
+                        <span class="frag-bl__alert"><i></i>A result may need your review.</span>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>DCEBD2</span><span class="band__num">05</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">05</span><span class="nm">BloodLine</span><span class="mt">Hack48 Sydney · Oct 2026</span><span class="ln">A safety net for GPs’ blood results, built in 48 hours.</span></span>
+                    <span class="visually-hidden">05 BloodLine. Hack48 Sydney, Oct 2026. A safety net for GPs’ blood results, built in 48 hours. I led product and UI design.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 5; --a: 65deg; --bg: #0d0f14; --acc: #3b69ff; --face: 'Sora', sans-serif; --w: 700" data-slug="airpoint" data-name="Airpoint" data-meta="Open source" data-blurb="A Galaxy S Pen turned into a wireless mouse. I designed and built it.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#airpoint" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">0D0F14</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag-ap__ground"></span>
+                        <span class="frag-ap__phone">
+                          <svg viewBox="0 0 30 30" aria-hidden="true"><path d="M3 25c7 1 17-6 16-15-.6-5-7-6-8.4-1-1.8 6.5 4 15 14.4 13" fill="none" stroke="#3b69ff" stroke-width="3.2" stroke-linecap="round" /><circle cx="27.5" cy="22" r="2.3" fill="#3b69ff" /></svg>
+                          <b>Your S Pen, now a mouse.</b>
+                          <span>Next</span>
+                        </span>
+                        <svg class="frag-ap__cursor" viewBox="0 0 11 16" aria-hidden="true"><path d="M1 1v12l3.2-3 2.3 5 2-.9-2.2-4.9H10z" fill="#f4f4f1" stroke="#0d0f14" stroke-width="1" stroke-linejoin="round" /></svg>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>3B69FF</span><span class="band__num">06</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">06</span><span class="nm">Airpoint</span><span class="mt">Open source</span><span class="ln">A Galaxy S Pen turned into a wireless mouse.</span></span>
+                    <span class="visually-hidden">06 Airpoint. Open source. A Galaxy S Pen turned into a wireless mouse. I designed and built it.</span>
+                  </a>
+                </div>
+              </li>
+
+              <li class="blade-item" style="--i: 6; --a: 80deg; --bg: #f7f9fc; --acc: #00b0f0; --face: 'Montserrat', sans-serif; --w: 800" data-slug="comparebestai" data-name="Compare Best AI" data-meta="Creative lead · Sep 2025 – Sep 2026" data-blurb="AI tools scored and compared side by side. I led the identity and the UX.">
+                <div class="blade__slide" data-slide>
+                  <a class="blade" href="#comparebestai" draggable="false">
+                    <span class="blade__neck" aria-hidden="true" data-body><span class="blade__hex">F7F9FC</span></span>
+                    <span class="blade__card" aria-hidden="true" data-body></span>
+                    <span class="blade__chip" aria-hidden="true" data-chip>
+                      <span class="frag">
+                        <span class="frag-cb__ground"></span>
+                        <img class="frag-cb__robot" src="../../shots/comparebestai/robot.webp" alt="" width="763" height="903" />
+                        <span class="frag-cb__search"><i></i>Search AI tools…</span>
+                        <span class="frag-cb__score"><span><span>Pricing</span><span>9.1</span></span><span class="frag-cb__track"><i class="frag-cb__fill"></i></span></span>
+                      </span>
+                    </span>
+                    <span class="blade__band" aria-hidden="true" data-body><span class="band__acc"><i></i>00B0F0</span><span class="band__num">07</span></span>
+                    <span class="blade__text" aria-hidden="true"><span class="num">07</span><span class="nm">Compare Best AI</span><span class="mt">Creative lead · Sep 2025 – Sep 2026</span><span class="ln">AI tools scored and compared side by side.</span></span>
+                    <span class="visually-hidden">07 Compare Best AI. Creative lead, Sep 2025 to Sep 2026. AI tools scored and compared side by side. I led the identity and the UX.</span>
+                  </a>
+                </div>
+              </li>
+
+            </ol>
+            <div class="deck__tips" aria-hidden="true">
+              <span class="tip" style="--i: 0; --a: -10deg; --face: 'Plus Jakarta Sans', sans-serif; --w: 800"><span class="in"><b>01</b><span class="nm">CareVisor</span></span></span>
+              <span class="tip" style="--i: 1; --a: 5deg; --face: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif; --w: 700"><span class="in"><b>02</b><span class="nm">Halation</span></span></span>
+              <span class="tip" style="--i: 2; --a: 20deg; --face: 'Inter', sans-serif; --w: 800"><span class="in"><b>03</b><span class="nm">SiteScore</span></span></span>
+              <span class="tip" style="--i: 3; --a: 35deg; --face: 'Lato', sans-serif; --w: 900"><span class="in"><b>04</b><span class="nm">NASA Space Apps</span></span></span>
+              <span class="tip" style="--i: 4; --a: 50deg; --face: 'Urbanist', sans-serif; --w: 800"><span class="in"><b>05</b><span class="nm">BloodLine</span></span></span>
+              <span class="tip" style="--i: 5; --a: 65deg; --face: 'Sora', sans-serif; --w: 700"><span class="in"><b>06</b><span class="nm">Airpoint</span></span></span>
+              <span class="tip" style="--i: 6; --a: 80deg; --face: 'Montserrat', sans-serif; --w: 800"><span class="in"><b>07</b><span class="nm">Compare Best AI</span></span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+      </div>
+
+      <!-- Chapter 01, CareVisor: its first frame (Chapter.astro + Demo.astro), mocked. -->
+      <section id="carevisor" class="cv" aria-labelledby="carevisor-title" data-room>
+        <div class="cv__mask" data-mask>
+          <div class="cv__inner" data-inner>
+            <div class="cv__ground" data-room-ground></div>
+            <header class="cv-nav">
+              <span class="cv-brand">
+                <svg class="cv-mark" viewBox="0 0 64 64" aria-hidden="true" data-cv-mark>
+                  <rect width="64" height="64" rx="13" fill="#3567ba"></rect>
+                  <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 38.6H13.4C15 38.6 15.6 33 16.6 33S17.9 38.9 18.8 38.9H20L28.2 15L35.8 38.9H40.6C42.6 38.9 43.9 31.7 45.2 31.7S46.9 38.9 48.4 38.9H58" data-cv-line></path>
+                    <path d="M38.2 22.4V38.6" data-cv-line></path>
+                  </g>
+                  <path d="M25 27.6H31.6" stroke="#a9c1ea" stroke-width="2.4" stroke-linecap="round" data-cv-dot></path>
+                  <circle cx="38.2" cy="17.4" r="2" fill="#5ea2f2" data-cv-dot></circle>
+                </svg>
+                <span class="cv-brand__name" data-cv-nav>Care<span>Visor</span></span>
+                <span class="cv-brand__sep" aria-hidden="true" data-cv-nav></span>
+                <span class="cv-brand__tag" data-cv-nav>NDIS service provider platform</span>
+              </span>
+              <p class="cv-nav__meta"><span data-cv-nav>01 · Work</span><span data-cv-nav>ReSkill AI</span><span data-cv-nav>Since Oct 2025</span><span data-cv-nav>NDIS software</span></p>
+              <a class="cv-btn cv-btn--sm" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer" data-cv-nav>Visit the site<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </header>
+
+            <div class="cv-stack">
+              <div class="cv-hero">
+                <h2 class="cv-hero__title" id="carevisor-title" tabindex="-1">
+                  <span class="w"><span>The</span></span> <span class="w"><span>complete</span></span> <span class="w"><span>NDIS</span></span> <span class="w"><span>compliance</span></span> <span class="w"><span>and</span></span> <br class="cv-br" /><span class="w"><span class="cv-blue">Audit&#8209;Ready</span></span> <span class="w"><span>platform.</span></span>
+                </h2>
+                <p class="cv-hero__lede" data-cv-bit>The NDIS service provider platform, built in Australia. It takes a provider’s team from participant intake to payroll, with every shift, document, incident and claim connected.</p>
+                <p class="cv-hero__role" data-cv-bit><span>My role</span>Designed the website and the product UI</p>
+                <div class="cv-hero__ctas" data-cv-bit>
+                  <a class="cv-btn" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer">Visit carevisor.com.au<span class="visually-hidden"> (opens in a new tab)</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></a>
+                </div>
+              </div>
+
+              <div class="cv-product">
+                <ol class="cv-tabs" aria-label="The six modules of the hero demo">
+                  <li class="cv-tab is-on" data-cv-tab><span class="cv-tab__tile" style="--tile: #e8f0fe; --tile-ink: #0052cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" x2="19" y1="8" y2="14" /><line x1="22" x2="16" y1="11" y2="11" /></svg></span><span class="cv-tab__caption">Guided onboarding</span><span class="cv-tab__title">Participant Intake</span><span class="cv-tab__track" aria-hidden="true"><i data-cv-track></i></span></li>
+                  <li class="cv-tab" data-cv-tab><span class="cv-tab__tile" style="--tile: #efe9fe; --tile-ink: #6d4aff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span><span class="cv-tab__caption">Compliance-first hiring</span><span class="cv-tab__title">Staff Intake</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+                  <li class="cv-tab" data-cv-tab><span class="cv-tab__tile" style="--tile: #fef3e2; --tile-ink: #d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1" /><path d="M16 2v4" /><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" /><path d="M3 10h5" /><path d="M8 2v4" /><circle cx="16" cy="16" r="6" /></svg></span><span class="cv-tab__caption">Roster on autopilot</span><span class="cv-tab__title">Shift Management</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+                  <li class="cv-tab" data-cv-tab><span class="cv-tab__tile" style="--tile: #e0f5f1; --tile-ink: #0f9d8f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18.226 5.226-2.52-2.52A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-.351" /><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /><path d="M8 18h1" /></svg></span><span class="cv-tab__caption">Smart templates</span><span class="cv-tab__title">Document Builder</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+                  <li class="cv-tab" data-cv-tab><span class="cv-tab__tile" style="--tile: #fdeaea; --tile-ink: #e05252"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg></span><span class="cv-tab__caption">Audit-ready workflows</span><span class="cv-tab__title">Incident Management</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+                  <li class="cv-tab" data-cv-tab><span class="cv-tab__tile" style="--tile: #e6f6ea; --tile-ink: #1d9d55"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" /><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" /></svg></span><span class="cv-tab__caption">Claims without chaos</span><span class="cv-tab__title">Billing &amp; Payroll</span><span class="cv-tab__track" aria-hidden="true"><i></i></span></li>
+                </ol>
+
+                <figure class="cvd cv-demo" role="img" aria-label="Recreated CareVisor hero demo on the Participant Intake tab: a browser window on app.carevisor.com with the app sidebar and a new participant form." data-window>
+                  <div class="cvd-glow" aria-hidden="true" data-glow></div>
+                  <div class="cvd-app" data-app>
+                    <div class="cvd-chrome">
+                      <span class="cvd-light" style="--c: #f0645c"></span><span class="cvd-light" style="--c: #f5bd4f"></span><span class="cvd-light" style="--c: #61c454"></span>
+                      <span class="cvd-url">app.carevisor.com</span>
+                      <span class="cvd-spacer"></span>
+                    </div>
+                    <div class="cvd-body">
+                      <div class="cvd-side">
+                        <div class="cvd-org">
+                          <span class="cvd-org__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /><path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" /></svg></span>
+                          <span><span class="cvd-org__name">Sunrise Care</span><span class="cvd-org__who">Aisha · Admin</span></span>
+                        </div>
+                        <div class="cvd-nav">
+                          <i class="cvd-nav__pill"></i>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg>Dashboard</span>
+                          <span class="cvd-nav__item is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></svg>Participants</span>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" /></svg>Team</span>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1" /><path d="M16 2v4" /><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" /><path d="M3 10h5" /><path d="M8 2v4" /><circle cx="16" cy="16" r="6" /></svg>Roster</span>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg>Documents</span>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>Incidents</span>
+                          <span class="cvd-nav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" /><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" /></svg>Billing</span>
+                        </div>
+                        <div class="cvd-side__foot"><i class="cvd-skel" style="--w: 96"></i><i class="cvd-skel" style="--w: 64"></i></div>
+                      </div>
+                      <div class="cvd-stage">
+                        <div class="cvd-inner">
+                          <div class="cvd-head">
+                            <div><span class="cvd-h">Participants</span><i class="cvd-skel cvd-skel--sub" style="--w: 128"></i></div>
+                            <span class="cvd-btn">+ New participant</span>
+                          </div>
+                          <div class="cvd-rows">
+                            <div class="cvd-row"><span class="cvd-ava">LC</span><span class="cvd-stack"><i class="cvd-skel" style="--w: 112"></i><i class="cvd-skel cvd-skel--thin" style="--w: 64"></i></span></div>
+                            <div class="cvd-row"><span class="cvd-ava">MT</span><span class="cvd-stack"><i class="cvd-skel" style="--w: 96"></i><i class="cvd-skel cvd-skel--thin" style="--w: 64"></i></span></div>
+                            <div class="cvd-row"><span class="cvd-ava">AR</span><span class="cvd-stack"><i class="cvd-skel" style="--w: 128"></i><i class="cvd-skel cvd-skel--thin" style="--w: 64"></i></span></div>
+                          </div>
+                          <div class="cvd-card cvd-form">
+                            <span class="cvd-card__title">New participant</span>
+                            <span class="cvd-label">Full name</span><span class="cvd-field"></span>
+                            <span class="cvd-label">NDIS number</span><span class="cvd-field"></span>
+                          </div>
+                          <svg class="cvd-cursor" viewBox="0 0 11 16" aria-hidden="true"><path d="M1 1v12l3.2-3 2.3 5 2-.9-2.2-4.9H10z" fill="#000918" stroke="#fff" stroke-width="1" stroke-linejoin="round" /></svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="after" aria-hidden="true">CareVisor’s chapter continues here</div>
+  </main>
+
+  <p class="toast" role="status" data-toast></p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="main.js?v=rd3"></script>
+</body>
+</html>

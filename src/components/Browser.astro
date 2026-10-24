@@ -1,0 +1,87 @@
+---
+/**
+ * Desktop browser frame. Children marked [data-screen] stack inside the
+ * viewport; in full motion mode they slide in one after another, otherwise
+ * they become a swipeable row.
+ */
+interface Props {
+  url?: string;
+  label: string;
+  class?: string;
+}
+const { url, label, class: className } = Astro.props;
+---
+
+<figure class:list={['browser', className]} data-device="browser" aria-label={label}>
+  <div class="browser__bar" aria-hidden="true">
+    <span class="browser__dots"><i></i><i></i><i></i></span>
+    {url && <span class="browser__url">{url}</span>}
+  </div>
+  <div class="browser__screen" role="group" aria-label={`${label}, screens`} data-screens data-scroller>
+    <slot />
+  </div>
+</figure>
+
+<style>
+  .browser {
+    --frame: color-mix(in srgb, var(--c-surface) 92%, var(--c-fg));
+    position: relative;
+    width: 100%;
+    border-radius: 14px;
+    background: var(--frame);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--c-fg) 12%, transparent),
+      0 30px 80px -30px rgb(0 0 0 / 0.45),
+      0 12px 24px -12px rgb(0 0 0 / 0.25);
+    overflow: hidden;
+    transform-origin: 50% 100%;
+  }
+
+  .browser__bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 34px;
+    padding: 0 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-fg) 10%, transparent);
+  }
+
+  .browser__dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .browser__dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--c-fg) 22%, transparent);
+  }
+
+  .browser__url {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 3px 12px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--c-fg) 7%, transparent);
+    color: var(--c-fg);
+    font: 500 11px/1.4 var(--font-sans);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The page meets the toolbar square, as a browser window's does; the frame rounds the bottom. */
+  .browser__screen {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 0;
+    background: var(--c-surface);
+  }
+
+  .browser__screen :global(.screen) {
+    border-radius: 0;
+  }
+</style>

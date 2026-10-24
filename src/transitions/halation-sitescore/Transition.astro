@@ -1,0 +1,362 @@
+---
+/**
+ * Halation → SiteScore. The artwork Halation ends on quantises into SiteScore's 36 month
+ * columns (the month strip: ink, darker as revenue ramps), the columns settle into bars,
+ * and Halation's red playhead becomes SiteScore's one red line, riding its tip across the
+ * 36 months while the type decodes into Inter and JetBrains Mono. The chart then tips back
+ * into the map plane: the hex heat mosaic ripples in and three candidate sites rise as pins.
+ */
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import { BAND_FLAT, H, HEX_TILE, HEX_W, LINE, PINS, R, RINGS, W } from '../shared/sitescore-map';
+import { COLUMNS } from './columns';
+import { BASE, MONTHS } from './months';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const art = `${base}shots/halation/look-coral-reeds-pane-1440.webp`;
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(4)}%`;
+const title = 'Projected monthly revenue';
+---
+
+<div class="b2s">
+  <div class="b2s__art" data-b2s="art" style={`background-image:url(${art})`}></div>
+  <div class="b2s__paper" data-b2s="paper"></div>
+
+  <!-- Quantise: one column per month, first in the artwork's colours, then SiteScore's ink. -->
+  <div class="b2s__months">
+    {
+      MONTHS.map((m, k) => (
+        <span class="b2s__month" style={`left:${pct(m.x0, W)};width:${pct(m.x1 - m.x0, W)}`}>
+          <i class="b2s__q" data-b2s="q" style={`background:linear-gradient(${COLUMNS[k].join(',')})`} />
+          <i class="b2s__ink" style={`bottom:${pct(H - BASE, H)}`} data-b2s="ink" data-o={m.opacity.toFixed(3)} data-s={m.scale.toFixed(4)} />
+        </span>
+      ))
+    }
+  </div>
+
+  <div class="b2s__stage">
+    <div class="b2s__plane" data-b2s="plane">
+      <svg class="b2s__map" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" data-b2s="map">
+        <defs>
+          <pattern id="b2s-hex" width={HEX_W} height={R * 3} patternUnits="userSpaceOnUse">
+            {HEX_TILE.map((pts) => <polygon points={pts} />)}
+          </pattern>
+        </defs>
+        <rect class="b2s__grid" width={W} height={H} fill="url(#b2s-hex)" />
+      </svg>
+      {/* One SVG per ring, so each ripple step fades as its own layer instead of repainting the mosaic. */}
+      {
+        RINGS.map((ring) => (
+          <svg class="b2s__ring" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" data-b2s="ring">
+            {ring.map((c) => (
+              <polygon points={c.points} fill={c.fill} fill-opacity={c.opacity} />
+            ))}
+          </svg>
+        ))
+      }
+      {/* The finished mosaic in one layer: it takes over once the ripple is done, so the recede fades two layers, not seven. */}
+      <svg class="b2s__ring" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" data-b2s="mosaic">
+        {RINGS.flat().map((c) => <polygon points={c.points} fill={c.fill} fill-opacity={c.opacity} />)}
+      </svg>
+      <svg class="b2s__chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" data-b2s="chart">
+        <path class="b2s__band" d={BAND_FLAT} data-b2s="band" />
+        <path class="b2s__line" d={LINE} data-b2s="line" />
+      </svg>
+      <!-- Halation's playhead: 3 × 14 px of brand red with its glow. -->
+      <i class="b2s__head" data-b2s="head"></i>
+      <i class="b2s__dot" data-b2s="dot"></i>
+    </div>
+    <!-- The pins stand upright, so they live outside the tilted plane and follow its projection. -->
+    {
+      PINS.map((p) => (
+        <span class:list={['b2s__pin', { 'is-selected': p.selected }]} data-b2s="pin" data-x={p.x} data-y={p.y}>
+          <span>
+            <b>{p.n}</b>
+          </span>
+        </span>
+      ))
+    }
+  </div>
+
+  <div class="b2s__head-copy">
+    <p class="b2s__kicker" data-b2s="kicker">forecast.monthly()</p>
+    <p class="b2s__title" data-b2s="title">
+      {
+        title.split(' ').map((w) => (
+          <>
+            <span class="b2s__word">
+              <span data-b2s="word">{w}</span>
+              <i data-b2s="block" />
+            </span>{' '}
+          </>
+        ))
+      }
+    </p>
+  </div>
+  <p class="b2s__axis" data-b2s="axis"><span>month 1</span><span>P10–P90 · 300 scenarios</span><span>month 36</span></p>
+</div>
+
+<style>
+  .b2s {
+    --signal: #e5484d;
+    --ink: #1d1d1d;
+    --text: #161616;
+    --surface: #ffffff;
+    --sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* Lite mode starts from its own copy of the still (full mode morphs the chapter's canvas instead). */
+  .b2s__art {
+    position: absolute;
+    inset: 0;
+    background: center / cover no-repeat;
+    opacity: 0;
+  }
+
+  /* SiteScore's 28px grid paper (frontend/src/styles.css .paper::before). Its radial fade is drawn
+     in the paper's own colour instead of a mask, so the layer can fade on the compositor. */
+  .b2s__paper {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background-image:
+      radial-gradient(120% 90% at 0% 0%, rgb(239 239 237 / 0) 30%, #efefed 75%),
+      linear-gradient(rgb(0 0 0 / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(0 0 0 / 0.055) 1px, transparent 1px);
+    background-size: 100% 100%, 28px 28px, 28px 28px;
+  }
+
+  .b2s__months {
+    position: absolute;
+    inset: 0;
+  }
+
+  .b2s__month {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+
+  .b2s__q,
+  .b2s__ink {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+
+  /* The month strip's cells (StatBand .viz--months i): ink, 1px apart. */
+  .b2s__ink {
+    left: 0.5px;
+    right: 0.5px;
+    border-radius: 1px;
+    background: var(--text);
+    transform-origin: 50% 100%;
+  }
+
+  .b2s__stage {
+    position: absolute;
+    inset: 0;
+    perspective: 1500px;
+    perspective-origin: 50% 20%;
+  }
+
+  .b2s__plane {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 62%;
+  }
+
+  .b2s__map,
+  .b2s__ring,
+  .b2s__chart {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .b2s__map,
+  .b2s__ring {
+    opacity: 0;
+  }
+
+  .b2s__grid {
+    opacity: 0.9;
+  }
+
+  .b2s__map pattern polygon {
+    fill: none;
+    stroke: #d3d3cf;
+    stroke-width: 1;
+  }
+
+  .b2s__chart path {
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .b2s__line {
+    fill: none;
+    stroke: var(--signal);
+    stroke-width: 2.5;
+    opacity: 0;
+  }
+
+  .b2s__band {
+    fill: var(--signal);
+    fill-opacity: 0.12;
+    stroke: none;
+    opacity: 0;
+  }
+
+  .b2s__head,
+  .b2s__dot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+  }
+
+  .b2s__head {
+    width: 3px;
+    height: 14px;
+    margin: -7px 0 0 -1.5px;
+    border-radius: 1.5px;
+    background: #ff3438;
+    box-shadow: 0 0 8px rgb(255 52 56 / 0.75);
+  }
+
+  /* The sparkline's red end dot (styles.css .spark__dot). */
+  .b2s__dot {
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 0 3px rgb(229 72 77 / 0.18);
+  }
+
+  /* SiteScore's map pins: a surface rim around an ink hex cell (styles.css .site-pin). */
+  .b2s__pin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 38px;
+    height: 44px;
+    margin: -44px 0 0 -19px;
+    transform-origin: 50% 100%;
+    opacity: 0;
+  }
+
+  /* The pin's soft shadow, drawn as a dimmer hex underneath rather than a filter on a moving layer. */
+  .b2s__pin::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: rgb(0 0 0 / 0.16);
+    transform: translateY(2px) scale(1.08);
+  }
+
+  .b2s__pin span {
+    --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    clip-path: var(--hex);
+    background: var(--surface);
+  }
+
+  .b2s__pin b {
+    display: grid;
+    place-items: center;
+    width: calc(100% - 5px);
+    height: calc(100% - 5px);
+    clip-path: var(--hex);
+    background: var(--ink);
+    color: #fff;
+    font: 600 12px/1 var(--mono);
+  }
+
+  .b2s__pin.is-selected b {
+    background: #d0433c;
+    font-size: 14px;
+  }
+
+  .b2s__head-copy {
+    position: absolute;
+    left: 9.4%;
+    top: 13%;
+  }
+
+  .b2s__kicker,
+  .b2s__axis {
+    font: 500 12.5px/1 var(--mono);
+    color: #4a4a47;
+    opacity: 0;
+  }
+
+  .b2s__kicker {
+    white-space: pre;
+  }
+
+  /* The red block cursor that ends SiteScore's kickers. */
+  .b2s__kicker::after {
+    content: '';
+    display: inline-block;
+    width: 0.6em;
+    height: 0.95em;
+    margin-left: 3px;
+    vertical-align: -0.12em;
+    background: var(--signal);
+  }
+
+  /* .page-title: Inter 500, tight, uncovered word by word by ink blocks. */
+  .b2s__title {
+    margin-top: 10px;
+    font: 500 clamp(28px, 3.2vw, 44px)/1.05 var(--sans);
+    font-feature-settings: 'cv11';
+    letter-spacing: -0.04em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .b2s__word {
+    position: relative;
+    display: inline-block;
+  }
+
+  .b2s__word span {
+    opacity: 0;
+  }
+
+  .b2s__word i {
+    position: absolute;
+    left: -0.03em;
+    right: -0.03em;
+    top: 0.1em;
+    bottom: 0.02em;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .b2s__axis {
+    position: absolute;
+    left: 9.4%;
+    right: 9.4%;
+    top: 74%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #5f5f5b;
+  }
+</style>

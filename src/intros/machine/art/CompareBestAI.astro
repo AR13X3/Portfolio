@@ -1,0 +1,24 @@
+---
+/** 06 Compare Best AI: a score card hung on one bolt. The dot lands on it first. */
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const star =
+  'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z';
+---
+
+<svg class="jm-art" viewBox="0 0 206 128">
+  <rect x="3" y="7" width="206" height="128" rx="14" fill="#0a1020" opacity=".07" />
+  <rect x=".5" y=".5" width="205" height="127" rx="14" fill="#fff" stroke="#dfe5ee" />
+  <image href={`${base}shots/comparebestai/logo.webp`} x="13" y="17" width="64" height="28" />
+  <rect x="130.5" y="18.5" width="61" height="20" rx="6" fill="#fff" stroke="#9fdcf3" />
+  <text x="161" y="32.2" text-anchor="middle" class="jm-t" font-size="9.8" font-weight="600" fill="#0072a3">Top pick</text>
+  <g class="jm-cba-hover"><g class="jm-cba-twinkle"><g data-r="star">
+    <path d={star} transform="translate(12 55) scale(1.2)" fill="#fff7e6" stroke="#f59e0b" stroke-width="1.5" />
+    <path data-r="star-fill" d={star} transform="translate(12 55) scale(1.2)" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" opacity="0" />
+  </g></g></g>
+  <text x="46" y="82" class="jm-t" font-size="35" font-weight="800" fill="#0a1020" letter-spacing="-1">9.2</text>
+  <text x="106" y="82" class="jm-t" font-size="13" font-weight="600" fill="#45556c">/10</text>
+  <rect x="14" y="97" width="178" height="5" rx="2.5" fill="#eef2f7" />
+  <rect x="14" y="97" width="164" height="5" rx="2.5" fill="#00b0f0" />
+  <text x="14" y="118" class="jm-t" font-size="9.8" font-weight="600" fill="#45556c">Overall score</text>
+  <rect x="100" y="7" width="6" height="6" class="jm-bolt" />
+</svg>

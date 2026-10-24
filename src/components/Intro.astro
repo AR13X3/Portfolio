@@ -1,0 +1,71 @@
+---
+/**
+ * The intro: the gate (loader and choice), then the two ways in, which hand off into chapter 01.
+ *
+ *   fan       live in the HTML: it is the page without JavaScript, and what a deep link or a
+ *             reload mounts
+ *   machine   inside a <template> until it is chosen (one h1 on the page at a time)
+ *
+ * scripts/boot.ts mounts the chosen route (the other root goes hidden and inert) and starts the
+ * engine (scripts/main.ts), which hands the section to the route's motion (src/intros/<id>/motion.ts).
+ * Routes bring their own markup and styles; this section has no layout of its own and nothing
+ * on it may clip, scroll or transform (the routes' lite stages are sticky inside it).
+ */
+import type { Chapter } from '../chapters/types';
+import Fan from '../intros/fan/Fan.astro';
+import Machine from '../intros/machine/Machine.astro';
+import Gate from './boot/Gate.astro';
+
+interface Props {
+  chapters: Chapter[];
+}
+const { chapters } = Astro.props;
+---
+
+<Gate chapters={chapters} />
+
+{/* The switch's live region: outside the section, which is aria-busy while a switch builds. */}
+<p class="visually-hidden" aria-live="polite" data-intro-status></p>
+
+<section id="top" class="intro" data-section="intro" aria-labelledby="intro-title">
+  {/* 100svh and 100lvh in px for the routes (IntroContext.svh(), lvh()). */}
+  <i class="intro__probe" data-probe="svh" aria-hidden="true"></i>
+  <i class="intro__probe intro__probe--lvh" data-probe="lvh" aria-hidden="true"></i>
+  <Fan chapters={chapters} />
+  <template data-intro-template="machine"><Machine chapters={chapters} /></template>
+</section>
+
+<style>
+  .intro {
+    position: relative;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  /* Full mode pins the section for the route's timeline: one viewport the root fills. Without a
+     route (its code failed to load) it stays a plain section. */
+  :global(html.mode-full) .intro:not([data-static]) {
+    height: 100vh;
+  }
+
+  /* The route not on show is hidden and inert, whatever display its own styles give its root. */
+  .intro :global([data-intro-route][hidden]) {
+    display: none !important;
+  }
+
+  .intro__probe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100vh;
+    height: 100svh;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .intro__probe--lvh {
+    height: 100vh;
+    height: 100lvh;
+  }
+</style>

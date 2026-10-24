@@ -1,0 +1,1804 @@
+/* The Joy Machine: intro prototype. Shell tokens match src/styles/global.css. */
+@property --u {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 1px;
+}
+
+/* The site's own font files (fontsource), latin subsets only. */
+@font-face { font-family: 'Archivo Variable'; font-style: normal; font-display: swap; font-weight: 100 900; font-stretch: 62% 125%; src: url(fonts/archivo-latin-wdth-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Geist Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/geist-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/inter-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Montserrat Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/montserrat-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Outfit Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/outfit-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Plus Jakarta Sans Variable'; font-style: normal; font-display: swap; font-weight: 200 800; src: url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Sora Variable'; font-style: normal; font-display: swap; font-weight: 100 800; src: url(fonts/sora-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Urbanist Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(fonts/urbanist-latin-wght-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'Lato'; font-style: normal; font-display: swap; font-weight: 700; src: url(fonts/lato-latin-700-normal.woff2) format('woff2'); }
+
+:root {
+  --paper: #f3f4f5;
+  --ink: #101114;
+  --ink-2: #53575e;
+  --rule: rgb(16 17 20 / 0.13);
+  --font-display: 'Archivo Variable', 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --gutter: clamp(16px, 4vw, 56px);
+  --rail: 56px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Width of "Toufiq Ahmed Joy." in em, at weight 760, width 112%, tracking -0.035em. */
+  --name-em: 9.53;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1rem/1.55 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+p,
+ol,
+ul {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+svg {
+  display: block;
+  overflow: visible;
+}
+
+.vh {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.875rem;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+/* Product faces used by the parts. */
+.t-mont { font-family: 'Montserrat Variable', ui-sans-serif, system-ui, sans-serif; }
+.t-sora { font-family: 'Sora Variable', ui-sans-serif, system-ui, sans-serif; }
+.t-urb { font-family: 'Urbanist Variable', ui-sans-serif, system-ui, sans-serif; }
+.t-lato { font-family: 'Lato', system-ui, sans-serif; }
+.t-inter { font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }
+.t-mono { font-family: var(--font-mono); }
+.t-sys { font-family: 'Segoe UI Variable Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+.bolt {
+  fill: #c9cdd3;
+  stroke: rgb(16 17 20 / 0.6);
+  stroke-width: 0.8;
+}
+
+/* ------------------------------------------------------------------
+   Background stack (the engine's BgStack): fixed layers, opacity only.
+   ------------------------------------------------------------------ */
+.bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  display: none;
+}
+
+.bg__layer {
+  position: absolute;
+  inset: 0;
+  background-color: var(--l-bg);
+  background-image: var(--l-art, none);
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.bg__layer--intro {
+  --l-bg: var(--paper);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* CareVisor's theme.bgArt. The reveal's world below uses the same longhands, so the swap is exact. */
+.bg__layer--cv,
+.reveal__world {
+  background-color: #e9f0fa;
+  background-image: linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)), url(../../shots/carevisor/prism.webp);
+  background-size: cover;
+  background-position: center;
+}
+
+html.mode-full .bg,
+html.mode-lite .bg {
+  display: block;
+}
+
+html.mode-full body,
+html.mode-lite body {
+  background: transparent;
+}
+
+html.mode-full [data-section],
+html.mode-lite [data-section] {
+  background: transparent !important;
+}
+
+/* Progress rail stand-in. */
+.rail {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: var(--rail);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.rail::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  left: 50%;
+  width: 1px;
+  background: rgb(16 17 20 / 0.18);
+}
+
+.rail i {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgb(16 17 20 / 0.5);
+  background: var(--paper);
+}
+
+.rail i.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+@media (min-width: 1024px) {
+  .rail {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Intro. Base styles are the phone tower; the bench layout is chosen
+   by the media query that mirrors the engine's "wide" condition.
+   ------------------------------------------------------------------ */
+.intro {
+  position: relative;
+  overflow: clip;
+  padding: 18px var(--gutter) 48px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.cam {
+  position: relative;
+  transform-origin: 0 0;
+}
+
+/* The workbench: a dot grid that belongs to the camera, so it moves with the parts. */
+.grid {
+  position: absolute;
+  inset: -40vh -40vw;
+  background-image: radial-gradient(circle at 1px 1px, rgb(16 17 20 / 0.09) 1px, transparent 1.3px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+.bar {
+  position: relative;
+  z-index: 5;
+}
+
+.bar__in {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px 32px;
+  animation: fade 0.5s 0.1s both;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 0.9375rem/1.2 var(--font-sans);
+}
+
+.who__mark {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: var(--ink);
+}
+
+.links {
+  display: flex;
+  gap: 0 22px;
+}
+
+.links a {
+  display: inline-block;
+  padding: 10px 0;
+  font: 500 0.9375rem/1.2 var(--font-sans);
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- The name ---------- */
+.name {
+  position: relative;
+  z-index: 3;
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: min(20vw, 9.25rem);
+  font-weight: 760;
+  font-stretch: 112%;
+  font-kerning: normal;
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+}
+
+/* Word masks. Padding keeps the descenders of q and y; the dot lives outside them. */
+.w {
+  display: inline-block;
+  vertical-align: top;
+  overflow: clip;
+  padding: 0.06em 0 0.22em;
+  margin: -0.06em 0 -0.22em;
+}
+
+.w__i {
+  display: inline-block;
+  animation: word 0.9s var(--d, 0s) var(--ease-out) both;
+}
+
+.name__last {
+  white-space: nowrap;
+}
+
+/* The full stop: an ink square on the baseline, drawn to Archivo's own period. */
+.name__end {
+  display: inline-block;
+  line-height: 0;
+  margin-left: 0.0625em;
+}
+
+.dot-land,
+.dot-idle,
+.dot-lean,
+.dot,
+.dot__sq,
+.dot__ink {
+  display: block;
+  transform-origin: 50% 100%;
+}
+
+.dot {
+  /* Archivo's period at this weight and width: 0.203em by 0.172em, sitting on the baseline. */
+  width: 0.203em;
+  height: 0.172em;
+  transform-origin: 50% 50%;
+}
+
+.dot__sq,
+.dot__ink {
+  width: 100%;
+  height: 100%;
+}
+
+.dot__ink {
+  background: var(--ink);
+  transform-origin: 50% 50%;
+}
+
+.dot-land {
+  animation: dot-drop 0.62s 0.75s both;
+}
+
+/* ---------- Statement, foot ---------- */
+.statement {
+  position: relative;
+  z-index: 2;
+  max-width: 34ch;
+  margin-top: 22px;
+  color: var(--ink-2);
+  font: 400 1.125rem/1.45 var(--font-sans);
+  text-wrap: pretty;
+}
+
+.statement__in {
+  display: block;
+  animation: rise 0.8s 1.05s var(--ease-out) both;
+}
+
+.foot {
+  position: relative;
+  z-index: 4;
+}
+
+.foot__in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 28px;
+  animation: fade 0.6s 1.7s both;
+}
+
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font: 600 0.8125rem/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.cue:hover {
+  text-decoration: underline;
+}
+
+.cue__arrow {
+  display: inline-block;
+}
+
+html.js .cue__arrow {
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 0.75rem/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.switch__track {
+  position: relative;
+  width: 30px;
+  height: 17px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 9px;
+  height: 9px;
+  background: var(--ink);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.switch[aria-checked='true'] .switch__thumb {
+  transform: translateX(13px);
+}
+
+.switch__state {
+  min-width: 2.2em;
+  color: var(--ink-2);
+}
+
+/* Without JS, or with reduced motion, nothing loops, so the switch has nothing to control. */
+html.no-js .switch,
+html.mode-reduced .switch {
+  display: none;
+}
+
+/* ---------- The machine (tower by default) ---------- */
+.machine {
+  position: relative;
+  margin-top: 28px;
+}
+
+.machine__in {
+  --u: 0.82px;
+}
+
+.stage {
+  position: relative;
+}
+
+.guide,
+.debug {
+  display: none;
+}
+
+.stations {
+  border-bottom: 1px solid var(--rule);
+}
+
+.st {
+  border-top: 1px solid var(--rule);
+}
+
+.st__link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 0 22px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.st__box {
+  position: relative;
+  order: 2;
+  width: calc(var(--tw) * var(--u));
+  height: calc(var(--th) * var(--u));
+}
+
+.st__pose {
+  position: absolute;
+  left: calc(var(--px, 0) * var(--u));
+  top: calc(var(--py, 0) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  transform: rotate(var(--r, 0deg));
+  transform-origin: calc(var(--ox) * var(--u)) calc(var(--oy) * var(--u));
+}
+
+.st__in,
+.st__idle,
+.st__react,
+.st__hover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: inherit;
+}
+
+.art {
+  width: 100%;
+  height: 100%;
+}
+
+.st__in {
+  animation: part-in 0.7s calc(0.8s + var(--k) * 0.08s) var(--ease-out) both;
+}
+
+/* Airpoint's status pill hangs from the pen's pivot. */
+.ap-hang {
+  position: absolute;
+  left: calc((120 + var(--px, 0)) * var(--u));
+  top: calc((12 + var(--py, 0)) * var(--u));
+  width: 1px;
+  height: calc(28 * var(--u));
+  background: rgb(16 17 20 / 0.35);
+  animation: fade 0.5s 1.05s both;
+}
+
+.ap-pill-wrap {
+  position: absolute;
+  left: calc((54 + var(--px, 0)) * var(--u));
+  top: calc((40 + var(--py, 0)) * var(--u));
+  width: calc(132 * var(--u));
+  height: calc(26 * var(--u));
+}
+
+.ap-pill-wrap .st__in {
+  --k: 1;
+}
+
+.ap-pill {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Tags: the parts' nameplates, and the links' text ---------- */
+.tag {
+  position: relative;
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
+  border: 1px solid rgb(16 17 20 / 0.16);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 0.8125rem/1.2 var(--font-sans);
+  white-space: nowrap;
+  animation: fade 0.5s calc(1.5s + var(--k) * 0.04s) both;
+}
+
+.tag__num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 18px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font: 600 0.6875rem/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.tag__fill {
+  position: absolute;
+  inset: -1px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--paper);
+  opacity: 0;
+}
+
+.tag__meta {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.st__link:is(:hover, :focus-visible) .tag__name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.st__link:focus-visible {
+  outline: none;
+}
+
+.st__link:focus-visible .tag {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- Hover and focus previews (CSS only, on their own wrappers) ---------- */
+.st__hover,
+.cba-hover,
+.ap-btn-hover,
+.hx-hover {
+  transition: transform 0.35s var(--ease-out);
+}
+
+.cba-hover,
+.cba-twinkle,
+.ap-btn-hover,
+.hx-hover,
+.hx-nudge,
+.ss-peek,
+.bl-peek,
+.bl-now,
+.ap-ping,
+.cv-ready,
+[data-r='star'],
+[data-r='pen-ping'],
+[data-r='cv-btn'],
+[data-r='cv-ring'],
+[data-r='ss-marker'] {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.ss-peek,
+.bl-peek {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ap-ping,
+.cv-ready {
+  opacity: 0;
+}
+
+.st--cb .st__link:is(:hover, :focus-visible) .st__hover {
+  transform: rotate(-3deg);
+}
+
+.st--cb .st__link:is(:hover, :focus-visible) .cba-hover {
+  transform: scale(1.18);
+}
+
+.st--ap .st__link:is(:hover, :focus-visible) .ap-btn-hover {
+  transform: translateY(1.4px);
+}
+
+.st--bl .st__link:is(:hover, :focus-visible) .bl-peek {
+  opacity: 0.6;
+}
+
+.st--na .st__link:is(:hover, :focus-visible) .na-sheen {
+  animation: sheen 1.1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.st--ss .st__link:is(:hover, :focus-visible) .ss-peek {
+  opacity: 0.85;
+}
+
+.st--hx .st__link:is(:hover, :focus-visible) .hx-hover {
+  transform: translateX(34px);
+}
+
+.cv-btn-bg {
+  transition: fill 0.2s;
+}
+
+.st--cv .st__link:is(:hover, :focus-visible) .cv-btn-bg {
+  fill: #003d99;
+}
+
+/* ---------- Idle life: one thing at a time, toggled by JS, never while running ---------- */
+.st.is-idle .cba-twinkle {
+  animation: twinkle 0.7s ease-in-out;
+}
+
+.st.is-idle .ap-ping {
+  animation: ping 1.2s ease-out;
+}
+
+.st.is-idle .bl-now {
+  animation: pulse 1.4s ease-in-out;
+}
+
+.st.is-idle .na-sheen {
+  animation: sheen 3.2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.st.is-idle .ss-breathe {
+  animation: breathe 2.4s ease-in-out both;
+}
+
+.st.is-idle .ss-breathe:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.st.is-idle .ss-breathe:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.st.is-idle .hx-nudge {
+  animation: nudge 1.6s ease-in-out;
+}
+
+.st.is-idle .cv-ready {
+  animation: ready 1.2s ease-out;
+}
+
+.ss-breathe {
+  opacity: 0;
+}
+
+.dot-idle.is-hop {
+  animation: dot-hop 0.8s;
+}
+
+.dot-idle.is-tip {
+  transform-origin: 100% 100%;
+  animation: dot-tip 1.5s;
+}
+
+.stage.is-riffle .st__idle {
+  animation: riffle 0.6s calc(var(--k) * 0.09s) ease-out both;
+}
+
+.st--cb,
+.st--ap {
+  --riffle-a: rotate(-2.4deg);
+  --riffle-b: rotate(0.9deg);
+}
+
+.st {
+  --riffle-a: translateY(calc(3 * var(--u)));
+  --riffle-b: translateY(calc(-1 * var(--u)));
+}
+
+html.motion-paused .cue__arrow,
+html.motion-paused .st__idle,
+html.motion-paused .dot-idle,
+html.motion-paused .st *,
+.intro.is-running .cue__arrow,
+.intro.is-running .dot-idle,
+.intro.is-running .st__idle,
+.intro.is-running .st.is-idle *,
+.intro.is-offscreen .cue__arrow {
+  animation: none !important;
+}
+
+/* ---------- The reveal ---------- */
+.reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.reveal__disc {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+/* The ripple's leading edge: CareVisor blue, in proportion to the disc, so it thickens as it travels. */
+.reveal__disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 82 204 / 0) 97%, rgb(0 82 204 / 0.18) 99.2%, rgb(0 82 204 / 0.55) 99.8%, rgb(0 82 204 / 0) 100%);
+}
+
+.reveal__world {
+  position: absolute;
+}
+
+.reveal__ring {
+  position: absolute;
+  border: 1.5px solid #0052cc;
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------------
+   Bench layout: wide and tall enough for the engine's full mode.
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .intro {
+    --pad-x: max(var(--gutter), (100% - var(--rail) - 1400px) / 2);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100vh;
+    height: 100svh;
+    padding: clamp(12px, 2.4vh, 26px) calc(var(--pad-x) + var(--rail)) clamp(14px, 2.8vh, 30px) var(--pad-x);
+  }
+
+  .cam {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    container-type: inline-size;
+  }
+
+  .name {
+    margin-top: clamp(6px, 2.4vh, 28px);
+    font-size: calc(100cqw / var(--name-em));
+    white-space: nowrap;
+  }
+
+  .machine {
+    min-height: 0;
+    margin-top: clamp(10px, 2.2vh, 24px);
+    container-type: size;
+  }
+
+  .machine__in {
+    position: absolute;
+    inset: 0;
+    --u: calc(min(100cqw, 100cqh * 2.1931) / 1272);
+  }
+
+  .statement {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(34ch, calc(100cqw - 905 * var(--u)));
+    margin: 0;
+    font-size: clamp(1rem, 0.6rem + 0.62vw, 1.1875rem);
+  }
+
+  /* In the empty corner under 06 and 07, clear of 01's plate at every bench size. */
+  .foot {
+    position: absolute;
+    right: 0;
+    bottom: calc(84 * var(--u));
+  }
+
+  .stage {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: calc(1272 * var(--u));
+    height: calc(580 * var(--u));
+  }
+
+  .guide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .guide path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0.34;
+    stroke-width: 2.6;
+    stroke-dasharray: 2.6 7.4;
+  }
+
+  .guide__in {
+    animation: fade 0.9s 1.45s both;
+  }
+
+  .stations {
+    position: absolute;
+    inset: 0;
+    border: 0;
+  }
+
+  .st {
+    position: absolute;
+    left: calc(var(--x) * var(--u));
+    top: calc(var(--y) * var(--u));
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+    border: 0;
+  }
+
+  .st__link {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+  }
+
+  .st__box {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .st__pose {
+    left: 0;
+    top: 0;
+  }
+
+  .ap-hang {
+    left: calc(120 * var(--u));
+    top: calc(12 * var(--u));
+  }
+
+  .ap-pill-wrap {
+    left: calc(54 * var(--u));
+    top: calc(40 * var(--u));
+  }
+
+  .tag {
+    position: absolute;
+    left: calc(var(--tx) * var(--u));
+    top: calc(var(--ty) * var(--u));
+  }
+
+  /* On the bench the plate shows the name; the meta slides out beside it on hover and focus. */
+  .tag__meta {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 6px);
+    padding: 4px 8px;
+    border-radius: 5px;
+    background: var(--paper);
+    opacity: 0;
+    transform: translate(-4px, -50%);
+    transition:
+      opacity 0.2s,
+      transform 0.25s var(--ease-out);
+  }
+
+  .st__link:is(:hover, :focus-visible) .tag__meta {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  .st__link:focus-visible .st__box {
+    outline: 2px solid var(--ink);
+    outline-offset: 6px;
+    border-radius: 8px;
+  }
+
+  .debug {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9;
+    pointer-events: none;
+  }
+
+  html.is-debug .debug {
+    display: block;
+  }
+}
+
+/* Phones: the tower. Tablets put each part beside its plate. */
+@media (min-width: 600px) and (max-width: 1023.98px), (min-width: 1024px) and (max-height: 599.98px) {
+  .machine__in {
+    --u: 1px;
+  }
+
+  .st__link {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .st__box {
+    order: 2;
+  }
+
+  .tag {
+    order: 1;
+  }
+}
+
+@media (max-width: 1023.98px), (max-height: 599.98px) {
+  .name .w,
+  .name__last {
+    display: block;
+    width: max-content;
+  }
+
+  .name .w {
+    margin-bottom: -0.12em;
+  }
+
+  .name__last .w {
+    display: inline-block;
+  }
+
+  .foot__in {
+    justify-content: space-between;
+  }
+
+  .stations {
+    max-width: 640px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Keyframes. Load: transforms and opacity, on wrappers only.
+   ------------------------------------------------------------------ */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes word {
+  from {
+    transform: translateY(104%);
+  }
+}
+
+@keyframes part-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(18 * var(--u)));
+  }
+}
+
+/* The full stop drops onto "Joy" with a weighted thock: squash on contact, one small rebound. */
+@keyframes dot-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.6em);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  12% {
+    opacity: 1;
+  }
+  52% {
+    transform: translateY(0) scale(1.2, 0.78);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  70% {
+    transform: translateY(-0.12em) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  84% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* The hint, once: a half-hop that lands back on "Joy." */
+@keyframes dot-hop {
+  0% {
+    transform: none;
+  }
+  16% {
+    transform: scale(1.16, 0.8);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  48% {
+    transform: translateY(-0.62em) scale(0.95, 1.06);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  78% {
+    transform: translateY(0) scale(1.14, 0.84);
+  }
+  90% {
+    transform: scale(0.98, 1.02);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* Restless: it tips over its right edge, toward the drop, and rocks back. */
+@keyframes dot-tip {
+  0%,
+  100% {
+    transform: none;
+  }
+  32% {
+    transform: rotate(18deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+  66% {
+    transform: rotate(-1.6deg);
+  }
+  80% {
+    transform: none;
+  }
+}
+
+@keyframes riffle {
+  0%,
+  100% {
+    transform: none;
+  }
+  28% {
+    transform: var(--riffle-a);
+  }
+  58% {
+    transform: var(--riffle-b);
+  }
+  82% {
+    transform: none;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: none;
+  }
+  45% {
+    transform: scale(1.18) rotate(14deg);
+  }
+}
+
+@keyframes ping {
+  from {
+    opacity: 0.7;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.45;
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(0);
+  }
+  60%,
+  100% {
+    transform: translateX(270px);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  45%,
+  60% {
+    transform: translateX(16px);
+  }
+}
+
+@keyframes ready {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* Reduced motion: every load step is a short fade, done by 1s; nothing else moves. */
+@media (prefers-reduced-motion: reduce) {
+  .bar__in,
+  .w__i,
+  .statement__in,
+  .st__in,
+  .tag,
+  .foot__in,
+  .guide__in,
+  .dot-land {
+    animation: fade 0.5s both !important;
+  }
+
+  .w__i,
+  .dot-land,
+  .statement__in {
+    animation-delay: 0.25s !important;
+  }
+
+  .st__in,
+  .tag,
+  .foot__in,
+  .guide__in {
+    animation-delay: 0.5s !important;
+  }
+
+  .cue__arrow,
+  .st__hover,
+  .cba-hover,
+  .ap-btn-hover,
+  .hx-hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   CareVisor mock (src/chapters/carevisor): its nav and hero over the prism.
+   ------------------------------------------------------------------ */
+.cv {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: #e9f0fa;
+  background-image: linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)), url(../../shots/carevisor/prism.webp);
+  background-size: cover;
+  background-position: center;
+}
+
+html.mode-full .cv {
+  height: 100vh;
+}
+
+html.mode-full .cv.follows-pin {
+  margin-top: -100vh;
+}
+
+.cv-world {
+  --cink: #000918;
+  --slate: #465062;
+  --blue: #0052cc;
+  --cv-gutter: clamp(16px, 4vw, 48px);
+  --font-cv-display: 'Plus Jakarta Sans Variable', 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-cv: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+  position: relative;
+  z-index: 1;
+  padding-right: 0;
+  color: var(--cink);
+  font: 400 16px/1.6 var(--font-cv);
+}
+
+@media (min-width: 1024px) {
+  .cv-world {
+    padding-right: var(--rail);
+  }
+}
+
+.cv-world :focus-visible {
+  outline-color: var(--blue);
+}
+
+.cv-blue {
+  color: var(--blue);
+}
+
+.cv-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px var(--cv-gutter);
+}
+
+.cv-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cv-mark {
+  width: 32px;
+  height: 32px;
+}
+
+.cv-brand__name {
+  font: 700 18px/1 var(--font-cv);
+  letter-spacing: -0.3px;
+}
+
+.cv-brand__name span {
+  color: var(--blue);
+}
+
+.cv-brand__sep {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: rgb(0 9 24 / 0.14);
+}
+
+.cv-brand__tag {
+  color: var(--slate);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.cv-nav__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.cv-nav__meta span {
+  padding: 9px 14px;
+  border-radius: 10px;
+  color: #424242;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.cv-nav__meta span:first-child {
+  color: var(--blue);
+  font: 700 13px/1.4 var(--font-mono);
+}
+
+.cv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font: 600 14.5px/1 var(--font-cv);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.cv-btn--solid {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 10px 26px rgb(0 82 204 / 0.35);
+}
+
+.cv-btn--solid:hover {
+  background: #003d99;
+  transform: scale(1.03);
+}
+
+.cv-btn--sm {
+  min-height: 44px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cv-hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(28px, 4.6vh, 56px) var(--cv-gutter) 28px;
+  text-align: center;
+}
+
+.cv-hero__title {
+  font: 800 clamp(36px, 4.2vw, 60px) / 1.06 var(--font-cv-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  outline: none;
+}
+
+.cvw {
+  display: inline-block;
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  vertical-align: top;
+}
+
+.cvw > span {
+  display: inline-block;
+}
+
+.cv-br {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .cv-br {
+    display: inline;
+  }
+}
+
+.cv-hero__lede {
+  max-width: 60ch;
+  margin: 20px auto 0;
+  color: var(--slate);
+  font-size: clamp(15.5px, 1.15vw, 17px);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.cv-hero__role {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+.cv-hero__role span {
+  color: var(--blue);
+  font: 700 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cv-hero__ctas {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.cv-product {
+  max-width: 1072px;
+  margin: 0 auto;
+  padding: 16px var(--cv-gutter) 0;
+}
+
+.cv-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 8px;
+}
+
+@media (min-width: 1024px) {
+  .cv-tabs {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.cv-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.cv-tile {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--tile);
+  color: var(--tile-ink);
+}
+
+.cv-tab:not(.is-on) .cv-tile {
+  opacity: 0.5;
+}
+
+.cv-tile svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cv-tab__cap {
+  color: var(--slate);
+  font: 500 11px/1.25 'Inter Variable', ui-sans-serif, sans-serif;
+}
+
+.cv-tab__title {
+  font: 700 12.5px/1.25 'Inter Variable', ui-sans-serif, sans-serif;
+}
+
+.cv-tab__track {
+  display: block;
+  width: 100%;
+  max-width: 120px;
+  height: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e6e4;
+}
+
+.cv-tab__track i {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.cv-tab.is-on .cv-tab__track i {
+  transform: scaleX(0.3);
+}
+
+/* The hero demo window, peeking in under the hero (Demo.astro, at 976px). */
+.cvd {
+  margin-top: 36px;
+  overflow: hidden;
+  border: 1px solid #e4e6e4;
+  border-radius: 23px;
+  background: #fff;
+  box-shadow: 0 17px 57px rgb(0 9 24 / 0.12);
+  font: 500 11.5px/1.35 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+}
+
+.cvd-chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-bottom: 1px solid #eef0f4;
+  background: #fafbfc;
+}
+
+.cvd-chrome i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.cvd-url {
+  display: grid;
+  place-items: center;
+  width: 214px;
+  height: 23px;
+  margin: 0 auto;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 0 0 1px #eef0f4;
+  color: #657084;
+  font-size: 10px;
+}
+
+.cvd-sp {
+  width: 52px;
+}
+
+.cvd-body {
+  display: flex;
+  height: 420px;
+}
+
+.cvd-side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 183px;
+  padding: 12px;
+  border-right: 1px solid #eef0f4;
+  background: #fafbfc;
+}
+
+.cvd-org {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 12px;
+}
+
+.cvd-org__icon {
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom right, #0052cc, #4a8fe8);
+}
+
+.cvd-org b,
+.cvd-org small {
+  display: block;
+}
+
+.cvd-org b {
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+.cvd-org small {
+  color: #657084;
+  font-size: 9px;
+}
+
+.cvd-nav {
+  display: flex;
+  align-items: center;
+  height: 31px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: #5a6472;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cvd-nav.is-on {
+  background: #e8f0fe;
+  color: #0052cc;
+}
+
+.cvd-stage {
+  flex: 1;
+  padding: 19px;
+}
+
+.cvd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cvd-h {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cvd-skel {
+  display: block;
+  width: var(--w);
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #e8ecf3;
+}
+
+.cvd-skel--thin {
+  height: 6px;
+  margin-top: 6px;
+}
+
+.cvd-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: #0052cc;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cvd-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 54%;
+  margin-top: 12px;
+  padding: 11px;
+  border: 1px solid #eef0f4;
+  border-radius: 11px;
+}
+
+.cvd-row:first-of-type {
+  margin-top: 19px;
+}
+
+.cvd-ava {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #e8f0fe;
+  color: #0052cc;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.cvd-stack .cvd-skel:first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  .cv-nav__meta,
+  .cv-brand__sep,
+  .cv-brand__tag {
+    display: none;
+  }
+
+  .cv-nav .cv-btn {
+    margin-left: auto;
+  }
+
+  .cvd-side {
+    display: none;
+  }
+}
+
+.tail {
+  display: grid;
+  place-items: end center;
+  min-height: 100vh;
+  padding: 0 var(--gutter) 40px;
+  background-color: #e9f0fa;
+  background-image: linear-gradient(rgb(241 246 252 / 0.32), rgb(241 246 252 / 0.32)), url(../../shots/carevisor/prism.webp);
+  background-size: cover;
+}
+
+.tail__note {
+  color: #465062;
+  font: 500 0.8125rem/1.4 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ?debug: timeline time and pin length. */
+.hud {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 50;
+  display: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 12px/1.4 var(--font-mono);
+}
+
+html.is-debug .hud {
+  display: block;
+}
+
+@media print {
+  .bg,
+  .rail,
+  .reveal,
+  .hud,
+  .guide {
+    display: none !important;
+  }
+}

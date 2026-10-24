@@ -1,0 +1,352 @@
+/* ------------------------------------------------------------------
+   Shell: the neutral frame around the chapters (Toufiq's own identity).
+   Chapters override the --c-* tokens with their product's palette.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #f3f4f5;
+  --ink: #101114;
+  --ink-2: #53575e;
+  --rule: rgb(16 17 20 / 0.13);
+
+  --font-display: 'Archivo Variable', 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --gutter: clamp(16px, 4vw, 56px);
+  --rail: 56px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Chapter tokens default to the shell. */
+  --c-bg: var(--paper);
+  --c-surface: #ffffff;
+  --c-fg: var(--ink);
+  --c-muted: var(--ink-2);
+  --c-accent: var(--ink);
+  --c-accent-text: var(--ink);
+  --c-on-accent: var(--paper);
+  --c-line: var(--rule);
+  --c-display: var(--font-display);
+  --c-body: var(--font-sans);
+  --c-mono: var(--font-mono);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--paper);
+  /* The page is the same width with its scroll locked (the gate) as without: the engine builds
+     the page under the gate, and its pins are measured in px. */
+  scrollbar-gutter: stable;
+}
+
+/* Nothing may widen the page sideways; on phones that would also widen the layout viewport. */
+html {
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/*
+ * Motion hides content with GSAP's autoAlpha: opacity 0 plus visibility hidden, written inline.
+ * Visibility would also drop it from the tab order and the accessibility tree, so anything that
+ * carries text or focus stays visible to assistive tech while it waits: still unseen at opacity
+ * 0, and deaf to the pointer until it is shown. main.ts brings focused content into view.
+ *
+ * The hidden element itself is made visible (its children inherit that), so the rule matches only
+ * the element whose inline style changed. Matching its descendants by tag instead made every
+ * style GSAP writes re-style the whole subtree under it: that alone was about 40% of building
+ * the page. Links and controls, which chapter.css gives pointer-events of their own, keep a rule.
+ */
+html.js main [style*='opacity: 0;'][style*='visibility: hidden'] {
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+
+html.js main [style*='opacity: 0;'][style*='visibility: hidden'] :is(a, button, [tabindex], [data-screens]) {
+  pointer-events: none !important;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The shutter a far jump cuts behind (scripts/motion/cut.ts): in the destination's colours. */
+.cut {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: var(--cut-bg, var(--paper));
+  color: var(--cut-fg, var(--ink));
+  visibility: hidden;
+  pointer-events: auto;
+}
+
+.cut__label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.cut__num {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  color: var(--cut-accent, currentColor);
+}
+
+.cut__num:empty {
+  display: none;
+}
+
+.cut__name {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* While the gate is up the skip link skips the intro itself (scripts/boot.ts). */
+.skip-link__gate,
+html[data-boot='load']:not(.boot-late) .skip-link__page {
+  display: none;
+}
+
+html[data-boot='load']:not(.boot-late) .skip-link__gate {
+  display: inline;
+}
+
+/* ------------------------------------------------------------------
+   The gate: the loader and the choice of intro (components/boot/Gate.astro,
+   scripts/boot.ts). Only a visit the head script sends through it
+   (html[data-boot="load"]) ever sees it; without JS it does not exist.
+   ------------------------------------------------------------------ */
+html[data-boot='load']:not(.boot-late) .boot {
+  display: block;
+}
+
+@media screen {
+  /* The scroll is locked on html only: a body with its own overflow would become a scroll
+     container and break the intro's sticky stages. */
+  html.boot-lock:not(.boot-late) {
+    overflow: hidden;
+  }
+
+  /* While it loads, the page stays out of layout, so it requests no chapter faces or art. The
+     page's own blocks are named (a section, or the pin-spacer main.ts wraps one in), not
+     "everything but the gate": a :not() here would have every element of the page restyled
+     each time the gate changes state, the lift after a pick included. */
+  html.boot-hide:not(.boot-late) main > :is([data-section], [data-pin-spacer]) {
+    display: none;
+  }
+
+  /* Under the gate only the gate and the skip link are there to read or reach. (Printing
+     from the gate prints the page.) */
+  html[data-boot='load']:not(.boot-late) :is(.progress, body > footer, main > [data-section], main > [data-pin-spacer]) {
+    visibility: hidden;
+  }
+
+  /* After a pick, a section the engine has not built yet stays out of layout until it is
+     (main.ts builds the rest of the page a section at a time). */
+  [data-later] {
+    display: none !important;
+  }
+}
+
+/* Small uppercase label used across the shell. */
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   Background stack. One fixed layer per section; the motion engine
+   crossfades their opacity (compositor only) between chapters.
+   Without JS each section paints its own background instead.
+   ------------------------------------------------------------------ */
+.bg-stack {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  display: none;
+}
+
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-color: var(--layer-bg);
+  background-image: var(--layer-art, none);
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity;
+}
+
+html.js .bg-stack {
+  display: block;
+}
+
+/* The body's own background would paint over the fixed layers; the canvas keeps the paper colour. */
+html.js body {
+  background: transparent;
+}
+
+html.js [data-section] {
+  background: transparent !important;
+}
+
+/* Reduced motion: no crossfading layers. Each section paints its own colour, so text never
+   sits on the next section's background while the switch happens. */
+html.mode-reduced .bg-stack {
+  display: none;
+}
+
+html.mode-reduced [data-section] {
+  background-color: var(--c-bg) !important;
+  background-image: var(--c-bg-art, none) !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Print and Save as PDF get the plain document (main.ts sets the story aside before printing):
+   no fixed chrome, no decorative transition strips. */
+/* The rail arrives with the page as the gate lifts. */
+html.boot-landed .progress {
+  animation: boot-rail 0.4s 0.1s both;
+}
+
+@keyframes boot-rail {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Lite: chapter 01 comes up over the end of the intro's strip when the route asks for it
+   (IntroLite.overlap, applied by the engine as a negative margin). */
+html.mode-lite [data-section='intro'] + [data-section] {
+  position: relative;
+  z-index: 2;
+}
+
+@media print {
+  .skip-link,
+  .progress,
+  .bg-stack,
+  .boot,
+  [data-transition] {
+    display: none !important;
+  }
+}

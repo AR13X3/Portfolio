@@ -1,0 +1,138 @@
+---
+/**
+ * BloodLine → Airpoint. BloodLine's heartbeat keeps its glowing head; the head becomes
+ * Airpoint's cursor, the line behind it becomes the live pad's tapering trail over the pad's
+ * dot grid, and the trail writes the Loop. Forest turns to Ink and the type turns to Sora.
+ * Geometry is laid out by motion.ts in the overlay's own pixels.
+ */
+import '@fontsource-variable/sora';
+import { CURSOR, DISPLAY_DOT, LOOP_SEGMENTS, TRAIL_LAYERS } from '../../chapters/airpoint/geometry';
+
+interface Props {
+  from: string;
+  to: string;
+}
+---
+
+<div class="bxa">
+  <div class="bxa__grid" data-bxa="grid"></div>
+  <svg class="bxa__svg" data-bxa="svg" focusable="false">
+    <defs>
+      <linearGradient id="bxa-fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1600" y2="0" data-bxa="fade">
+        <stop offset="0" stop-color="#dcebd2" stop-opacity="0"></stop>
+        <stop offset="0.22" stop-color="#dcebd2"></stop>
+        <stop offset="0.88" stop-color="#dcebd2"></stop>
+        <stop offset="1" stop-color="#dcebd2" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    <path class="bxa__base" data-bxa="base"></path>
+    <path class="bxa__guide" data-bxa="travel"></path>
+    <path class="bxa__guide" data-bxa="loop"></path>
+    <g class="bxa__trail" data-bxa="trail">
+      {TRAIL_LAYERS.map((l) => <path stroke-opacity={l.alpha} data-width={l.width} data-window={l.window} />)}
+    </g>
+    <g data-bxa="lift">
+      <g data-bxa="mark">
+        <g class="bxa__segs" data-bxa="segs">
+          {LOOP_SEGMENTS.map((s) => <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke-width={s.w} />)}
+        </g>
+        <circle class="bxa__dot" cx={DISPLAY_DOT.x} cy={DISPLAY_DOT.y} r={DISPLAY_DOT.r} data-bxa="dot"></circle>
+      </g>
+    </g>
+    <g data-bxa="cursor">
+      <g data-bxa="glow">
+        <circle r="9" fill="rgb(220 235 210 / 0.22)"></circle>
+        <circle r="3.2" fill="#dcebd2"></circle>
+      </g>
+      <g data-bxa="core">
+        <circle r={CURSOR.halo} fill="rgb(59 105 255 / 0.18)"></circle>
+        <circle r={CURSOR.core} fill="#3b69ff"></circle>
+        <circle r={CURSOR.punch} fill="#090b0f"></circle>
+      </g>
+    </g>
+  </svg>
+  <p class="bxa__word" data-bxa="word">Airpoint</p>
+</div>
+
+<style>
+  .bxa {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* The live pad's dot grid (LivePad.kt): dots of outlineStrong at 70% every 22 dp. */
+  .bxa__grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgb(53 59 72 / 0.7) 1.1px, transparent 1.7px);
+    background-size: 22px 22px;
+    background-position: center;
+    opacity: 0;
+    will-change: opacity;
+  }
+
+  .bxa__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .bxa__base {
+    fill: none;
+    stroke: url(#bxa-fade);
+    stroke-opacity: 0.2;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+  }
+
+  .bxa__guide {
+    fill: none;
+    stroke: none;
+  }
+
+  .bxa__trail {
+    opacity: 0;
+  }
+
+  .bxa__trail path {
+    fill: none;
+    stroke: #dcebd2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bxa__segs line {
+    stroke: #3b69ff;
+    stroke-linecap: round;
+  }
+
+  .bxa__dot {
+    fill: #3b69ff;
+  }
+
+  [data-bxa='cursor'] {
+    opacity: 0;
+  }
+
+  [data-bxa='core'] {
+    opacity: 0;
+  }
+
+  /* The wordmark: Sora SemiBold, displayLarge's tracking (Type.kt). */
+  .bxa__word {
+    position: absolute;
+    left: var(--word-x, 50%);
+    top: var(--word-y, 60%);
+    margin: 0;
+    color: #f4f4f1;
+    font: 600 var(--word-size, 56px) / 1 'Sora Variable', 'Sora', ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.035em;
+    white-space: nowrap;
+    opacity: 0;
+  }
+</style>

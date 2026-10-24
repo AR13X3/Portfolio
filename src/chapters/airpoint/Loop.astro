@@ -1,0 +1,61 @@
+---
+/**
+ * The Loop, Airpoint's mark: a handwritten air gesture that lifts off into a point.
+ * Outlines from assets/brand/airpoint-mark.svg (display cut) and desktop/airpoint/_mark.py
+ * (small cut). With `write`, the stroke sits under a mask drawn along LoopGeometry.kt's
+ * centerline, so the motion code can write it on the way the app does. Colours come from
+ * --loop-stroke and --loop-dot.
+ */
+import { DISPLAY_DOT, DISPLAY_STROKE, MASK_PATH, MASK_WIDTH, SMALL_DOT, SMALL_STROKE } from './geometry';
+
+interface Props {
+  /** Unique id; needed for the write-on mask. */
+  id?: string;
+  write?: boolean;
+  cut?: 'display' | 'small';
+  /** When set, the mark is announced as an image with this name. Otherwise it is decorative. */
+  label?: string;
+  class?: string;
+}
+const { id, write = false, cut = 'display', label, class: className } = Astro.props;
+const stroke = cut === 'small' ? SMALL_STROKE : DISPLAY_STROKE;
+const dot = cut === 'small' ? SMALL_DOT : DISPLAY_DOT;
+const maskId = write && id ? `${id}-ink` : undefined;
+---
+
+<svg
+  class:list={['loop', className]}
+  viewBox="0 0 48 48"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+  data-loop
+>
+  {
+    maskId && (
+      <defs>
+        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+          <path d={MASK_PATH} fill="none" stroke="#fff" stroke-width={MASK_WIDTH} stroke-linejoin="round" data-loop-ink />
+        </mask>
+      </defs>
+    )
+  }
+  <path class="loop__stroke" d={stroke} mask={maskId ? `url(#${maskId})` : undefined} data-loop-stroke />
+  <circle class="loop__dot" cx={dot.x} cy={dot.y} r={dot.r} data-loop-dot />
+</svg>
+
+<style>
+  .loop {
+    display: block;
+    overflow: visible;
+  }
+
+  .loop__stroke {
+    fill: var(--loop-stroke, currentColor);
+  }
+
+  .loop__dot {
+    fill: var(--loop-dot, var(--loop-stroke, currentColor));
+  }
+</style>

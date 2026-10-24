@@ -1,0 +1,970 @@
+---
+/**
+ * BloodLine, told in the BloodLine website's own language: its nav and nine-bar
+ * mark, the hero with floating glass cards, the "From report to review" steps
+ * with a filling rail, the paper lab report beside read.json, the GP app's alert,
+ * and the real site in a browser. Components are ported from Website/src/css
+ * (Apache-2.0, by the BloodLine team).
+ */
+import '@fontsource-variable/urbanist';
+import '@fontsource-variable/geist-mono';
+import ChapterSection from '../../components/ChapterSection.astro';
+import Browser from '../../components/Browser.astro';
+import Screen from '../../components/Screen.astro';
+import Shot from '../../components/Shot.astro';
+import AlertCard from './AlertCard.astro';
+import Mark from './Mark.astro';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const [live, repo] = chapter.links;
+const pulse = 'M0 120 H1040 L1060 120 L1075 96 L1093 150 L1119 30 L1145 176 L1165 104 L1183 120 H1340 L1358 112 L1374 120 H1600';
+const rows = [
+  { test: 'Haemoglobin', result: '118 g/L', range: '130–180', flag: 'L' },
+  { test: 'White cell count', result: '6.2 ×10⁹/L', range: '4.0–11.0', flag: '' },
+  { test: 'Platelets', result: '245 ×10⁹/L', range: '150–400', flag: '' },
+  { test: 'MCV', result: '84 fL', range: '80–100', flag: '' },
+  { test: 'Ferritin', result: '12 µg/L', range: '30–500', flag: 'L' },
+];
+---
+
+<ChapterSection chapter={chapter} next={next} class="bl">
+  <div class="bl-world">
+    <header class="bl-nav" data-bl="nav" data-clear>
+      <span class="bl-nav__brand">
+        <Mark class="bl-logo" />
+        <span>BloodLine</span>
+      </span>
+      <p class="bl-nav__meta">
+        <span>{num}</span>
+      </p>
+      <a class="bl-btn bl-btn--light bl-btn--sm" href={live.href} target="_blank" rel="noopener noreferrer">
+        {live.label}<span class="visually-hidden"> (opens in a new tab)</span>
+      </a>
+    </header>
+
+    <div class="bl-hero" data-bl="hero">
+      <p class="bl-hero__meta" aria-hidden="true">{num}</p>
+      <p class="bl-hero__pre" data-bl="pre">The lab makes sure the result arrives.</p>
+      <h2 class="bl-hero__title" id={`${chapter.slug}-title`} tabindex="-1" data-focus data-bl="title">
+        BloodLine makes sure the GP&nbsp;knows.
+      </h2>
+      <div class="bl-hero__foot" data-bl="foot">
+        <div class="bl-hero__ctas">
+          <a class="bl-btn bl-btn--light" href={live.href} target="_blank" rel="noopener noreferrer">
+            See the live site<span class="visually-hidden"> (opens in a new tab)</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+          <a class="bl-btn bl-btn--ghost" href={repo.href} target="_blank" rel="noopener noreferrer">
+            {repo.label}<span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- The hero's heartbeat line (Website/index.html .hero__pulse). -->
+    <svg class="bl-pulse" viewBox="0 0 1600 200" preserveAspectRatio="none" aria-hidden="true" data-bl="pulse">
+      <path class="bl-pulse__base" d={pulse} data-pulse />
+      <path class="bl-pulse__glow" d={pulse} data-pulse-glow />
+    </svg>
+
+    <div class="bl-float" aria-hidden="true" data-bl="float">
+      <div class="bl-hcard bl-hcard--range" data-bl="hcard">
+        <div class="bl-hcard__row">
+          <span class="bl-hcard__label">Haemoglobin</span>
+          <span class="bl-chip bl-chip--amber" data-bl="hchip">Outside range</span>
+        </div>
+        <div class="bl-hcard__value">118 <small>g/L</small></div>
+        <div class="bl-ruler">
+          <span class="bl-ruler__band"></span>
+          <span class="bl-ruler__ticks"></span>
+          <span class="bl-ruler__dot" data-bl="hdot"></span>
+        </div>
+        <div class="bl-hcard__scale"><span>130</span><span>180</span></div>
+      </div>
+      <div class="bl-hcard bl-hcard--note" data-bl="hcard">
+        <span class="bl-hcard__icon"><Mark ink /></span>
+        <div>
+          <div class="bl-hcard__app">BloodLine <span>now</span></div>
+          <div class="bl-hcard__msg">A result may need your review.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bl-how" data-bl="how" data-clear>
+      <div class="bl-how__copy">
+        <h3 class="bl-title" data-bl="how-title">Three decisions behind it.</h3>
+        <div class="bl-steps-wrap">
+          <ol class="bl-steps">
+            {
+              chapter.decisions.map((d, i) => (
+                <li class="bl-step" data-bl="step">
+                  <span class="bl-step__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h4>{d.title}</h4>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="bl-steps__rail" aria-hidden="true"><span data-bl="rail"></span></div>
+        </div>
+      </div>
+
+      <div class="bl-pipe" data-bl="pipe">
+        <div class="bl-scene bl-scene--report" data-bl="scene">
+          <div class="bl-scene__inner">
+            <div class="bl-report" aria-label="Recreated pathology report with two results flagged low. Synthetic data." role="img">
+              <div class="bl-report__head" aria-hidden="true">
+                <div>
+                  <div class="bl-report__lab">Pathology report</div>
+                  <div class="bl-report__name">Full blood count &amp; iron studies</div>
+                </div>
+                <div class="bl-report__patient">Synthetic patient<br /><span>Collected 11 Oct</span></div>
+              </div>
+              <div class="bl-report__cols" aria-hidden="true"><span>Test</span><span>Result</span><span>Range</span><span>Flag</span></div>
+              <div aria-hidden="true">
+                {
+                  rows.map((r) => (
+                    <div class:list={['bl-rrow', { 'is-flag': r.flag }]} data-bl={r.flag ? 'flagrow' : undefined}>
+                      <i class="bl-rrow__bg" />
+                      <span>{r.test}</span>
+                      <b>{r.result}</b>
+                      <span>{r.range}</span>
+                      <em>{r.flag}</em>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+            <div class="bl-fields" aria-hidden="true">
+              <div class="bl-fields__title"><span>read.json</span><span>verdicts</span></div>
+              {
+                rows.map((r) => (
+                  <div class:list={['bl-field', { 'is-flag': r.flag }]}>
+                    <span class="bl-field__k">{r.test}</span>
+                    <span class="bl-field__v">{r.result.split(' ')[0]}</span>
+                    <span class:list={['bl-field__verdict', r.flag ? 'v-amber' : 'v-ok']} data-bl={r.flag ? 'verdict' : undefined}>
+                      {r.flag ? 'Lab flag · Outside range' : 'In range'}
+                    </span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="bl-scene bl-scene--alert" data-bl="scene">
+          <AlertCard />
+        </div>
+
+        <div class="bl-scene bl-scene--site" data-bl="scene">
+          <Browser url="ar13x3.github.io/Bloodline" label="The BloodLine website">
+            <Screen>
+              <Shot
+                src="shots/bloodline/desktop-hero.webp"
+                alt="BloodLine website hero. 'The lab makes sure the result arrives. BloodLine makes sure the GP knows.' over a deep green background, with a Haemoglobin 118 g/L card marked Outside range."
+                width={2880}
+                height={1800}
+              />
+            </Screen>
+            <Screen>
+              <Shot
+                src="shots/bloodline/desktop-pipeline-checks.webp"
+                alt="BloodLine website, step 3 'Plain code checks each one': a paper lab report with Haemoglobin and Ferritin highlighted, beside the read.json panel with Lab flag and Outside range verdicts."
+                width={2880}
+                height={1800}
+              />
+            </Screen>
+            <Screen>
+              <Shot
+                src="shots/bloodline/desktop-pipeline-alert-seen.webp"
+                alt="BloodLine website, step 5 'You mark it seen': a phone showing the alert with a green Seen button, delivery chips for App, Email, SMS and Call, and an audit line."
+                width={2880}
+                height={1800}
+              />
+            </Screen>
+          </Browser>
+        </div>
+      </div>
+    </div>
+  </div>
+</ChapterSection>
+
+<style>
+  /* Tokens from Website/src/css/base.css. (On .bl-world: the <section> belongs to ChapterSection, outside this component's scope.) */
+  .bl-world {
+    --bg: #06110c;
+    --surface: #0d2018;
+    --text: #eaf2ec;
+    --muted: #a6bcad;
+    --faint: #71897c;
+    --line: rgb(220 238 226 / 0.1);
+    --line-2: rgb(220 238 226 / 0.18);
+    --sage: #b9d3a8;
+    --mint: #dcebd2;
+    --teal: #7fc4d4;
+    --amber: #e9ad4c;
+    --amber-text: #f3c57a;
+    --ok: #93d3a9;
+    --paper: #f4f7f3;
+    --paper-2: #e6eee9;
+    --paper-ink: #123441;
+    --paper-muted: #56686f;
+    --paper-amber: #7d5414;
+    --paper-amber-bg: #fbf1df;
+    --font-bl: 'Urbanist Variable', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+    --font-bl-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace;
+    --bl-gutter: clamp(16px, 4vw, 48px);
+    --silk: cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    z-index: 1;
+    color: var(--text);
+    font: 400 17px/1.6 var(--font-bl);
+  }
+
+  .bl-world ::selection {
+    background: var(--sage);
+    color: var(--bg);
+  }
+
+  .bl-world :focus-visible {
+    outline-color: var(--sage);
+  }
+
+  /* ---------- Nav ---------- */
+  .bl-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px var(--bl-gutter);
+  }
+
+  .bl-nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 19px/1 var(--font-bl);
+    letter-spacing: -0.01em;
+  }
+
+  .bl-nav__brand :global(.bl-logo) {
+    width: 28px;
+    height: 28px;
+  }
+
+  .bl-nav__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .bl-nav__meta span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .bl-nav__meta span:first-child {
+    color: var(--sage);
+    font-family: var(--font-bl-mono);
+    font-size: 13px;
+  }
+
+  /* ---------- Buttons ---------- */
+  .bl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 999px;
+    font: 600 16px/1 var(--font-bl);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.35s var(--silk),
+      box-shadow 0.35s var(--silk);
+  }
+
+  .bl-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.45s var(--silk);
+  }
+
+  .bl-btn:hover svg {
+    transform: translateX(4px);
+  }
+
+  .bl-btn--light {
+    background: var(--mint);
+    color: #0a1d14;
+  }
+
+  .bl-btn--light:hover {
+    background: #fff;
+  }
+
+  .bl-btn--ghost {
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+
+  .bl-btn--ghost:hover {
+    background: rgb(234 242 236 / 0.07);
+  }
+
+  .bl-btn--sm {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+
+  /* ---------- Hero ---------- */
+  .bl-hero {
+    padding: clamp(64px, 12vh, 140px) var(--bl-gutter) 48px;
+  }
+
+  /* Phones: the nav's meta moves here, as the site hides its nav links under 860px. */
+  .bl-hero__meta {
+    display: none;
+    margin-bottom: 18px;
+    font: 500 12px/1.5 var(--font-bl-mono);
+    letter-spacing: 0.04em;
+    color: var(--sage);
+  }
+
+  @media (max-width: 860px) {
+    .bl-nav__meta {
+      display: none;
+    }
+
+    .bl-nav .bl-btn {
+      margin-left: auto;
+    }
+
+    .bl-hero__meta {
+      display: block;
+    }
+  }
+
+  .bl-hero__pre {
+    margin-bottom: 20px;
+    font: 400 clamp(19px, 2vw, 28px)/1.25 var(--font-bl);
+    letter-spacing: -0.01em;
+    color: var(--mint);
+  }
+
+  .bl-hero__title {
+    max-width: 10.4em;
+    font: 600 clamp(46px, 7.4vw, 116px)/0.95 var(--font-bl);
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+    outline: none;
+  }
+
+  .bl-hero__foot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 32px;
+  }
+
+  .bl-hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ---------- Heartbeat line ---------- */
+  .bl-pulse {
+    display: block;
+    width: 100%;
+    height: clamp(110px, 16vh, 180px);
+    overflow: visible;
+    pointer-events: none;
+    mask: linear-gradient(90deg, transparent 0%, #000 22%, #000 88%, transparent 100%);
+  }
+
+  .bl-pulse path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .bl-pulse__base {
+    stroke: rgb(220 235 210 / 0.2);
+    stroke-width: 1.5;
+  }
+
+  .bl-pulse__glow {
+    stroke: var(--mint);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgb(220 235 210 / 0.8));
+    opacity: 0;
+  }
+
+  /* ---------- Floating glass cards ---------- */
+  .bl-float {
+    position: relative;
+    width: min(330px, 100% - 2 * var(--bl-gutter));
+    height: 300px;
+    margin: 0 var(--bl-gutter) 64px auto;
+  }
+
+  .bl-hcard {
+    position: absolute;
+    border-radius: 22px;
+    border: 1px solid var(--line-2);
+    background: rgb(9 24 17 / 0.72);
+    box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.65);
+  }
+
+  .bl-hcard--range {
+    right: 0;
+    top: 0;
+    width: 270px;
+    padding: 18px 20px 16px;
+  }
+
+  .bl-hcard--note {
+    left: 0;
+    bottom: 0;
+    width: 290px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .bl-hcard__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .bl-hcard__label {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .bl-hcard__value {
+    margin-top: 8px;
+    font: 300 46px/1 var(--font-bl);
+    letter-spacing: -0.03em;
+    color: var(--amber-text);
+  }
+
+  .bl-hcard__value small {
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  .bl-hcard__scale {
+    display: flex;
+    justify-content: space-between;
+    padding-inline: 30% 20%;
+    margin-top: 2px;
+    font: 400 11px/1 var(--font-bl-mono);
+    color: var(--muted);
+  }
+
+  .bl-hcard__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 12px;
+    background: var(--mint);
+  }
+
+  .bl-hcard__icon :global(.bl-mark) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .bl-hcard__app {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .bl-hcard__app span {
+    font-weight: 400;
+    color: var(--faint);
+    margin-left: 6px;
+  }
+
+  .bl-hcard__msg {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .bl-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 11px;
+    border-radius: 999px;
+    font: 600 12px/1 var(--font-bl);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .bl-chip--amber {
+    background: rgb(233 173 76 / 0.17);
+    color: var(--amber-text);
+  }
+
+  /* Range ruler (Website/src/css/base.css .ruler). */
+  .bl-ruler {
+    position: relative;
+    height: 30px;
+    margin-top: 14px;
+    overflow-x: clip; /* the travelling dot's box runs past the ruler; it must not widen the page */
+  }
+
+  .bl-ruler__band {
+    position: absolute;
+    top: 0;
+    left: 30%;
+    width: 50%;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--teal);
+  }
+
+  .bl-ruler__ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    height: 16px;
+    background: repeating-linear-gradient(90deg, rgb(234 242 236 / 0.32) 0 1px, transparent 1px 7px);
+    mask: linear-gradient(180deg, #000 60%, transparent);
+  }
+
+  .bl-ruler__dot {
+    position: absolute;
+    inset: 0;
+    transform: translateX(18%);
+  }
+
+  .bl-ruler__dot::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: -4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 4px rgb(233 173 76 / 0.22);
+  }
+
+  .bl-ruler__dot::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 8px;
+    width: 2px;
+    height: 20px;
+    border-radius: 2px;
+    background: var(--amber);
+  }
+
+  /* ---------- How: steps + pipe ---------- */
+  .bl-how {
+    display: grid;
+    gap: clamp(32px, 5vw, 88px);
+    padding: 48px var(--bl-gutter) 96px;
+  }
+
+  .bl-title {
+    font: 600 clamp(34px, 3.8vw, 56px)/1 var(--font-bl);
+    letter-spacing: -0.035em;
+    max-width: 15ch;
+    text-wrap: balance;
+  }
+
+  .bl-steps-wrap {
+    position: relative;
+    margin-top: 32px;
+  }
+
+  .bl-steps {
+    display: grid;
+    gap: 4px;
+    padding: 0 0 0 28px;
+  }
+
+  .bl-step {
+    display: flex;
+    gap: 16px;
+    padding: 10px 0;
+  }
+
+  .bl-step__n {
+    flex: none;
+    width: 22px;
+    padding-top: 6px;
+    font: 500 12px/1 var(--font-bl-mono);
+    color: var(--sage);
+  }
+
+  .bl-step h4 {
+    margin: 0 0 4px;
+    font: 600 clamp(19px, 1.6vw, 23px)/1.2 var(--font-bl);
+    letter-spacing: -0.01em;
+  }
+
+  .bl-steps__rail {
+    position: absolute;
+    left: 4px;
+    top: 16px;
+    bottom: 16px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+
+  .bl-steps__rail span {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, var(--sage), var(--mint));
+    transform: scaleY(1);
+    transform-origin: 50% 0;
+  }
+
+  .bl-pipe {
+    position: relative;
+    display: grid;
+    gap: 56px;
+  }
+
+  .bl-scene {
+    position: relative;
+    display: grid;
+    justify-items: center;
+  }
+
+  /* The report scene is sized in em; 1em tracks the scene width (as on the site). */
+  .bl-scene--report {
+    container-type: inline-size;
+  }
+
+  .bl-scene__inner {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.45;
+    font-size: 1.9cqw;
+    line-height: 1.3;
+  }
+
+  .bl-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 36em;
+    padding: 2em 2em 1.6em;
+    border-radius: 1.6em;
+    background: var(--paper);
+    color: var(--paper-ink);
+    box-shadow: 0 3em 6em -2em rgb(0 0 0 / 0.6);
+  }
+
+  .bl-report__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+    padding-bottom: 1.2em;
+    border-bottom: 1px solid var(--paper-2);
+  }
+
+  .bl-report__lab {
+    font: 500 0.8em/1 var(--font-bl-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paper-muted);
+  }
+
+  .bl-report__name {
+    margin-top: 0.4em;
+    font-size: 1.3em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .bl-report__patient {
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .bl-report__patient span {
+    font-weight: 400;
+    color: var(--paper-muted);
+    font-size: 0.9em;
+  }
+
+  .bl-report__cols,
+  .bl-rrow {
+    display: grid;
+    grid-template-columns: 1.5fr 1.1fr 0.9fr 0.35fr;
+    gap: 0.6em;
+    align-items: center;
+  }
+
+  .bl-report__cols {
+    padding: 1em 0.6em 0.5em;
+    font: 500 0.75em/1 var(--font-bl-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--paper-muted);
+  }
+
+  .bl-rrow {
+    position: relative;
+    padding: 0.62em 0.6em;
+    border-radius: 0.6em;
+    font-size: 1.05em;
+  }
+
+  .bl-rrow > * {
+    position: relative;
+  }
+
+  .bl-rrow b {
+    font-weight: 600;
+  }
+
+  .bl-rrow em {
+    font-style: normal;
+    font-weight: 700;
+    color: #9a6225;
+  }
+
+  .bl-rrow span:nth-of-type(2) {
+    color: var(--paper-muted);
+    font-family: var(--font-bl-mono);
+    font-size: 0.88em;
+  }
+
+  .bl-rrow__bg {
+    position: absolute !important;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--paper-amber-bg);
+    opacity: 0;
+  }
+
+  .bl-rrow.is-flag .bl-rrow__bg {
+    opacity: 1;
+  }
+
+  .bl-fields {
+    position: absolute;
+    right: 0;
+    top: 6em;
+    width: 26em;
+    padding: 1.4em;
+    border-radius: 1.6em;
+    border: 1px solid var(--line-2);
+    background: rgb(10 28 20 / 0.94);
+    box-shadow: 0 3em 6em -2em rgb(0 0 0 / 0.6);
+  }
+
+  .bl-fields__title {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 1em;
+    margin-bottom: 0.4em;
+    font: 0.85em/1 var(--font-bl-mono);
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bl-field {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.2em 1em;
+    padding: 0.6em 0.8em;
+    border-radius: 0.8em;
+  }
+
+  .bl-field__k {
+    color: var(--muted);
+  }
+
+  .bl-field__v {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    font: 500 1.5em/1 var(--font-bl);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bl-field__verdict {
+    justify-self: start;
+    font-size: 0.8em;
+    font-weight: 600;
+    padding: 0.25em 0.7em;
+    border-radius: 999px;
+  }
+
+  .v-ok {
+    background: rgb(147 211 169 / 0.14);
+    color: var(--ok);
+  }
+
+  .v-amber {
+    background: rgb(233 173 76 / 0.18);
+    color: var(--amber-text);
+  }
+
+  .bl-field.is-flag::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.7em;
+    bottom: 0.7em;
+    width: 0.22em;
+    border-radius: 1em;
+    background: var(--amber);
+  }
+
+  .bl-scene--site {
+    width: 100%;
+  }
+
+  .bl-scene--site :global(.browser) {
+    --c-surface: #0d2018;
+    --c-fg: #eaf2ec;
+    --c-muted: #a6bcad;
+  }
+
+  @media (min-width: 1024px) {
+    .bl-how {
+      grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.22fr);
+      align-items: start;
+    }
+
+    .bl-float {
+      margin-top: -240px;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport. The hero and the steps share the
+     stage and the timeline hands one to the other.
+     ------------------------------------------------------------------ */
+  :global(html.mode-full) .bl-world {
+    position: absolute;
+    inset: 0;
+  }
+
+  :global(html.mode-full) .bl-nav {
+    position: absolute;
+    inset: 0 0 auto;
+    padding-right: calc(var(--rail) + var(--bl-gutter));
+  }
+
+  :global(html.mode-full) .bl-hero {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(88px, 14vh, 150px);
+    padding: 0 calc(var(--rail) + var(--bl-gutter)) 0 var(--bl-gutter);
+  }
+
+  :global(html.mode-full) .bl-pulse {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(18px, 4vh, 40px);
+    z-index: 0;
+  }
+
+  :global(html.mode-full) .bl-float {
+    position: absolute;
+    right: calc(var(--rail) + var(--bl-gutter));
+    bottom: clamp(88px, 14vh, 150px);
+    margin: 0;
+  }
+
+  :global(html.mode-full) .bl-hcard {
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    backdrop-filter: blur(20px) saturate(130%);
+    background: rgb(9 24 17 / 0.58);
+  }
+
+  :global(html.mode-full) .bl-how {
+    position: absolute;
+    inset: 88px calc(var(--rail) + var(--bl-gutter)) 40px var(--bl-gutter);
+    align-items: center;
+    padding: 0;
+  }
+
+  /* Short windows (600–720px tall): tighten the decisions so all three fit the frame. */
+  @media (max-height: 720px) {
+    :global(html.mode-full) .bl-how {
+      inset: 72px calc(var(--rail) + var(--bl-gutter)) 24px var(--bl-gutter);
+    }
+
+    :global(html.mode-full) .bl-title {
+      font-size: clamp(28px, 3vw, 44px);
+    }
+
+    :global(html.mode-full) .bl-steps-wrap {
+      margin-top: 16px;
+    }
+
+    :global(html.mode-full) .bl-step {
+      padding: 6px 0;
+    }
+  }
+
+  /* The site dims inactive steps to 0.32. Here only the number and heading dim (0.72 keeps them
+     above 4.5:1 over the art); the body text stays at full strength. */
+  :global(html.mode-full) .bl-step :is(.bl-step__n, h4) {
+    opacity: 0.72;
+  }
+
+  :global(html.mode-full) .bl-pipe {
+    display: block;
+    height: min(100%, 640px);
+    align-self: center;
+  }
+
+  :global(html.mode-full) .bl-scene {
+    position: absolute;
+    inset: 0;
+    align-content: center;
+  }
+
+  :global(html.mode-full) .bl-scene--site :global(.browser) {
+    width: min(100%, calc((100vh - 260px) * 1.6));
+  }
+</style>

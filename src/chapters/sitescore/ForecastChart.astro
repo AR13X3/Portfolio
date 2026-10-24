@@ -1,0 +1,108 @@
+---
+/**
+ * forecast.monthly(): the workspace's 36-month projection (frontend/src/components/RevenueChart.tsx).
+ * Only the selected site is red and solid, with its P10–P90 band; the other sites are ink,
+ * told apart by their slot's line pattern (lib/theme.ts SITE_DASH). Real model output for the
+ * three demo sites, redrawn as SVG so the lines can draw in as you scroll.
+ */
+import { OPEN_DATE, RUNS, SITES } from './data';
+import { band, longMonth, money, shortMonth, smooth } from './format';
+
+interface Props {
+  /** Index into SITES of the selected site. */
+  selected: number;
+}
+const { selected } = Astro.props;
+
+const VW = 1000;
+const VH = 300;
+const PAD_T = 10;
+const PAD_B = 6;
+const sel = SITES[selected];
+const months = sel.months.length;
+const top = Math.max(...SITES.flatMap((s) => s.months), ...sel.bandP90);
+const step = top > 60000 ? 20000 : 10000;
+const max = Math.ceil(top / step) * step;
+const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step);
+const x = (i: number) => (i / (months - 1)) * VW;
+const y = (v: number) => PAD_T + (1 - v / max) * (VH - PAD_T - PAD_B);
+const pts = (vals: number[]) => vals.map((v, i) => [x(i), y(v)] as [number, number]);
+const DASH: (string | null)[] = [null, '7 4', '2 3', '10 3 2 3', '14 5'];
+
+const lines = SITES.map((s, i) => ({
+  ...s,
+  on: i === selected,
+  d: smooth(pts(s.months)),
+  // Grown out of the baseline for the lite reveal.
+  dash: i === selected ? null : DASH[i],
+  end: { x: 100, y: (y(s.months[months - 1]) / VH) * 100 },
+}));
+const bandD = band(pts(sel.bandP90), pts(sel.bandP10));
+const bandFlat = band(pts(sel.months), pts(sel.months));
+const xTicks = Array.from({ length: Math.floor((months - 1) / 6) + 1 }, (_, k) => k * 6);
+const mature = (s: (typeof SITES)[number]) => money(s.months.slice(-12).reduce((a, b) => a + b, 0) / 12);
+const label =
+  `Projected monthly revenue for the three demo sites over ${months} months from ${longMonth(OPEN_DATE)}. ` +
+  `${sel.label}, the selected site, ramps up to about ${mature(sel)} a month in its third year, with its P10–P90 band shaded around it; ` +
+  SITES.filter((_, i) => i !== selected)
+    .map((s) => `${s.label} reaches about ${mature(s)}`)
+    .join(' and ') +
+  '.';
+---
+
+<div class="ss-card ss-chart" data-ss="chart">
+  <div class="ss-card__head">
+    <div>
+      <p class="ss-kicker ss-mono" aria-hidden="true"><span data-ss="decode">forecast.monthly()</span></p>
+      <h4 class="ss-card__title">Projected monthly revenue</h4>
+      <p class="ss-card__note">
+        Opens {longMonth(OPEN_DATE)} · line: central estimate · shaded: 80% of {RUNS} scenarios
+      </p>
+    </div>
+    <span class="ss-seg" aria-hidden="true"><span class="is-on">Revenue</span><span>Profit</span></span>
+  </div>
+  <ul class="ss-legend" aria-hidden="true">
+    {
+      lines.map((l) => (
+        <li class:list={{ 'is-on': l.on }}>
+          <svg viewBox="0 0 26 8" width="26" height="8">
+            <path d="M1 4H25" stroke-dasharray={l.dash ?? undefined} />
+          </svg>
+          {l.n} {l.label}
+        </li>
+      ))
+    }
+  </ul>
+  <figure class="ss-plot" role="img" aria-label={label}>
+    <div class="ss-plot__y" aria-hidden="true">
+      {
+        ticks.map((t) => (
+          <span style={`top:${(y(t) / VH) * 100}%`}>{money(t)}</span>
+        ))
+      }
+    </div>
+    <div class="ss-plot__area" aria-hidden="true">
+      <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none">
+        <defs>
+          <mask id="ss-chart-wipe" maskUnits="userSpaceOnUse" x="-20" y="-20" width={VW + 40} height={VH + 40}>
+            <path d={`M-10 ${VH / 2}H${VW + 10}`} stroke="#fff" stroke-width={VH + 40} data-ss="wipe" />
+          </mask>
+        </defs>
+        {ticks.map((t) => <path class="ss-plot__grid" d={`M0 ${y(t)}H${VW}`} />)}
+        <g mask="url(#ss-chart-wipe)">
+          <path class="ss-plot__band" d={bandD} data-ss="band" data-flat={bandFlat} data-full={bandD} />
+          {
+            lines
+              .filter((l) => !l.on)
+              .map((l) => <path class="ss-plot__line" d={l.d} stroke-dasharray={l.dash ?? undefined} data-ss="rival" />)
+          }
+          {lines.filter((l) => l.on).map((l) => <path class="ss-plot__line is-on" d={l.d} data-ss="line" />)}
+        </g>
+      </svg>
+      {lines.map((l) => <i class:list={['ss-plot__dot', { 'is-on': l.on }]} style={`top:${l.end.y}%`} data-ss="dot" />)}
+    </div>
+    <div class="ss-plot__x" aria-hidden="true">
+      {xTicks.map((i) => <span style={`left:${(x(i) / VW) * 100}%`}>{shortMonth(OPEN_DATE, i)}</span>)}
+    </div>
+  </figure>
+</div>

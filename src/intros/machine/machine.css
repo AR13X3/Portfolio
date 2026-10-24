@@ -1,0 +1,2297 @@
+/* ==================================================================
+   The Machine (Machine.astro). Every rule starts with the route's root,
+   .jm, or a mode class on <html> before it: nothing here reaches
+   another section. Base styles are the phone column; the bench layout
+   is chosen by the query that mirrors the engine's "wide" condition.
+
+   Root states (motion.ts):
+     .jm--live      a build is running (without one, the parts show set off: print)
+     .jm--held      chosen, waiting for enter(): nothing shows yet
+     .jm--enter     the load-in is playing (CSS keyframes on wrappers GSAP never touches)
+     .jm--fall      the phone column is built; .jm--strip with the run, .jm--still without
+     .jm--running   the dot has left "Joy."; .jm--offscreen, .jm--paused (Idle motion off)
+   ================================================================== */
+
+/* The bench's unit and the column's, as lengths: resolved where they are set, inherited as px. */
+@property --jm-u {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 1px;
+}
+
+.jm {
+  /* Width of "Toufiq Ahmed Joy." in em, at weight 760, width 112%, tracking -0.035em. */
+  --name-em: 9.53;
+  position: relative;
+  color: var(--ink);
+}
+
+/* Opacity, not visibility: GSAP's autoAlpha reads an inherited `visibility: hidden` as a starting
+   state, so a held root only goes transparent (the build's own tweens use opacity for the same reason). */
+.jm.jm--held {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The phone column's pieces. On the bench they do not exist. */
+.jm .jm-hud,
+.jm .jm-disc-clip,
+.jm .jm-ring,
+.jm .jm-runner,
+.jm .jm-hit,
+.jm .jm-ghost,
+.jm .jm-fcue,
+.jm .jm-role,
+.jm .jm-st__mark {
+  display: none;
+}
+
+.jm .jm-hold,
+.jm .jm-col {
+  display: contents;
+}
+
+/* Product faces: each part sets its own (parts.ts, from its chapter's theme). */
+.jm .jm-t {
+  font-family: var(--jm-face);
+}
+
+.jm .jm-tm {
+  font-family: var(--jm-mono);
+}
+
+.jm .jm-bolt {
+  fill: #c9cdd3;
+  stroke: rgb(16 17 20 / 0.6);
+  stroke-width: 0.8;
+}
+
+.jm svg {
+  display: block;
+  max-width: none;
+  overflow: visible;
+}
+
+/* ------------------------------------------------------------------
+   Shell: the bar, the name, the statement, the foot.
+   ------------------------------------------------------------------ */
+.jm .jm-cam {
+  position: relative;
+  transform-origin: 0 0;
+}
+
+/* The workbench: a dot grid that belongs to the camera, so it moves with the parts. */
+.jm .jm-grid {
+  position: absolute;
+  inset: -40vh -40vw;
+  background-image: radial-gradient(circle at 1px 1px, rgb(16 17 20 / 0.09) 1px, transparent 1.3px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+.jm .jm-bar {
+  position: relative;
+  z-index: 5;
+}
+
+.jm .jm-bar__in {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px 32px;
+}
+
+.jm .jm-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 0.9375rem/1.2 var(--font-sans);
+}
+
+.jm .jm-who__mark {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: var(--ink);
+}
+
+.jm .jm-bar__end {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.jm .jm-bar__rule {
+  width: 1px;
+  height: 16px;
+  background: var(--rule);
+}
+
+/* No rule without the switch beside it (it shows once the engine runs). */
+.jm .jm-switch[hidden] + .jm-bar__rule {
+  display: none;
+}
+
+.jm .jm-links {
+  display: flex;
+  gap: 0 22px;
+  margin-left: auto;
+}
+
+.jm .jm-links a {
+  display: inline-block;
+  padding: 10px 0;
+  font: 500 0.9375rem/1.2 var(--font-sans);
+  text-decoration: none;
+}
+
+.jm .jm-links a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- The name ---------- */
+.jm .jm-name {
+  position: relative;
+  z-index: 3;
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: min(20vw, 9.25rem);
+  font-weight: 760;
+  font-stretch: 112%;
+  font-kerning: normal;
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  outline: none;
+}
+
+/* Word masks. Padding keeps the descenders of q and y; the dot lives outside them. */
+.jm .jm-w {
+  display: inline-block;
+  vertical-align: top;
+  overflow: clip;
+  padding: 0.06em 0 0.22em;
+  margin: -0.06em 0 -0.22em;
+}
+
+.jm .jm-w__i {
+  display: inline-block;
+}
+
+.jm .jm-name__last {
+  white-space: nowrap;
+}
+
+/* The full stop: an ink square on the baseline, drawn to Archivo's own period. */
+.jm .jm-end {
+  display: inline-block;
+  line-height: 0;
+  margin-left: 0.0625em;
+}
+
+.jm :is(.jm-dot-land, .jm-dot-idle, .jm-dot-lean, .jm-dot, .jm-dot__sq, .jm-dot__ink) {
+  display: block;
+  transform-origin: 50% 100%;
+}
+
+.jm .jm-dot {
+  /* Archivo's period at this weight and width: 0.203em by 0.172em, sitting on the baseline. */
+  width: 0.203em;
+  height: 0.172em;
+  transform-origin: 50% 50%;
+}
+
+.jm :is(.jm-dot__sq, .jm-dot__ink) {
+  width: 100%;
+  height: 100%;
+}
+
+.jm .jm-dot__ink {
+  background: var(--ink);
+  transform-origin: 50% 50%;
+}
+
+/* ---------- Statement, foot ---------- */
+.jm .jm-statement {
+  position: relative;
+  z-index: 2;
+  max-width: 34ch;
+  margin-top: 22px;
+  color: var(--ink-2);
+  font: 400 1.125rem/1.45 var(--font-sans);
+  text-wrap: pretty;
+}
+
+.jm .jm-statement__in {
+  display: block;
+}
+
+.jm .jm-foot {
+  position: relative;
+  z-index: 4;
+}
+
+.jm .jm-foot__in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 28px;
+}
+
+.jm .jm-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font: 600 0.8125rem/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.jm .jm-cue:hover {
+  text-decoration: underline;
+}
+
+/* What the cue says to a screen reader: as written (a capitalised name is read as letters). */
+.jm .jm-said {
+  text-transform: none;
+}
+
+.jm .jm-cue__arrow {
+  display: inline-block;
+}
+
+/* Idle motion: the one switch for everything that moves on its own here. */
+.jm .jm-idle {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.jm .jm-idle:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.jm .jm-idle__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.jm .jm-idle__pause {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.jm .jm-idle__play {
+  fill: currentColor;
+}
+
+.jm .jm-idle[aria-checked='true'] .jm-idle__play,
+.jm .jm-idle[aria-checked='false'] .jm-idle__pause {
+  display: none;
+}
+
+/* Without a running build, or with reduced motion, nothing moves on its own: no switch. */
+.jm:not(.jm--live) .jm-idle,
+html.mode-reduced .jm .jm-idle {
+  display: none;
+}
+
+/* ---------- The machine (phone column by default) ---------- */
+.jm .jm-machine {
+  position: relative;
+  margin-top: 28px;
+}
+
+.jm .jm-machine__in {
+  --jm-u: 0.82px;
+}
+
+.jm .jm-stage {
+  position: relative;
+}
+
+.jm :is(.jm-guide, .jm-debug) {
+  display: none;
+}
+
+.jm .jm-st__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.jm .jm-st__box {
+  position: absolute;
+  inset: 0;
+}
+
+.jm .jm-st__pose {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--w) * var(--jm-u));
+  height: calc(var(--h) * var(--jm-u));
+  transform: rotate(var(--r, 0deg));
+  transform-origin: calc(var(--ox) * var(--jm-u)) calc(var(--oy) * var(--jm-u));
+}
+
+.jm :is(.jm-st__in, .jm-st__idle, .jm-st__react, .jm-st__hover) {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: inherit;
+}
+
+.jm .jm-art {
+  width: 100%;
+  height: 100%;
+}
+
+/* Airpoint's status pill hangs from the pen's pivot. */
+.jm .jm-ap-hang {
+  position: absolute;
+  left: calc(120 * var(--jm-u));
+  top: calc(12 * var(--jm-u));
+  width: 1px;
+  height: calc(28 * var(--jm-u));
+  background: rgb(16 17 20 / 0.35);
+}
+
+.jm .jm-ap-pill-wrap {
+  position: absolute;
+  left: calc(54 * var(--jm-u));
+  top: calc(40 * var(--jm-u));
+  width: calc(132 * var(--jm-u));
+  height: calc(26 * var(--jm-u));
+}
+
+.jm .jm-ap-pill {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Plates: the parts' nameplates, and the links' text ---------- */
+.jm .jm-tag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
+  border: 1px solid rgb(16 17 20 / 0.16);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 0.8125rem/1.2 var(--font-sans);
+  white-space: nowrap;
+}
+
+.jm .jm-tag__num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 18px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font: 600 0.6875rem/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.jm .jm-tag__fill {
+  position: absolute;
+  inset: -1px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--paper);
+  opacity: 0;
+}
+
+.jm .jm-tag__meta {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.jm .jm-st__link:is(:hover, :focus-visible) .jm-tag__name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.jm .jm-st__link:focus-visible {
+  outline: none;
+}
+
+.jm .jm-st__link:focus-visible .jm-tag {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* The ring follows the part's pose (06 hangs at -9deg, the pen at +15deg). */
+.jm .jm-st__link:focus-visible .jm-st__pose {
+  outline: 2px solid var(--ink);
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+
+/* ---------- Hover and focus previews (CSS only, on their own wrappers) ---------- */
+.jm :is(.jm-st__hover, .jm-cba-hover, .jm-ap-btn-hover, .jm-hx-hover) {
+  transition: transform 0.35s var(--ease-out);
+}
+
+.jm :is(.jm-cba-hover, .jm-cba-twinkle, .jm-ap-btn-hover, .jm-hx-hover, .jm-hx-nudge, .jm-ss-peek, .jm-bl-peek, .jm-bl-now, .jm-ap-ping, .jm-cv-ready),
+.jm [data-r='star'],
+.jm [data-r='pen-ping'],
+.jm [data-r='cv-btn'],
+.jm [data-r='cv-ring'],
+.jm [data-r='ss-marker'] {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.jm :is(.jm-ss-peek, .jm-bl-peek) {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.jm :is(.jm-ap-ping, .jm-cv-ready, .jm-ss-breathe) {
+  opacity: 0;
+}
+
+.jm .jm-st--comparebestai .jm-st__link:is(:hover, :focus-visible) .jm-st__hover {
+  transform: rotate(-3deg);
+}
+
+.jm .jm-st--comparebestai .jm-st__link:is(:hover, :focus-visible) .jm-cba-hover {
+  transform: scale(1.18);
+}
+
+.jm .jm-st--airpoint .jm-st__link:is(:hover, :focus-visible) .jm-ap-btn-hover {
+  transform: translateY(1.4px);
+}
+
+.jm .jm-st--bloodline .jm-st__link:is(:hover, :focus-visible) .jm-bl-peek {
+  opacity: 0.6;
+}
+
+.jm .jm-st--sitescore .jm-st__link:is(:hover, :focus-visible) .jm-ss-peek {
+  opacity: 0.85;
+}
+
+.jm .jm-st--halation .jm-st__link:is(:hover, :focus-visible) .jm-hx-hover {
+  transform: translateX(34px);
+}
+
+.jm .jm-cv-btn-bg {
+  transition: fill 0.2s;
+}
+
+.jm .jm-st--carevisor .jm-st__link:is(:hover, :focus-visible) .jm-cv-btn-bg {
+  fill: #003d99;
+}
+
+/* ---------- Idle life: one thing at a time, toggled by motion.ts, never while running ---------- */
+.jm .jm-st.is-idle .jm-cba-twinkle {
+  animation: jm-twinkle 0.7s ease-in-out;
+}
+
+.jm .jm-st.is-idle .jm-ap-ping {
+  animation: jm-ping 1.2s ease-out;
+}
+
+.jm .jm-st.is-idle .jm-bl-now {
+  animation: jm-pulse 1.4s ease-in-out;
+}
+
+.jm .jm-st.is-idle .jm-ss-breathe {
+  animation: jm-breathe 2.4s ease-in-out both;
+}
+
+.jm .jm-st.is-idle .jm-ss-breathe:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.jm .jm-st.is-idle .jm-ss-breathe:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.jm .jm-st.is-idle .jm-hx-nudge {
+  animation: jm-nudge 1.6s ease-in-out;
+}
+
+.jm .jm-st.is-idle .jm-cv-ready {
+  animation: jm-ready 1.2s ease-out;
+}
+
+.jm .jm-dot-idle.is-hop {
+  animation: jm-dot-hop 0.8s;
+}
+
+.jm .jm-dot-idle.is-tip {
+  transform-origin: 100% 100%;
+  animation: jm-dot-tip 1.5s;
+}
+
+.jm .jm-stage.is-riffle .jm-st__idle {
+  animation: jm-riffle 0.6s calc(var(--k) * 0.09s) ease-out both;
+}
+
+.jm .jm-st {
+  --riffle-a: translateY(calc(3 * var(--jm-u)));
+  --riffle-b: translateY(calc(-1 * var(--jm-u)));
+}
+
+.jm :is(.jm-st--comparebestai, .jm-st--airpoint) {
+  --riffle-a: rotate(-2.4deg);
+  --riffle-b: rotate(0.9deg);
+}
+
+.jm.jm--paused :is(.jm-cue__arrow, .jm-st__idle, .jm-dot-idle, .jm-st *),
+.jm.jm--running :is(.jm-cue__arrow, .jm-dot-idle, .jm-st__idle, .jm-st.is-idle *),
+.jm.jm--offscreen .jm-cue__arrow {
+  animation: none !important;
+}
+
+/* ---------- The cut (bench) ---------- */
+.jm .jm-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.jm .jm-reveal__disc {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+/* The ripple's leading edge: CareVisor blue, in proportion to the disc, so it thickens as it travels. */
+.jm .jm-reveal__disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 82 204 / 0) 97%, rgb(0 82 204 / 0.18) 99.2%, rgb(0 82 204 / 0.55) 99.8%, rgb(0 82 204 / 0) 100%);
+}
+
+/* Chapter 01's ground, with the very longhands its background layer uses (BgStack). */
+.jm :is(.jm-reveal__world, .jm-disc__world) {
+  position: absolute;
+  background-color: var(--jm-cut-bg);
+  background-image: var(--jm-cut-art);
+  background-size: cover;
+  background-position: center;
+}
+
+.jm .jm-reveal__ring {
+  position: absolute;
+  border: 1.5px solid #0052cc;
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------------
+   Bench layout: wide and tall enough for the engine's full mode.
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .jm {
+    --pad-x: max(var(--gutter), (100% - var(--rail) - 1400px) / 2);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100vh;
+    height: 100svh;
+    padding: clamp(12px, 2.4vh, 26px) calc(var(--pad-x) + var(--rail)) clamp(14px, 2.8vh, 30px) var(--pad-x);
+  }
+
+  /* Full mode: the engine pins the section (100vh); the camera moves inside it. */
+  html.mode-full .jm {
+    height: 100%;
+    overflow: clip;
+  }
+
+  .jm .jm-cam {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    container-type: inline-size;
+  }
+
+  .jm .jm-name {
+    margin-top: clamp(6px, 2.4vh, 28px);
+    font-size: calc(100cqw / var(--name-em));
+    white-space: nowrap;
+  }
+
+  .jm .jm-machine {
+    min-height: 0;
+    margin-top: clamp(10px, 2.2vh, 24px);
+    container-type: size;
+  }
+
+  .jm .jm-machine__in {
+    position: absolute;
+    inset: 0;
+    --jm-u: calc(min(100cqw, 100cqh * 2.1931) / 1272);
+  }
+
+  .jm .jm-statement {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(34ch, calc(100cqw - 905 * var(--jm-u)));
+    margin: 0;
+    font-size: clamp(1rem, 0.6rem + 0.62vw, 1.1875rem);
+  }
+
+  /* In the empty corner under 05 and 06, clear of 01's plate at every bench size. */
+  .jm .jm-foot {
+    position: absolute;
+    right: 0;
+    bottom: calc(84 * var(--jm-u));
+  }
+
+  /* A small bench (the unit under about 0.73px, so 1024 wide): the foot's one row (about 370px of
+     13px type, which does not scale with the bench) no longer fits beside 01's window. It rises
+     over the window's top edge instead, under 04's plate. */
+  @container (max-width: 932px) or (max-height: 425px) {
+    .jm .jm-foot {
+      bottom: calc(128 * var(--jm-u) + 12px);
+    }
+  }
+
+  .jm .jm-stage {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: calc(1272 * var(--jm-u));
+    height: calc(580 * var(--jm-u));
+  }
+
+  .jm .jm-guide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .jm .jm-guide path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0.34;
+    stroke-width: 2.6;
+    stroke-dasharray: 2.6 7.4;
+  }
+
+  .jm .jm-stations {
+    position: absolute;
+    inset: 0;
+  }
+
+  .jm .jm-st {
+    position: absolute;
+    left: calc(var(--x) * var(--jm-u));
+    top: calc(var(--y) * var(--jm-u));
+    width: calc(var(--w) * var(--jm-u));
+    height: calc(var(--h) * var(--jm-u));
+  }
+
+  .jm .jm-st__link {
+    position: absolute;
+    inset: 0;
+  }
+
+  .jm .jm-tag {
+    left: calc(var(--tx) * var(--jm-u));
+    top: calc(var(--ty) * var(--jm-u));
+  }
+
+  /* On the bench the plate shows the name; the meta slides out beside it on hover and focus. */
+  .jm .jm-tag__meta {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 6px);
+    padding: 4px 8px;
+    border-radius: 5px;
+    background: var(--paper);
+    opacity: 0;
+    transform: translate(-4px, -50%);
+    transition:
+      opacity 0.2s,
+      transform 0.25s var(--ease-out);
+  }
+
+  .jm .jm-st__link:is(:hover, :focus-visible) .jm-tag__meta {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  .jm .jm-debug {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9;
+    pointer-events: none;
+  }
+
+  .jm.jm--debug .jm-debug {
+    display: block;
+  }
+}
+
+/* Phones and tablets: the name in three lines. The machine's layout is the Fall Line, below. */
+@media (max-width: 1023.98px), (max-height: 599.98px) {
+  .jm .jm-name .jm-w,
+  .jm .jm-name__last {
+    display: block;
+    width: max-content;
+  }
+
+  .jm .jm-name .jm-w {
+    margin-bottom: -0.12em;
+  }
+
+  .jm .jm-name__last .jm-w {
+    display: inline-block;
+  }
+}
+
+/* ------------------------------------------------------------------
+   The load-in (enter()): transforms and opacity, on wrappers that
+   GSAP never animates. Only a chosen route plays it; a build that
+   starts at rest (a deep link, a rebuild) shows its first frame as is.
+   ------------------------------------------------------------------ */
+.jm.jm--enter .jm-bar__in {
+  animation: jm-fade 0.5s 0.1s both;
+}
+
+.jm.jm--enter .jm-w__i {
+  animation: jm-word 0.9s var(--d, 0s) var(--ease-out) both;
+}
+
+.jm.jm--enter .jm-dot-land {
+  animation: jm-dot-drop 0.62s 0.75s both;
+}
+
+.jm.jm--enter .jm-statement__in {
+  animation: jm-rise 0.8s 1.05s var(--ease-out) both;
+}
+
+.jm.jm--enter .jm-foot__in {
+  animation: jm-fade 0.6s 1.7s both;
+}
+
+.jm.jm--enter .jm-st__in {
+  animation: jm-part-in 0.7s calc(0.8s + var(--k) * 0.08s) var(--ease-out) both;
+}
+
+.jm.jm--enter .jm-ap-hang {
+  animation: jm-fade 0.5s 1.05s both;
+}
+
+.jm.jm--enter .jm-ap-pill-wrap .jm-st__in {
+  --k: 1;
+}
+
+.jm.jm--enter .jm-tag {
+  animation: jm-fade 0.5s calc(1.5s + var(--k) * 0.04s) both;
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .jm.jm--enter .jm-guide__in {
+    animation: jm-fade 0.9s 1.45s both;
+  }
+}
+
+/* Entered by the gate's flying dot (enter({ arrive: true })): the full stop's own drop does not run;
+   it shows when the dot lands on it (land()) and settles with the drop's own thock. */
+.jm.jm--arrive .jm-dot-land {
+  opacity: 0;
+  animation: none !important;
+}
+
+.jm.jm--landed .jm-dot-land {
+  animation: jm-dot-settle 0.3s both !important;
+}
+
+@keyframes jm-dot-settle {
+  0% {
+    transform: scale(1.2, 0.78);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  37% {
+    transform: translateY(-0.12em) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  66% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* A hint that the cue scrolls: three bobs, then still (nothing loops). */
+.jm.jm--live .jm-cue__arrow {
+  animation: jm-bob 1.6s 2.4s ease-in-out 3;
+}
+
+@keyframes jm-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes jm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* Each word starts wholly under its mask: the mask reaches 0.22em under the line (for q and y),
+   and the tall letters reach above it, so a word's own height (104%) left the tops of T, f, i
+   and J showing while it waited to rise. */
+@keyframes jm-word {
+  from {
+    transform: translateY(calc(100% + 0.34em));
+  }
+}
+
+@keyframes jm-part-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(18 * var(--jm-u)));
+  }
+}
+
+/* The full stop drops onto "Joy" with a weighted thock: squash on contact, one small rebound. */
+@keyframes jm-dot-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.6em);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  12% {
+    opacity: 1;
+  }
+  52% {
+    transform: translateY(0) scale(1.2, 0.78);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  70% {
+    transform: translateY(-0.12em) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  84% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* On phones the name is three lines: the full stop drops from the gap under "Ahmed" (0.6em), not
+   through it. The same weighted thock as the bench's drop. */
+@keyframes jm-dot-drop-m {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.6em);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  18% {
+    opacity: 1;
+  }
+  52% {
+    transform: translateY(0) scale(1.2, 0.78);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  70% {
+    transform: translateY(-0.12em) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  84% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* The hint, once: a half-hop that lands back on "Joy." */
+@keyframes jm-dot-hop {
+  0% {
+    transform: none;
+  }
+  16% {
+    transform: scale(1.16, 0.8);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  48% {
+    transform: translateY(-0.62em) scale(0.95, 1.06);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  78% {
+    transform: translateY(0) scale(1.14, 0.84);
+  }
+  90% {
+    transform: scale(0.98, 1.02);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* Restless: it tips over its right edge, toward the drop, and rocks back. */
+@keyframes jm-dot-tip {
+  0%,
+  100% {
+    transform: none;
+  }
+  32% {
+    transform: rotate(18deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+  66% {
+    transform: rotate(-1.6deg);
+  }
+  80% {
+    transform: none;
+  }
+}
+
+@keyframes jm-riffle {
+  0%,
+  100% {
+    transform: none;
+  }
+  28% {
+    transform: var(--riffle-a);
+  }
+  58% {
+    transform: var(--riffle-b);
+  }
+  82% {
+    transform: none;
+  }
+}
+
+@keyframes jm-bob {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes jm-twinkle {
+  0%,
+  100% {
+    transform: none;
+  }
+  45% {
+    transform: scale(1.18) rotate(14deg);
+  }
+}
+
+@keyframes jm-ping {
+  from {
+    opacity: 0.7;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes jm-pulse {
+  0%,
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.45;
+  }
+}
+
+@keyframes jm-breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@keyframes jm-nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  45%,
+  60% {
+    transform: translateX(16px);
+  }
+}
+
+@keyframes jm-ready {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* Load keyframes for the phone's parts: 06 swings onto its bolt; 05 settles on its pivot. */
+@keyframes jm-hang {
+  0% {
+    opacity: 0;
+    transform: rotate(-16deg);
+  }
+  14% {
+    opacity: 1;
+  }
+  40% {
+    transform: rotate(4deg);
+  }
+  65% {
+    transform: rotate(-2deg);
+  }
+  85% {
+    transform: rotate(0.8deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes jm-lever {
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    transform: rotate(2deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* =====================================================================
+   FALL LINE: the Machine on phones and tablets (lite). Upright screens
+   (narrower than 5/4) hang the parts one under another down the page,
+   and the full stop falls through them as the reader scrolls. The
+   column scrolls natively, 1:1 with the thumb; it is held twice by CSS
+   sticky (the opening hop, the last drop). Positions are custom
+   properties in units of q = column / 358, so the still column and
+   print get the same picture. Wide-short screens split it: the name
+   stays left and only the machine falls, on the right.
+   ===================================================================== */
+@media (max-width: 1023.98px), (max-height: 599.98px) {
+  .jm {
+    --g: clamp(16px, calc(16px + (100vw - 390px) * 0.0423), 32px);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Upright (and every lite screen narrower than 5/4): the drop.
+   --------------------------------------------------------------------- */
+@media (max-width: 1023.98px) and (max-aspect-ratio: 1249/1000), (max-height: 599.98px) and (max-aspect-ratio: 1249/1000) {
+  .jm {
+    --colW: calc(100vw - 2 * var(--g));
+    --qu: calc(var(--colW) / 358);
+    --F: min(calc(var(--colW) / 3.74), 12.5vh);
+  }
+
+  @supports (height: 1svh) {
+    .jm {
+      --F: min(calc(var(--colW) / 3.74), 12.5svh);
+    }
+  }
+
+  .jm .jm-hold,
+  .jm .jm-col {
+    position: relative;
+    display: block;
+  }
+
+  /* ---------- The bar: the switch on the left (it replaces the kicker), the links on the right ---------- */
+  .jm .jm-bar {
+    position: absolute;
+    top: 14px;
+    left: var(--g);
+    right: var(--g);
+    z-index: 8;
+  }
+
+  .jm .jm-bar__in {
+    flex-wrap: nowrap;
+    gap: 0 10px;
+  }
+
+  .jm .jm-who,
+  .jm .jm-bar__rule {
+    display: none;
+  }
+
+  .jm .jm-bar__end {
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .jm .jm-links {
+    gap: 4px;
+    margin-right: -5px;
+  }
+
+  .jm .jm-links a {
+    padding: 13px 5px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  /* ---------- The column ---------- */
+  .jm .jm-cam {
+    display: flex;
+    flex-direction: column;
+    width: var(--colW);
+    margin: 0 auto;
+    padding: 66px 0 24px;
+  }
+
+  /* With the run, chapter 01's own nav follows 01's plate closely (it brings its own top space). */
+  .jm.jm--strip .jm-cam {
+    padding-bottom: 8px;
+  }
+
+  .jm .jm-grid {
+    inset: 0 calc((var(--colW) - 100vw) / 2);
+  }
+
+  .jm :is(.jm-machine, .jm-machine__in, .jm-stage) {
+    display: contents;
+  }
+
+  .jm .jm-statement {
+    order: 1;
+    max-width: none;
+    margin: 0;
+    font: 400 14.5px/20.6px var(--font-sans);
+  }
+
+  .jm .jm-foot {
+    order: 2;
+    margin-top: 4px;
+  }
+
+  .jm .jm-foot__in {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0 12px;
+    height: 44px;
+  }
+
+  .jm .jm-cue {
+    display: none;
+  }
+
+  .jm .jm-fcue {
+    order: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    height: 44px;
+    color: var(--ink);
+    font: 500 12.5px/1.2 var(--font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .jm .jm-fcue__arrow {
+    flex: none;
+    width: 13px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .jm .jm-fcue:hover .jm-fcue__text {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .jm .jm-idle {
+    order: 2;
+    flex: none;
+    width: 44px;
+    height: 44px;
+  }
+
+  /* ---------- The name, three lines; the role beside "Joy." ---------- */
+  .jm .jm-name {
+    order: 3;
+    z-index: 2;
+    margin-top: 11px;
+    font-size: var(--F);
+  }
+
+  .jm .jm-role {
+    display: inline-block;
+    margin-left: calc(0.3 * var(--F));
+    color: var(--ink);
+    font: 600 min(calc(15 * var(--qu)), 17px) / 1.2 var(--font-sans);
+    font-stretch: normal;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }
+
+  /* ---------- The machine: a zig-zag down the column ---------- */
+  .jm .jm-stations {
+    /* The machine's own unit: the column's, times --qs (fall.ts: under 1 on short screens). */
+    --qu: calc(var(--colW) * var(--qs, 1) / 358);
+    order: 4;
+    position: relative;
+    align-self: center;
+    width: calc(358 * var(--qu));
+    height: calc(var(--jm-col-h) * var(--qu));
+    /* 06's box top sits 0.32F + 17.3q under the baseline (its raised corner, 0.32F). --nb is the
+       h1's foot under the baseline, in F. */
+    margin-top: calc(0.32 * var(--F) + 17.27 * var(--qu) - var(--nb, 0.226) * var(--F));
+  }
+
+  .jm .jm-st {
+    --jm-u: calc(var(--ms) * var(--qu));
+    position: absolute;
+    left: calc(var(--ml) * var(--qu));
+    top: calc(var(--mt) * var(--qu));
+    z-index: 1;
+    width: calc(var(--w) * var(--jm-u));
+    height: calc(var(--h) * var(--jm-u));
+  }
+
+  .jm .jm-st--carevisor {
+    z-index: 4;
+  }
+
+  .jm .jm-st__link {
+    position: absolute;
+    inset: 0;
+  }
+
+  .jm .jm-st__pose {
+    transform: rotate(var(--mr, 0deg));
+  }
+
+  /* 05: the pen mirrored, so its nib points the way the dot rolls. */
+  .jm .jm-st--airpoint .jm-art {
+    transform: scaleX(-1);
+  }
+
+  /* The pen is 22px tall: its link reaches 44px. */
+  .jm .jm-st--airpoint .jm-st__link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% - 22px);
+    height: 44px;
+    transform: rotate(var(--mr, 0deg));
+  }
+
+  .jm .jm-tag {
+    top: calc(var(--mpy) * var(--qu));
+  }
+
+  .jm .jm-st--pL .jm-tag {
+    left: calc(-1 * var(--ml) * var(--qu));
+  }
+
+  .jm .jm-st--pR .jm-tag {
+    right: calc((var(--ml) + var(--w) * var(--ms) - 358) * var(--qu));
+  }
+
+  /* The meta stays for screen readers; the plate shows the number and the name. */
+  .jm .jm-tag__meta {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* The fall line: the route, drawn like the bench's guide, used up as the dot runs it. */
+  .jm .jm-guide {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .jm .jm-guide path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0.34;
+    stroke-width: 2.4;
+    stroke-dasharray: 2.4 6.6;
+  }
+
+  .jm:not(.jm--live) .jm-guide {
+    display: none;
+  }
+
+  .jm.jm--debug .jm-debug {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* The load-in, phone timing: 06 swings onto its bolt, 05 settles on its pivot, the rest rise. */
+  .jm.jm--enter .jm-statement__in {
+    animation-delay: 0.2s;
+  }
+
+  .jm.jm--enter .jm-foot__in {
+    animation-delay: 1.8s;
+  }
+
+  .jm.jm--enter .jm-name > .jm-w:nth-child(1) .jm-w__i {
+    animation-delay: 0.3s;
+  }
+
+  .jm.jm--enter .jm-name > .jm-w:nth-child(2) .jm-w__i {
+    animation-delay: 0.38s;
+  }
+
+  .jm.jm--enter .jm-name__last .jm-w__i {
+    animation-delay: 0.46s;
+  }
+
+  .jm.jm--enter .jm-dot-land {
+    animation-name: jm-dot-drop-m;
+    animation-delay: 0.95s;
+  }
+
+  .jm.jm--enter .jm-role {
+    animation: jm-fade 0.4s 1.25s both;
+  }
+
+  .jm.jm--enter .jm-ap-hang {
+    animation-delay: 1.5s;
+  }
+
+  .jm.jm--enter .jm-tag {
+    animation-delay: calc(1.7s + (5 - var(--k)) * 0.04s);
+  }
+
+  .jm.jm--enter .jm-st__in {
+    animation-delay: calc(1.35s + var(--k) * 0.08s);
+  }
+
+  .jm.jm--enter .jm-st--comparebestai .jm-st__pose > .jm-st__in {
+    animation: jm-hang 1.1s 1.35s both;
+  }
+
+  .jm.jm--enter .jm-st--airpoint .jm-st__pose > .jm-st__in {
+    animation: jm-lever 0.8s 1.43s var(--ease-out) both;
+  }
+
+  .jm.jm--enter .jm-ap-pill-wrap .jm-st__in {
+    animation-delay: 1.55s;
+  }
+
+  .jm.jm--enter .jm-guide__in {
+    animation: jm-fade 0.9s 1.6s both;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Every lite layout: the run's pieces, the readout, the strip, the still states.
+   --------------------------------------------------------------------- */
+@media (max-width: 1023.98px), (max-height: 599.98px) {
+  .jm .jm-runner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 7;
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .jm :is(.jm-runner__sq, .jm-runner__ink) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%;
+  }
+
+  .jm .jm-runner__sq {
+    transform-origin: 50% 100%;
+  }
+
+  .jm .jm-runner__ink {
+    background: var(--ink);
+  }
+
+  /* The impact: one ink ring that ripples out where the dot strikes a part (placed by fall.ts). */
+  .jm.jm--strip .jm-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 6;
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The cut: a 600px disc of chapter 01's ground, scaled from the pressed button. It is clipped to
+     the screen it has to cover (placed by fall.ts), so its box never widens the page. It sits over
+     01's window until it has swallowed it; then the window is lifted back on top of the ground. */
+  .jm.jm--strip .jm-disc-clip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 5;
+    display: block;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .jm .jm-disc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 600px;
+    height: 600px;
+    margin: -300px 0 0 -300px;
+    overflow: hidden;
+    border-radius: 50%;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .jm .jm-disc::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(0 82 204 / 0) 95.5%, rgb(0 82 204 / 0.2) 98.6%, rgb(0 82 204 / 0.6) 99.6%, rgb(0 82 204 / 0) 100%);
+  }
+
+  .jm .jm-disc__world {
+    inset: 0;
+    display: block;
+  }
+
+  /* The run moves these with GSAP, whose SVG transforms carry their own origin. */
+  .jm [data-r='star'],
+  .jm [data-r='pen-ping'],
+  .jm [data-r='cv-btn'],
+  .jm [data-r='cv-ring'],
+  .jm [data-r='ss-marker'] {
+    transform-box: view-box;
+  }
+
+  .jm.jm--lowmem .jm-disc__world {
+    display: none;
+  }
+
+  .jm.jm--lowmem .jm-disc {
+    background: var(--jm-cut-bg);
+  }
+
+  /* The full stop's target: 52px wide, from 24px under it to over the top of its idle hop. */
+  .jm.jm--strip .jm-hit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    display: block;
+    width: 52px;
+    height: calc(48px + 0.62 * var(--F));
+    margin: calc(-24px - 0.62 * var(--F)) 0 0 -26px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-y;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  .jm .jm-ghost {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    display: block;
+    width: 38px;
+    height: 38px;
+    margin: -19px 0 0 -19px;
+    border-radius: 50%;
+    background: rgb(16 17 20 / 0.08);
+    box-shadow:
+      inset 0 0 0 1.5px rgb(16 17 20 / 0.28),
+      0 0 0 6px rgb(16 17 20 / 0.04);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- The run's readout: pinned while the dot falls; the way out ---------- */
+  .jm.jm--strip .jm-hud {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    display: block;
+    height: 0;
+  }
+
+  /* A paper band, so whatever rides up under the readout never collides with it. It takes the taps
+     there too: the parts sliding under it fade out (fall.ts) and must not be hit through it. */
+  .jm .jm-hud__in::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--g));
+    right: calc(-1 * var(--g));
+    top: -14px;
+    z-index: -1;
+    height: 72px;
+    background: linear-gradient(var(--paper) 76%, rgb(243 244 245 / 0));
+  }
+
+  /* During the run the shell is only faded (it stays in the tab order, and focusing it rewinds the
+     run), so it must not take taps. */
+  .jm.jm--strip.jm--running :is(.jm-bar, .jm-statement, .jm-foot) {
+    pointer-events: none;
+  }
+
+  .jm .jm-hud__in {
+    position: absolute;
+    top: 14px;
+    left: var(--g);
+    right: var(--g);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 44px;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .jm .jm-hud__now {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--ink);
+    font: 600 13px/1.2 var(--font-sans);
+    white-space: nowrap;
+  }
+
+  .jm .jm-hud__ticks {
+    display: flex;
+    gap: 3px;
+  }
+
+  .jm .jm-hud__ticks i {
+    width: 5px;
+    height: 5px;
+    border: 1px solid rgb(16 17 20 / 0.5);
+  }
+
+  .jm .jm-hud__ticks i.is-on {
+    border-color: var(--chip);
+    background: var(--chip);
+  }
+
+  .jm .jm-hud__num {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 18px;
+    margin-left: 4px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    font: 600 11px/1 var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  .jm .jm-hud__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The link is the 44px target; the pill it draws is 32px (its ::before, behind the words). */
+  .jm .jm-hud__skip {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    margin-right: -2px;
+    padding: 0 12px 0 14px;
+    color: var(--ink);
+    font: 500 13px/1 var(--font-sans);
+    text-decoration: none;
+  }
+
+  .jm .jm-hud__skip::before {
+    content: '';
+    position: absolute;
+    inset: 6px 0;
+    z-index: -1;
+    border: 1px solid rgb(16 17 20 / 0.22);
+    border-radius: 999px;
+    background: var(--paper);
+  }
+
+  .jm .jm-hud__skip:focus-visible {
+    outline: none;
+  }
+
+  .jm .jm-hud__skip:focus-visible::before {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .jm .jm-hud__skip svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---------- The strip (lite): the track and its two holds ---------- */
+  /* The opening hop: the whole column holds for --h1 x 100svh of scroll. */
+  .jm.jm--strip::after {
+    content: '';
+    display: block;
+    height: calc(var(--h1, 0.05) * 100vh);
+    height: calc(var(--h1, 0.05) * 100svh);
+  }
+
+  .jm.jm--strip .jm-hold {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+  }
+
+  /* The last drop: the column holds again, at -D, for --h2 x 100svh. */
+  .jm.jm--strip .jm-hold::after {
+    content: '';
+    display: block;
+    height: calc(var(--h2, 0.5) * 100vh);
+    height: calc(var(--h2, 0.5) * 100svh);
+  }
+
+  .jm.jm--strip .jm-col {
+    position: -webkit-sticky;
+    position: sticky;
+    top: calc(-1 * var(--D, 99999px));
+  }
+
+  .jm .jm-reveal {
+    display: none;
+  }
+
+  /* ---------- Still states: reduced motion, and no build at all (print) ---------- */
+  /* Each part set off: the state the dot leaves it in. Without a build all show; the still column
+     crossfades each in as it reaches 80% of the screen. A small ink square marks where the dot
+     touched it. */
+  .jm .jm-st__mark {
+    position: absolute;
+    left: calc(var(--cx) * var(--jm-u));
+    top: calc(var(--cy) * var(--jm-u));
+    display: block;
+    width: calc(0.203 * var(--F));
+    height: calc(0.172 * var(--F));
+    background: var(--ink);
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+
+  .jm:not(.jm--live) .jm-st__mark,
+  .jm.jm--still .jm-st.is-set .jm-st__mark,
+  .jm:not(.jm--live) .jm-tag__fill,
+  .jm.jm--still .jm-st.is-set .jm-tag__fill,
+  .jm:not(.jm--live) .jm-st :is([data-r='star-fill'], [data-r='pen-green'], [data-r='ap-dot-green'], [data-r='ap-point'], [data-r='bl-amber'], [data-r='bl-chip'], [data-r='bl-val-amber'], [data-r='h1'], [data-r='h2'], [data-r='h3'], [data-r='ss-marker'], [data-r='rec-dot'], [data-r='rec-txt'], [data-r='name-indigo'], [data-r='look-indigo']),
+  .jm.jm--still .jm-st.is-set :is([data-r='star-fill'], [data-r='pen-green'], [data-r='ap-dot-green'], [data-r='ap-point'], [data-r='bl-amber'], [data-r='bl-chip'], [data-r='bl-val-amber'], [data-r='h1'], [data-r='h2'], [data-r='h3'], [data-r='ss-marker'], [data-r='rec-dot'], [data-r='rec-txt'], [data-r='name-indigo'], [data-r='look-indigo']) {
+    opacity: 1;
+  }
+
+  .jm:not(.jm--live) .jm-st [data-r='cv-ring'],
+  .jm.jm--still .jm-st.is-set [data-r='cv-ring'] {
+    opacity: 0.8;
+  }
+
+  .jm:not(.jm--live) .jm-st :is([data-r='ap-listen'], [data-r='name-coral']),
+  .jm.jm--still .jm-st.is-set :is([data-r='ap-listen'], [data-r='name-coral']) {
+    opacity: 0;
+  }
+
+  /* Halation set off: the take at 9.6 s (the run's own playhead, scrub and timecode give way). */
+  .jm .jm-hx-set {
+    pointer-events: none;
+  }
+
+  .jm:not(.jm--live) .jm-st .jm-hx-run,
+  .jm.jm--still .jm-st.is-set .jm-hx-run {
+    opacity: 0;
+  }
+
+  .jm:not(.jm--live) .jm-st .jm-hx-set,
+  .jm.jm--still .jm-st.is-set .jm-hx-set {
+    opacity: 1;
+  }
+
+  .jm.jm--still :is(.jm-st__mark, .jm-tag__fill, .jm-st [data-r], .jm-st .jm-hx-run, .jm-st .jm-hx-set) {
+    transition: opacity 0.4s;
+  }
+}
+
+/* Tablets, upright: the same fall in a centred column. */
+@media (min-width: 600px) and (max-width: 1023.98px) and (max-aspect-ratio: 1249/1000) {
+  .jm {
+    --colW: min(calc(100vw - 2 * var(--g)), 520px);
+    --F: min(calc(var(--colW) / 3.74), 12vh);
+  }
+
+  @supports (height: 1svh) {
+    .jm {
+      --F: min(calc(var(--colW) / 3.74), 12svh);
+    }
+  }
+
+  .jm .jm-statement {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .jm .jm-role {
+    font-size: 17px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Wide and short (lite, 5/4 or wider: a phone on its side). A vertical drop
+   needs height, so the name stays put on the left and only the machine falls,
+   on the right. The first move is the bench's signature hop: a long arc from
+   "Joy." up and over onto 06's raised corner at the top of the right pane.
+   --------------------------------------------------------------------- */
+@media (max-width: 1023.98px) and (min-aspect-ratio: 5/4), (max-height: 599.98px) and (min-aspect-ratio: 5/4) {
+  .jm {
+    --L0: max(16px, env(safe-area-inset-left));
+    --R0: max(16px, env(safe-area-inset-right));
+    --pane: 300px;
+    /* The column also answers to the height: the last frame (Halation's hook under the readout, the
+       button at 80% of the screen) must fit, so the parts shrink on a short screen. */
+    --colW: min(358px, calc(100vw - var(--L0) - var(--R0) - var(--pane) - 24px), calc((80vh - 120px) * 1.6));
+    --qu: calc(var(--colW) / 358);
+    /* The plates keep their 13px type when the parts shrink: each step down gets back what they lose. */
+    --gap: max(0px, calc(30px - 30 * var(--qu)));
+    --F: min(calc(var(--pane) / 3.74), calc((100vh - 134px) / 2.58));
+  }
+
+  @supports (height: 1svh) {
+    .jm {
+      --colW: min(358px, calc(100vw - var(--L0) - var(--R0) - var(--pane) - 24px), calc((80svh - 120px) * 1.6));
+      --F: min(calc(var(--pane) / 3.74), calc((100svh - 134px) / 2.58));
+    }
+  }
+
+  .jm .jm-hold,
+  .jm .jm-col {
+    position: relative;
+    display: block;
+  }
+
+  .jm .jm-bar {
+    position: absolute;
+    top: 14px;
+    left: var(--L0);
+    right: var(--R0);
+    z-index: 8;
+  }
+
+  .jm .jm-bar__in {
+    flex-wrap: nowrap;
+    gap: 0 10px;
+  }
+
+  .jm .jm-who,
+  .jm .jm-bar__rule {
+    display: none;
+  }
+
+  .jm .jm-bar__end {
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .jm .jm-links {
+    gap: 4px;
+    margin-right: -5px;
+  }
+
+  .jm .jm-links a {
+    padding: 13px 5px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  /* Two panes: the name (left, held), the machine (right, falling). */
+  .jm .jm-cam {
+    display: grid;
+    grid-template-columns: var(--pane) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 24px;
+    padding: 66px var(--R0) 24px var(--L0);
+  }
+
+  .jm .jm-grid {
+    inset: 0;
+  }
+
+  .jm :is(.jm-machine, .jm-machine__in, .jm-stage) {
+    display: contents;
+  }
+
+  .jm .jm-name {
+    position: sticky;
+    top: 62px;
+    z-index: 2;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: -4px;
+    font-size: var(--F);
+  }
+
+  /* The cue row sits under "Joy." (its descender included). */
+  .jm .jm-foot {
+    position: sticky;
+    top: calc(60px + 2.84 * var(--F));
+    z-index: 4;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: calc(2.84 * var(--F) - 6px);
+  }
+
+  /* One row, a little wider than the pane: it reaches into the gap before the machine's column. */
+  .jm .jm-foot__in {
+    flex-wrap: nowrap;
+    width: max-content;
+    height: 44px;
+  }
+
+  .jm .jm-cue {
+    display: none;
+  }
+
+  .jm .jm-fcue {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 44px;
+    color: var(--ink);
+    font: 500 12.5px/1.2 var(--font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .jm .jm-fcue__arrow {
+    flex: none;
+    width: 13px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .jm .jm-idle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .jm .jm-role {
+    display: inline-block;
+    margin-left: calc(0.3 * var(--F));
+    color: var(--ink);
+    font: 600 13.5px/1.2 var(--font-sans);
+    font-stretch: normal;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }
+
+  .jm .jm-statement {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    width: var(--colW);
+    max-width: none;
+    margin: 0;
+    font: 400 13.5px/19.5px var(--font-sans);
+  }
+
+  .jm .jm-stations {
+    position: relative;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: center;
+    width: var(--colW);
+    /* Down to the foot of 01's plate (below). */
+    height: calc(var(--jm-split-h) * var(--qu) + var(--jm-split-k) * var(--gap) + 66px);
+    /* 06's raised corner sits 17.3q over its box top: it clears the statement by 22px. */
+    margin-top: calc(17.27 * var(--qu) + 22px);
+  }
+
+  .jm .jm-st {
+    --jm-u: calc(var(--ms) * var(--qu));
+    position: absolute;
+    left: calc(var(--ml) * var(--qu));
+    top: calc(var(--mt) * var(--qu) + var(--k) * var(--gap));
+    z-index: 1;
+    width: calc(var(--w) * var(--jm-u));
+    height: calc(var(--h) * var(--jm-u));
+  }
+
+  /* The last drop must fit a short screen: 01 hangs 14px under the plate of the part before it
+     (the lowest thing there), not at its upright place. */
+  .jm .jm-st--carevisor {
+    top: calc(var(--jm-split-cv) * var(--qu) + var(--jm-split-k) * var(--gap) + 40px);
+    z-index: 4;
+  }
+
+  .jm .jm-st__link {
+    position: absolute;
+    inset: 0;
+  }
+
+  .jm .jm-st__pose {
+    transform: rotate(var(--mr, 0deg));
+  }
+
+  .jm .jm-st--airpoint .jm-art {
+    transform: scaleX(-1);
+  }
+
+  .jm .jm-st--airpoint .jm-st__link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% - 22px);
+    height: 44px;
+    transform: rotate(var(--mr, 0deg));
+  }
+
+  .jm .jm-tag {
+    top: calc(var(--mpy) * var(--qu));
+  }
+
+  .jm .jm-st--pL .jm-tag {
+    left: calc(-1 * var(--ml) * var(--qu));
+  }
+
+  .jm .jm-st--pR .jm-tag {
+    right: calc((var(--ml) + var(--w) * var(--ms) - 358) * var(--qu));
+  }
+
+  .jm .jm-tag__meta {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .jm .jm-guide {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .jm .jm-guide path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0.34;
+    stroke-width: 2.4;
+    stroke-dasharray: 2.4 6.6;
+  }
+
+  .jm:not(.jm--live) .jm-guide {
+    display: none;
+  }
+
+  .jm.jm--debug .jm-debug {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .jm.jm--enter .jm-statement__in {
+    animation-delay: 0.2s;
+  }
+
+  .jm.jm--enter .jm-foot__in {
+    animation-delay: 1.8s;
+  }
+
+  .jm.jm--enter .jm-name > .jm-w:nth-child(1) .jm-w__i {
+    animation-delay: 0.3s;
+  }
+
+  .jm.jm--enter .jm-name > .jm-w:nth-child(2) .jm-w__i {
+    animation-delay: 0.38s;
+  }
+
+  .jm.jm--enter .jm-name__last .jm-w__i {
+    animation-delay: 0.46s;
+  }
+
+  .jm.jm--enter .jm-dot-land {
+    animation-name: jm-dot-drop-m;
+    animation-delay: 0.95s;
+  }
+
+  .jm.jm--enter .jm-role {
+    animation: jm-fade 0.4s 1.25s both;
+  }
+
+  .jm.jm--enter .jm-ap-hang {
+    animation-delay: 1.5s;
+  }
+
+  .jm.jm--enter .jm-tag {
+    animation-delay: calc(1.7s + (5 - var(--k)) * 0.04s);
+  }
+
+  .jm.jm--enter .jm-st__in {
+    animation-delay: calc(1.35s + var(--k) * 0.08s);
+  }
+
+  .jm.jm--enter .jm-st--comparebestai .jm-st__pose > .jm-st__in {
+    animation: jm-hang 1.1s 1.35s both;
+  }
+
+  .jm.jm--enter .jm-st--airpoint .jm-st__pose > .jm-st__in {
+    animation: jm-lever 0.8s 1.43s var(--ease-out) both;
+  }
+
+  .jm.jm--enter .jm-ap-pill-wrap .jm-st__in {
+    animation-delay: 1.55s;
+  }
+
+  .jm.jm--enter .jm-guide__in {
+    animation: jm-fade 0.9s 1.6s both;
+  }
+
+  /* With the run, the left pane is held to the screen (the right pane does the falling). The name
+     stays over the cut's disc: the ground opens under it, and it goes as chapter 01 arrives. */
+  .jm.jm--strip .jm-name {
+    position: fixed;
+    left: var(--L0);
+    top: 62px;
+    z-index: 6;
+    width: var(--pane);
+    margin: 0;
+  }
+
+  .jm.jm--strip .jm-foot {
+    position: fixed;
+    left: var(--L0);
+    top: calc(60px + 2.84 * var(--F));
+    width: max-content;
+    margin: 0;
+  }
+
+  .jm .jm-hud__in {
+    left: var(--L0);
+    right: var(--R0);
+  }
+
+  .jm .jm-hud__in::before {
+    left: calc(-1 * var(--L0));
+    right: calc(-1 * var(--R0));
+  }
+}
+
+/* The machine's key, beside "Joy." over the role: the parts in their products' colours, counted
+   down to 01. The readout's ticks are the same chips, lit as the dot reaches each. */
+.jm .jm-key {
+  display: none;
+}
+
+@media (max-width: 1023.98px), (max-height: 599.98px) {
+  .jm .jm-role {
+    position: relative;
+  }
+
+  .jm .jm-key {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.07 * var(--F));
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .jm .jm-key__chips {
+    display: flex;
+    gap: 3px;
+  }
+
+  .jm .jm-key__chips i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--chip);
+  }
+
+  .jm .jm-key b {
+    color: var(--ink);
+    font: 600 11px/1 var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+  }
+
+  /* The establishing shot (fall.ts, upright only): while the whole machine is shown, the shell's
+     copy waits, and comes in as the camera pushes in to the first frame. */
+  .jm.jm--enter.jm--ov .jm-statement__in {
+    animation-delay: 3.25s;
+  }
+
+  .jm.jm--enter.jm--ov .jm-foot__in {
+    animation-delay: 3.45s;
+  }
+}
+
+/* Without the run (reduced motion, print) the full stop does nothing: the cue says what the link does. */
+.jm .jm-fcue__still {
+  display: none;
+}
+
+.jm:is(:not(.jm--live), .jm--still) :is(.jm-fcue__text, .jm-fcue__vh) {
+  display: none;
+}
+
+.jm:is(:not(.jm--live), .jm--still) .jm-fcue__still {
+  display: inline;
+}
+
+/* Reduced motion: every load step is a short fade, done by 1s; nothing else moves. */
+@media (prefers-reduced-motion: reduce) {
+  .jm.jm--enter :is(.jm-bar__in, .jm-w__i, .jm-statement__in, .jm-st__in, .jm-st__mark, .jm-tag, .jm-foot__in, .jm-guide__in, .jm-dot-land, .jm-role, .jm-ap-hang),
+  .jm.jm--enter :is(.jm-st--comparebestai, .jm-st--airpoint) .jm-st__pose > .jm-st__in {
+    animation: jm-fade 0.5s 0.5s both !important;
+  }
+
+  .jm.jm--enter :is(.jm-w__i, .jm-dot-land, .jm-statement__in) {
+    animation-delay: 0.25s !important;
+  }
+
+  .jm .jm-cue__arrow,
+  .jm :is(.jm-st__hover, .jm-cba-hover, .jm-ap-btn-hover, .jm-hx-hover) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media print {
+  .jm :is(.jm-reveal, .jm-guide, .jm-hud, .jm-idle, .jm-hit, .jm-ghost) {
+    display: none !important;
+  }
+}
+
+/* A visual portfolio: the statement is kept for screen readers only, its room kept so the bench
+   does not move (important: the motion animates its visibility). */
+.jm-statement {
+  visibility: hidden !important;
+}
+
+/* A visual portfolio: a part's label is its number and name only (the meta stays for screen readers). */
+.jm .jm-tag__meta {
+  display: none !important;
+}

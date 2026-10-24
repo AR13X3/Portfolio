@@ -1,0 +1,104 @@
+---
+/**
+ * The Overview's opportunity map (frontend/src/components/OpportunityMap.tsx, HexLayer.tsx):
+ * every corner of the council scored on a 250 m pointy-top hex grid, in the red ramp, over
+ * the grid's own outline. The cells come from HeatDefs; the probe pin is the app's ink dot.
+ */
+import { HEAT_GRID_R, HEAT_H, HEAT_POINTS, HEAT_W } from './heat';
+import type { SiteRun } from './data';
+
+interface Props {
+  probe: SiteRun;
+  label: string;
+}
+const { probe, label } = Astro.props;
+
+// The outline lattice, aligned to a real cell so it sits under the mosaic.
+const R = HEAT_GRID_R;
+const TW = 48; // column spacing in half units (250 m)
+const TH = 3 * R;
+const ref = HEAT_POINTS[3][0].split(' ').map(Number);
+const ox = ref[0] - TW / 2;
+const oy = ref[1] - R;
+const hx = (cx: number, cy: number) => {
+  const h = (R * Math.sqrt(3)) / 2;
+  return `M${cx} ${cy - R}L${cx + h} ${cy - R / 2}V${cy + R / 2}L${cx} ${cy + R}L${cx - h} ${cy + R / 2}V${cy - R / 2}Z`;
+};
+const tile = [hx(TW / 2, R), hx(0, 2.5 * R), hx(TW, 2.5 * R)].join('');
+---
+
+<div class="ss-heat" role="img" aria-label={label} style={`--hw:${HEAT_W};--hh:${HEAT_H}`}>
+  <svg class="ss-heat__svg" viewBox={`0 0 ${HEAT_W} ${HEAT_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <pattern id="ss-lattice" width={TW} height={TH} patternUnits="userSpaceOnUse" patternTransform={`translate(${ox.toFixed(2)} ${oy.toFixed(2)})`}>
+        <path d={tile} />
+      </pattern>
+    </defs>
+    <rect class="ss-heat__grid" x="-200" y="-200" width={HEAT_W + 400} height={HEAT_H + 400} fill="url(#ss-lattice)" data-ss="lattice"></rect>
+    {
+      HEAT_POINTS.map((ring, g) => (
+        <g data-ss="ring">
+          {ring.map((points, b) => points && <use href={`#ss-heat-${g}-${b}`} />)}
+        </g>
+      ))
+    }
+  </svg>
+  <span class="ss-probe-pin" style={`--x:${probe.x};--y:${probe.y}`} aria-hidden="true" data-ss="pin">
+    <i></i><span></span>
+  </span>
+</div>
+
+<style>
+  .ss-heat {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+    overflow: hidden;
+  }
+
+  .ss-heat__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ss-heat__grid {
+    opacity: 0.75;
+  }
+
+  .ss-heat pattern path {
+    fill: none;
+    stroke: #d3d3cf;
+    stroke-width: 3;
+  }
+
+  /* HTML over the SVG, placed with the same scale as preserveAspectRatio="slice". */
+  .ss-probe-pin {
+    --k: max(100cqw / var(--hw), 100cqh / var(--hh));
+    position: absolute;
+    left: calc(50% + (var(--x) - var(--hw) / 2) * var(--k));
+    top: calc(50% + (var(--y) - var(--hh) / 2) * var(--k));
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+  }
+
+  .ss-probe-pin span {
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: #1d1d1d;
+    box-shadow:
+      0 0 0 3px #fff,
+      0 2px 8px rgb(0 0 0 / 0.3);
+  }
+
+  .ss-probe-pin i {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid #1d1d1d;
+    opacity: 0;
+  }
+</style>

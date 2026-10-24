@@ -1,0 +1,312 @@
+/* ------------------------------------------------------------------
+   Chapters.
+   Default (no JS, lite, reduced): each chapter reads as a document.
+   html.mode-full: each chapter is one pinned viewport whose story the
+   motion engine scrubs. Chapters draw their own world inside; the
+   generic template below (.chapter-generic) is only for scaffolding.
+   ------------------------------------------------------------------ */
+.chapter {
+  position: relative;
+  background-color: var(--c-bg);
+  background-image: var(--c-bg-art, none);
+  background-size: cover;
+  background-position: center;
+  color: var(--c-fg);
+  font-family: var(--c-body);
+}
+
+.chapter-generic {
+  padding: clamp(88px, 14vh, 160px) var(--gutter) clamp(72px, 10vh, 120px);
+}
+
+.chapter__frame {
+  position: relative;
+  max-width: 1360px;
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(40px, 6vw, 80px);
+}
+
+@media (min-width: 1024px) {
+  .chapter__frame {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
+
+  .chapter__stage {
+    position: sticky;
+    top: 12vh;
+  }
+}
+
+.chapter__kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--c-muted);
+  font: 500 0.75rem/1.4 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chapter__num {
+  color: var(--c-accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter__status {
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--c-accent-text);
+}
+
+.chapter__title {
+  margin-top: 18px;
+  font-family: var(--c-display);
+  font-size: clamp(3rem, 7vw, 6.75rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  outline: none;
+}
+
+.chapter__lede {
+  margin-top: 22px;
+  max-width: 32ch;
+  font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  line-height: 1.42;
+}
+
+.chapter__label {
+  color: var(--c-muted);
+  font: 500 0.75rem/1.4 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chapter__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 20px;
+  max-width: 40ch;
+}
+
+.chapter__notes {
+  margin-top: 44px;
+}
+
+.chapter__notes ol {
+  display: grid;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.chapter__note {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  padding-top: 16px;
+  border-top: 1px solid var(--c-line);
+}
+
+.chapter__note-num {
+  color: var(--c-accent-text);
+  font: 500 0.75rem/1.9 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter__note h4 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.chapter__note p {
+  margin-top: 4px;
+  max-width: 48ch;
+  color: var(--c-muted);
+  font-size: 0.96875rem;
+  line-height: 1.5;
+}
+
+.chapter__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 32px;
+}
+
+.chapter__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--c-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.chapter__links a:hover {
+  text-decoration: underline;
+}
+
+/* Stage: device frames. */
+.chapter__stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 28px;
+}
+
+.chapter__stage > .phone {
+  width: min(62%, 300px);
+}
+
+/* Screens swipe horizontally unless the motion engine stacks them. */
+[data-screens] {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  border-radius: inherit;
+}
+
+.screen {
+  position: relative;
+  flex: 0 0 100%;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.screen > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* Transition overlays only exist while the motion engine is running. */
+.chapter__transition {
+  display: none;
+}
+
+html.mode-lite .chapter__transition {
+  position: relative;
+  display: block;
+  height: 70vh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------
+   Full mode: one pinned viewport per chapter.
+   ------------------------------------------------------------------ */
+html.mode-full [data-section] {
+  pointer-events: none;
+}
+
+html.mode-full [data-section] :is(a, button, [tabindex], [data-screens]) {
+  pointer-events: auto;
+}
+
+/* A section after a pinned one starts where that pin ends, so there is no dead scroll between
+   them. The engine adds .follows-pin; ScrollTrigger moves the margin onto the pin spacer. */
+html.mode-full .follows-pin {
+  margin-top: -100vh;
+}
+
+/* An unpinned section after a pin rises into the bottom half of the frame as the pin's
+   transition ends (.rises-under-pin), so the hand-off never ends on empty ground. */
+html.mode-full .rises-under-pin {
+  margin-top: -50vh;
+}
+
+html.mode-full .chapter {
+  height: 100vh;
+  overflow: hidden;
+}
+
+html.mode-full .chapter-generic {
+  padding: 0;
+}
+
+html.mode-full .chapter__frame {
+  height: 100%;
+  max-width: none;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(32px, 4vw, 80px);
+  padding: 88px calc(var(--rail) + var(--gutter)) 56px var(--gutter);
+}
+
+html.mode-full .chapter__title {
+  font-size: clamp(3.5rem, 7.2vw, 8rem);
+}
+
+html.mode-full .chapter__swap {
+  display: grid;
+}
+
+html.mode-full .chapter__swap > * {
+  grid-area: 1 / 1;
+}
+
+html.mode-full .chapter__notes {
+  margin-top: 26px;
+}
+
+html.mode-full .chapter__stage {
+  position: relative;
+  top: auto;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+html.mode-full .chapter__stage > .browser {
+  width: min(100%, calc((100vh - 230px) * 1.6));
+}
+
+html.mode-full .chapter__stage > .phone {
+  position: absolute;
+  right: -1%;
+  bottom: 4%;
+  width: min(24%, calc((100vh - 200px) * 0.44));
+}
+
+html.mode-full [data-screens] {
+  display: block;
+  overflow: hidden;
+}
+
+html.mode-full .screen {
+  position: absolute;
+  inset: 0;
+}
+
+html.mode-full .screen > img[data-scroll] {
+  height: auto;
+  object-fit: fill;
+}
+
+/* The transition overlay sits behind the chapter's world (z-index 1) until the world clears. */
+html.mode-full .chapter__transition {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+html.mode-full .chapter-generic {
+  position: relative;
+  z-index: 1;
+}

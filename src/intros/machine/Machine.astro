@@ -1,0 +1,251 @@
+---
+/**
+ * The Machine: the full stop on the name sets off a chain reaction through the products, counting
+ * down to chapter 01, whose button it presses; the press opens CareVisor's ground.
+ *
+ *   bench       desktop (1024 × 600 and up): the parts on a workbench, the camera following the
+ *               dot down it (full mode, pinned and scrubbed by the engine)
+ *   fall line   phones and tablets: the parts hang down a column and the dot falls through them
+ *               as the page scrolls (lite: its own sticky strip). Wide and short screens split
+ *               it: the name stays left, the machine falls on the right.
+ *
+ * It waits in a <template> in components/Intro.astro until it is chosen. No <script> here: all
+ * behaviour is in motion.ts (bench.ts, fall.ts). Styles are in machine.css, every rule under .jm.
+ * Parts come from parts.ts, one per chapter in story order; their art is in art/.
+ */
+import '@fontsource-variable/inter';
+import '@fontsource-variable/montserrat';
+import '@fontsource-variable/sora';
+import '@fontsource-variable/urbanist';
+import '@fontsource-variable/geist-mono';
+import type { Chapter } from '../../chapters/types';
+import { site } from '../../data/site';
+import Switch from '../Switch.astro';
+import Airpoint from './art/Airpoint.astro';
+import AirpointPill from './art/AirpointPill.astro';
+import BloodLine from './art/BloodLine.astro';
+import CareVisor from './art/CareVisor.astro';
+import CompareBestAI from './art/CompareBestAI.astro';
+import Halation from './art/Halation.astro';
+import SiteScore from './art/SiteScore.astro';
+import { fallLengths, machineParts } from './parts';
+import './machine.css';
+
+interface Props {
+  chapters: Chapter[];
+}
+const { chapters } = Astro.props;
+
+const arts: Record<string, typeof CareVisor> = {
+  carevisor: CareVisor,
+  halation: Halation,
+  sitescore: SiteScore,
+  bloodline: BloodLine,
+  airpoint: Airpoint,
+  comparebestai: CompareBestAI,
+};
+const list = machineParts(chapters);
+for (const p of list) {
+  if (!arts[p.chapter.slug]) throw new Error(`The Machine has no art for "${p.chapter.slug}" (src/intros/machine/art/).`);
+}
+/** The run's order: the last chapter first, chapter 01 last. */
+const run = [...list].reverse();
+const first = list[0];
+const lengths = fallLengths(chapters);
+
+const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const count = words[chapters.length] ?? String(chapters.length);
+const Count = count[0].toUpperCase() + count.slice(1);
+
+const [given, ...rest] = site.name.split(' ');
+const last = rest.pop() ?? '';
+const nameWords = [given, ...rest];
+const roleWords = site.role.split(' ');
+const roleTop = roleWords.slice(0, -1).join(' ');
+const roleBottom = `${roleWords.at(-1)}, ${site.location}`;
+
+// Chapter 01's ground, painted exactly as its background layer paints it (BgStack): the cut opens
+// onto these pixels, so the swap to the real layer under it cannot be seen.
+const ground = first.chapter.theme;
+const rootStyle = [
+  `--jm-cut-bg:${ground.bg}`,
+  `--jm-cut-art:${ground.bgArt ?? 'none'}`,
+  `--jm-col-h:${lengths.height}`,
+  `--jm-split-cv:${lengths.splitCv}`,
+  `--jm-split-h:${lengths.splitHeight}`,
+  `--jm-split-k:${run.length - 2}`,
+].join(';');
+
+const partStyle = (p: (typeof list)[number]) => {
+  const b = p.spec.bench;
+  const f = p.spec.fall;
+  return [
+    `--x:${b.x}`,
+    `--y:${b.y}`,
+    `--w:${b.w}`,
+    `--h:${b.h}`,
+    `--r:${b.r}deg`,
+    `--ox:${b.ox}`,
+    `--oy:${b.oy}`,
+    `--tx:${b.tx}`,
+    `--ty:${b.ty}`,
+    `--ml:${f.ml}`,
+    `--mt:${f.mt}`,
+    `--ms:${f.ms}`,
+    `--mr:${f.mr}deg`,
+    `--mpy:${f.mpy}`,
+    `--cx:${f.cx}`,
+    `--cy:${f.cy}`,
+    `--k:${p.k}`,
+    `--chip:${p.chip}`,
+    `--jm-face:${p.face}`,
+    `--jm-mono:${p.mono}`,
+  ].join(';');
+};
+const firstHref = `#${first.chapter.slug}`;
+---
+
+<div class="jm" data-intro-route="machine" style={rootStyle}>
+  {/* Phones and tablets: the run's readout, pinned to the top while the dot falls (not on the bench). */}
+  <div class="jm-hud" data-hud>
+    <div class="jm-hud__in">
+      <p class="jm-hud__now" aria-hidden="true">
+        <span class="jm-hud__ticks">{run.map((p) => <i style={`--chip:${p.chip}`} />)}</span><span class="jm-hud__num" data-hud-num>{run[0].num}</span><span class="jm-hud__name" data-hud-name>{run[0].chapter.name}</span>
+      </p>
+      <a class="jm-hud__skip" href={firstHref} data-skip>
+        Skip<span class="visually-hidden"> the intro, to {first.num} {first.chapter.name}</span>
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v8M2.5 6.5 6 10l3.5-3.5"></path></svg>
+      </a>
+    </div>
+  </div>
+
+  {
+    /* On the bench these two wrappers are display: contents. On phones the outer one holds the
+       opening hop (sticky, top 0) and the inner one the last drop (sticky, top -D). */
+  }
+  <div class="jm-hold" data-hold>
+    <div class="jm-col" data-col>
+      <header class="jm-bar" data-shell>
+        <div class="jm-bar__in">
+          <p class="jm-who"><span class="jm-who__mark" aria-hidden="true"></span>{site.role}, {site.location}</p>
+          <div class="jm-bar__end">
+            <Switch current="machine" class="jm-switch" />
+            <i class="jm-bar__rule" aria-hidden="true"></i>
+            <ul class="jm-links">
+              <li><a href={site.links.github} target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+              <li><a href={site.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+              <li><a href={`mailto:${site.email}`}>Email</a></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
+      <div class="jm-cam" data-cam>
+        <i class="jm-grid" aria-hidden="true"></i>
+        {
+          /* Phones: the cut (a disc of chapter 01's ground that opens from the pressed button), the
+             impact ring, the full stop as it runs, its tap and flick target, the ghost of a thumb. */
+        }
+        <div class="jm-disc-clip" aria-hidden="true" data-disc-clip><div class="jm-disc" data-disc><i class="jm-disc__world"></i></div></div>
+        <i class="jm-ring" aria-hidden="true" data-ring></i>
+        <i class="jm-runner" aria-hidden="true" data-runner><i class="jm-runner__sq" data-runner-sq><i class="jm-runner__ink" data-runner-ink></i></i></i>
+        <span class="jm-hit" aria-hidden="true" data-hit></span>
+        <i class="jm-ghost" aria-hidden="true" data-ghost></i>
+
+        {/* Words in masks; the full stop is the dot that runs (its own nested wrappers: land, idle, lean). No whitespace inside .jm-name__last: the stop sits on "Joy". */}
+        <h1 id="intro-title-machine" class="jm-name" tabindex="-1" data-intro-focus>{nameWords.map((w, i) => (<><span class="jm-w" aria-hidden="true" style={`--d:${(0.1 + i * 0.08).toFixed(2)}s`}><span class="jm-w__i">{w}</span></span>{' '}</>))}<span class="jm-name__last" aria-hidden="true"><span class="jm-w" style={`--d:${(0.1 + nameWords.length * 0.08).toFixed(2)}s`}><span class="jm-w__i">{last}</span></span><span class="jm-end" aria-hidden="true" data-end><span class="jm-dot-land" data-dot-land><span class="jm-dot-idle" data-dot-idle><span class="jm-dot-lean" data-dot-lean><span class="jm-dot" data-dot><span class="jm-dot__sq" data-dot-sq><span class="jm-dot__ink" data-dot-ink></span></span></span></span></span></span></span><span class="jm-role" aria-hidden="true"><span class="jm-key"><b>{run[0].num}</b><span class="jm-key__chips">{run.map((p) => <i style={`--chip:${p.chip}`} />)}</span><b>{first.num}</b></span>{roleTop}<br />{roleBottom}</span></span><span class="visually-hidden">{site.name}, {site.role} in {site.location}.</span></h1>
+
+        <div class="jm-machine">
+          <div class="jm-machine__in">
+            <p class="jm-statement" data-shell>
+              <span class="jm-statement__in">I design websites and app interfaces, then wire up the automations that run them. This portfolio is wired the same way.</span>
+            </p>
+
+            <div class="jm-stage" data-stage>
+              <svg class="jm-guide" viewBox="0 0 1272 580" preserveAspectRatio="none" aria-hidden="true" data-guide><g class="jm-guide__in" data-guide-in><path d=""></path></g></svg>
+
+              <ol class="jm-stations" aria-label={`${Count} projects`} data-stations>
+                {
+                  list.map((p) => {
+                    const Art = arts[p.chapter.slug];
+                    return (
+                      <li class={`jm-st jm-st--${p.chapter.slug} jm-st--p${p.spec.fall.side}`} data-st={p.chapter.slug} data-num={p.num} data-name={p.chapter.name} style={partStyle(p)}>
+                        <a class="jm-st__link" href={`#${p.chapter.slug}`}>
+                          <span class="jm-st__box">
+                            <span class="jm-st__pose">
+                              <span class="jm-st__in">
+                                <span class="jm-st__idle">
+                                  <span class="jm-st__react" data-react>
+                                    <span class="jm-st__hover" aria-hidden="true">
+                                      <Art />
+                                    </span>
+                                  </span>
+                                </span>
+                              </span>
+                              <i class="jm-st__mark" aria-hidden="true" />
+                            </span>
+                            {p.chapter.slug === 'airpoint' && (
+                              <>
+                                <span class="jm-ap-hang" aria-hidden="true" />
+                                <span class="jm-ap-pill-wrap" aria-hidden="true">
+                                  <span class="jm-st__in">
+                                    <AirpointPill />
+                                  </span>
+                                </span>
+                              </>
+                            )}
+                          </span>
+                          <span class="jm-tag">
+                            <span class="jm-tag__num" aria-hidden="true">
+                              {p.num}
+                              <span class="jm-tag__fill" data-fill>
+                                {p.num}
+                              </span>
+                            </span>
+                            <span class="jm-tag__name" aria-hidden="true">{p.chapter.name}</span>
+                            <span class="jm-tag__meta" aria-hidden="true">{p.meta}</span>
+                            <span class="visually-hidden">{`${p.num} ${p.chapter.name}${p.meta ? `, ${p.meta}` : ''}`}</span>
+                          </span>
+                        </a>
+                      </li>
+                    );
+                  })
+                }
+              </ol>
+              <svg class="jm-debug" viewBox="0 0 1272 580" preserveAspectRatio="none" aria-hidden="true" data-debug></svg>
+            </div>
+
+            <div class="jm-foot" data-shell data-foot>
+              <div class="jm-foot__in">
+                <button class="jm-idle" type="button" role="switch" aria-checked="true" aria-label="Idle motion" title="Idle motion" data-idle>
+                  {/* Pause while it runs, play once paused. */}
+                  <svg class="jm-idle__icon" viewBox="0 0 16 16" aria-hidden="true">
+                    <path class="jm-idle__pause" d="M5 3.5v9M11 3.5v9"></path>
+                    <path class="jm-idle__play" d="M5.5 3.2v9.6L13 8z"></path>
+                  </svg>
+                  <span class="visually-hidden" data-idle-state>On</span>
+                </button>
+                <a class="jm-cue" href={firstHref} data-cue-bench>
+                  <span aria-hidden="true">Scroll to set it off</span><span class="visually-hidden jm-said">Scroll to set it off, starting with {first.chapter.name}</span>
+                  <span class="jm-cue__arrow" aria-hidden="true">↓</span>
+                </a>
+                <a class="jm-fcue" href={firstHref} data-cue>
+                  <svg class="jm-fcue__arrow" viewBox="0 0 13 22" aria-hidden="true"><path d="M2.5 1.5c7 1.5 9 7.5 7.4 17.2M6.6 15.4l3.3 3.6 2.6-4.1"></path></svg>
+                  <span class="jm-fcue__text" aria-hidden="true" data-cue-text>Scroll, or tap the full stop</span>
+                  <span class="jm-fcue__still">Scroll, or go to {first.num} {first.chapter.name}</span>
+                  <span class="visually-hidden jm-fcue__vh"><span data-cue-said>Scroll, or tap the full stop</span>: plays the machine and opens {first.num} {first.chapter.name}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* The cut, on the bench: the button's ripple keeps growing into chapter 01's own ground. */}
+  <div class="jm-reveal" aria-hidden="true" data-reveal>
+    <div class="jm-reveal__disc" data-reveal-disc><div class="jm-reveal__world" data-reveal-world></div></div>
+    <div class="jm-reveal__ring" data-reveal-ring></div>
+  </div>
+</div>

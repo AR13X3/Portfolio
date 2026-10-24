@@ -1,0 +1,232 @@
+---
+import type { Chapter } from '../chapters/types';
+
+interface Props {
+  chapters: Chapter[];
+  /** Whether the drawings and photography section is on the page. */
+  gallery?: boolean;
+}
+const { chapters, gallery = true } = Astro.props;
+const items = [
+  ...chapters.map((c, i) => ({ id: c.slug, num: String(i + 1).padStart(2, '0'), name: c.name, accent: c.theme.accent })),
+  ...(gallery ? [{ id: 'gallery', num: '', name: 'Drawings and photography', accent: 'var(--ink)' }] : []),
+  { id: 'contact', num: '', name: 'Contact', accent: 'var(--ink)' },
+];
+---
+
+<nav class="progress" aria-label="Chapters" data-progress>
+  <p class="progress__current" aria-hidden="true" data-nav-current></p>
+  <ol>
+    {
+      items.map((item) => (
+        <li>
+          <a href={`#${item.id}`} data-nav={item.id} data-name={item.name}>
+            <span class="progress__bar" aria-hidden="true">
+              <span class="progress__fill" data-fill />
+            </span>
+            <span class="progress__label">
+              {item.num && <span class="progress__num" aria-hidden="true">{item.num}</span>}
+              {item.name}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .progress {
+    --nav-fg: var(--ink);
+    --nav-muted: var(--ink-2);
+    --nav-accent: var(--ink);
+    position: fixed;
+    z-index: 50;
+    color: var(--nav-fg);
+    font: 500 0.75rem/1.2 var(--font-sans);
+    letter-spacing: 0.04em;
+    transition: color 0.4s ease;
+  }
+
+  .progress ol {
+    display: flex;
+  }
+
+  .progress a {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* The unfilled track is a hairline at full strength (a faint 3px bar fell under 3:1 on some
+     grounds); progress fills the full 3px over it. */
+  .progress__bar {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .progress__bar::before {
+    content: '';
+    position: absolute;
+    background: var(--nav-fg);
+    transition: background-color 0.4s ease;
+  }
+
+  .progress__fill {
+    position: absolute;
+    inset: 0;
+    background: var(--nav-fg);
+    transition: background-color 0.4s ease;
+  }
+
+  .progress__num {
+    margin-right: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Phones and narrow windows: a segmented bar across the top. */
+  @media (max-width: 1023.98px) {
+    .progress {
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 0 var(--gutter);
+      pointer-events: none;
+    }
+
+    .progress ol {
+      gap: 4px;
+    }
+
+    .progress li {
+      flex: 1;
+    }
+
+    .progress a {
+      align-items: flex-start;
+      height: 12px;
+      padding-top: 4px;
+      pointer-events: auto;
+    }
+
+    .progress__bar {
+      width: 100%;
+      height: 3px;
+    }
+
+    .progress__bar::before {
+      left: 0;
+      right: 0;
+      top: 1px;
+      height: 1px;
+    }
+
+    .progress__fill {
+      transform-origin: 0 50%;
+      transform: scaleX(var(--p, 0));
+    }
+
+    .progress__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    /* Chapters draw their own nav bar at the top; the rail stays a thin line above it. */
+    .progress__current {
+      display: none;
+    }
+  }
+
+  /* Desktop: a vertical rail on the right edge, labels on hover, focus and on arriving at a chapter. */
+  @media (min-width: 1024px) {
+    .progress {
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+    }
+
+    .progress__current {
+      display: none;
+    }
+
+    .progress ol {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .progress a {
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 12px;
+      min-height: 28px;
+      padding: 0 4px;
+    }
+
+    .progress__bar {
+      width: 3px;
+      height: 22px;
+    }
+
+    .progress__bar::before {
+      top: 0;
+      bottom: 0;
+      left: 1px;
+      width: 1px;
+    }
+
+    .progress__fill {
+      transform-origin: 50% 0;
+      transform: scaleY(var(--p, 0));
+    }
+
+    .progress__label {
+      opacity: 0;
+      transform: translateX(6px);
+      transition:
+        opacity 0.25s ease,
+        transform 0.25s var(--ease-out);
+      white-space: nowrap;
+      color: var(--nav-muted);
+    }
+
+    /* The active name shows for a moment on arrival, so it never sits over a chapter's content. */
+    .progress a:hover .progress__label,
+    .progress a:focus-visible .progress__label,
+    .progress a.is-announced .progress__label {
+      opacity: 1;
+      transform: none;
+    }
+
+    .progress a[aria-current] .progress__label {
+      color: var(--nav-fg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progress,
+    .progress * {
+      transition: none !important;
+    }
+  }
+
+  /* Contrast themes force backgrounds to Canvas; draw the track and fill in system colours. */
+  @media (forced-colors: active) {
+    .progress__bar::before,
+    .progress__fill {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    .progress__bar {
+      forced-color-adjust: none;
+      background: Canvas;
+    }
+  }
+</style>

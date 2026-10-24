@@ -1,0 +1,1290 @@
+---
+/**
+ * The homepage's hero demo (src/components/carevisor/hero: DashboardDemo, demo-ui and scenes):
+ * a browser window on app.carevisor.com showing one of the six scripted scenes, one per module
+ * tab, on the site's sample data. The hero's window has the app's sidebar and pointer; the module
+ * wall's cards (bare) are the stage alone. Every animated part names its kind and its moment on
+ * the site's own clock (data-k, data-at in seconds); motion.ts plays them on the scroll.
+ *
+ * Sized in design pixels of the site's 1024px stage (--d), so the window scales as one piece,
+ * as the site does, instead of reflowing. Without the motion engine each scene shows its last frame.
+ */
+import Icon from './Icon.astro';
+
+export type SceneKey = 'participant' | 'staff' | 'shifts' | 'docs' | 'incidents' | 'billing';
+
+interface Props {
+  /** The scene this window shows. */
+  scene?: SceneKey;
+  /** A card for the module wall: no sidebar, pointer or glow, and decorative (the wall is labelled). */
+  bare?: boolean;
+}
+const { scene = 'participant', bare = false } = Astro.props;
+/** Hooks for the chapter's motion, on the hero's window only. */
+const hook = (name: string) => (bare ? undefined : name);
+
+const nav = [
+  { label: 'Dashboard', icon: 'layout-dashboard' },
+  { label: 'Participants', icon: 'users', key: 'participant' },
+  { label: 'Team', icon: 'user-round', key: 'staff' },
+  { label: 'Roster', icon: 'calendar-clock', key: 'shifts' },
+  { label: 'Documents', icon: 'file-text', key: 'docs' },
+  { label: 'Incidents', icon: 'triangle-alert', key: 'incidents' },
+  { label: 'Billing', icon: 'wallet', key: 'billing' },
+] as const;
+
+/** Cursor waypoints [x%, y%, seconds] and click moments, from each scene's <DemoCursor>. */
+const paths = {
+  participant: { path: [[52, 72, 0], [88, 7, 1.1], [88, 7, 1.5], [74, 32, 2.3], [72, 47, 3.1], [68, 62, 4.0], [64, 74, 5.3], [62, 76, 7]], clicks: [1.2] },
+  staff: { path: [[50, 65, 0], [87, 7, 1.2], [87, 7, 1.6], [40, 46, 2.4], [40, 60, 3.2], [40, 74, 4.0], [68, 78, 5.4], [66, 80, 7]], clicks: [1.3] },
+  shifts: { path: [[55, 30, 0], [50, 62, 1.3], [50, 62, 1.7], [46, 86, 2.7], [46, 86, 3.1], [58, 55, 4.0], [60, 58, 7]], clicks: [1.4, 2.9] },
+  docs: { path: [[45, 60, 0], [82, 77, 1.2], [82, 77, 1.6], [30, 42, 2.6], [34, 58, 3.6], [55, 68, 5.0], [56, 70, 7]], clicks: [1.3] },
+  incidents: { path: [[50, 60, 0], [88, 26, 1.7], [88, 26, 2.1], [38, 55, 2.8], [55, 55, 3.6], [72, 55, 4.4], [50, 78, 5.6], [48, 80, 7]], clicks: [1.8] },
+  billing: { path: [[45, 62, 0], [88, 7, 1.3], [88, 7, 1.7], [52, 38, 2.6], [52, 55, 3.4], [52, 72, 4.1], [30, 88, 5.2], [32, 89, 7]], clicks: [1.4] },
+};
+const cursor = (key: keyof typeof paths) => JSON.stringify(paths[key]);
+
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+const filled: Record<string, string> = {
+  '0-0': 'Jess M · 7–3',
+  '1-0': 'Omar K · 7–3',
+  '1-1': 'Jess M · 3–9',
+  '3-0': 'Tara W · 7–3',
+  '4-1': 'Omar K · 3–9',
+};
+const invoices = [
+  ['LC', 'Liam Carter', '12 hrs · Core supports', '$1,148.40', 3.2],
+  ['MT', 'Mia Torres', '8 hrs · Capacity building', '$986.75', 3.6],
+  ['AR', 'Aiden Reid', '15 hrs · Core supports', '$1,847.00', 4.0],
+] as const;
+---
+
+<figure
+  class:list={['cvd', { 'cvd--bare': bare }]}
+  data-cv={hook('demo')}
+  role={bare ? undefined : 'img'}
+  aria-hidden={bare ? 'true' : undefined}
+  aria-label={bare ? undefined : 'Recreated CareVisor hero demo on the Participant Intake tab: a browser window on app.carevisor.com with the app sidebar, where a new participant, Liam Carter, is typed in and made ready for a service agreement.'}
+>
+  {!bare && <div class="cvd-glow" aria-hidden="true" />}
+  <div class="cvd-app">
+    <div class="cvd-chrome">
+      <span class="cvd-light" style="--c:#f0645c"></span>
+      <span class="cvd-light" style="--c:#f5bd4f"></span>
+      <span class="cvd-light" style="--c:#61c454"></span>
+      <span class="cvd-url" data-cv={hook('url')}>app.carevisor.com</span>
+      <span class="cvd-spacer"></span>
+    </div>
+
+    <div class="cvd-body">
+      {!bare && (
+      <div class="cvd-side">
+        <div class="cvd-org">
+          <span class="cvd-org__icon"><Icon name="heart-pulse" size={15} /></span>
+          <span>
+            <span class="cvd-org__name">Sunrise Care</span>
+            <span class="cvd-org__who">Aisha · Admin</span>
+          </span>
+        </div>
+        <div class="cvd-nav">
+          <i class="cvd-nav__pill" data-cv={hook('side-pill')}></i>
+          {
+            nav.map((item) => (
+              <span class:list={['cvd-nav__item', { 'is-on': 'key' in item && item.key === scene }]} data-cv-nav={'key' in item ? item.key : undefined}>
+                <Icon name={item.icon} size={14} />
+                {item.label}
+              </span>
+            ))
+          }
+        </div>
+        <div class="cvd-side__foot">
+          <i class="cvd-skel" style="--w:96"></i>
+          <i class="cvd-skel" style="--w:64"></i>
+        </div>
+      </div>
+      )}
+
+      <div class="cvd-stage">
+        <div class="cvd-inner" data-cv={hook('inner')}>
+          {scene === 'participant' && (
+          <div class="cvd-scene" data-scene="participant" data-cursor={cursor('participant')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Participants</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+              <span class="cvd-btn" data-k="press" data-at="1.2">+ New participant</span>
+            </div>
+            <div class="cvd-rows" style="padding-right:46%">
+              {
+                [['LC', 112], ['MT', 96], ['AR', 128]].map(([ini, w]) => (
+                  <div class="cvd-row">
+                    <span class="cvd-ava">{ini}</span>
+                    <span class="cvd-stack">
+                      <i class="cvd-skel" style={`--w:${w}`} />
+                      <i class="cvd-skel cvd-skel--thin" style="--w:64" />
+                    </span>
+                  </div>
+                ))
+              }
+            </div>
+            <div class="cvd-card cvd-form" data-k="pop" data-at="1.45">
+              <span class="cvd-card__title">New participant</span>
+              <span class="cvd-label">Full name</span>
+              <span class="cvd-field"><span class="cvd-type" data-k="type" data-at="2.4">Liam Carter</span></span>
+              <span class="cvd-label">NDIS number</span>
+              <span class="cvd-field"><span class="cvd-type" data-k="type" data-at="3.2">430 512 887</span></span>
+              <span class="cvd-tags" data-k="pop" data-at="4.0">
+                <span class="cvd-tag">Plan 12 Mar → 11 Sep</span>
+                <span class="cvd-tag">Core + Capacity</span>
+              </span>
+              <span class="cvd-chip cvd-chip--green" data-k="pop" data-at="5.4"><Icon name="check" size={11} stroke={3} /> Ready for service agreement</span>
+            </div>
+            <div class="cvd-tip" style="left:4%;top:62%" data-k="pop" data-at="4.6">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">A</span>Adelaide · Intake lead</span>
+              <span class="cvd-tip__text">Capture details once, they sync to rosters, documents and billing.</span>
+            </div>
+            <svg class="cvd-arrow" style="left:34%;top:38%" viewBox="0 0 72 56" data-k="arrow" data-at="4.9">
+              <path d="M6 50 C 22 46, 42 34, 58 12" stroke-dasharray="7 6" data-line></path>
+              <path d="M48 13 L59 9 L57 21" data-head></path>
+            </svg>
+            <span class="cvd-pulse" style="left:88%;top:7%" data-k="pulse" data-at="1.2"><i></i><i></i></span>
+          </div>
+          )}
+
+          {scene === 'staff' && (
+          <div class="cvd-scene" data-scene="staff" data-cursor={cursor('staff')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Staff onboarding</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+              <span class="cvd-btn" data-k="press" data-at="1.3"><Icon name="sparkles" size={12} /> Run checks</span>
+            </div>
+            <div class="cvd-row cvd-row--person">
+              <span class="cvd-ava cvd-ava--violet">SN</span>
+              <span>
+                <span class="cvd-strong">Sarah Nguyen</span>
+                <span class="cvd-meta">Support worker · Casual</span>
+              </span>
+              <span class="cvd-chip cvd-chip--green cvd-push" data-k="pop" data-at="5.2"><Icon name="check" size={11} stroke={3} /> Cleared to roster</span>
+            </div>
+            <div class="cvd-rows cvd-rows--tight" style="padding-right:36%">
+              {
+                [['NDIS Worker Screening', 2.2], ['First Aid & CPR certificate', 3.0], ['Reference check', 3.8]].map(([label, at]) => (
+                  <div class="cvd-row cvd-row--check">
+                    <span class="cvd-tick">
+                      <i class="cvd-tick__ring" />
+                      <span class="cvd-tick__on" data-k="check" data-at={at}><Icon name="check" size={11} stroke={3.5} /></span>
+                    </span>
+                    <span class="cvd-strong">{label}</span>
+                    <span class="cvd-verdict">
+                      <span class="cvd-verdict__was" data-k="out" data-at={Number(at) - 0.1}>Pending</span>
+                      <span class="cvd-verdict__now" data-k="in" data-at={at}>Verified</span>
+                    </span>
+                  </div>
+                ))
+              }
+            </div>
+            <div class="cvd-tip" style="left:62%;top:46%" data-k="pop" data-at="4.4">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">M</span>Marcus · Compliance</span>
+              <span class="cvd-tip__text">Checks run automatically, expiries tracked with smart reminders.</span>
+            </div>
+            <svg class="cvd-arrow cvd-arrow--flip" style="left:50%;top:30%" viewBox="0 0 72 56" data-k="arrow" data-at="4.7">
+              <path d="M6 50 C 22 46, 42 34, 58 12" stroke-dasharray="7 6" data-line></path>
+              <path d="M48 13 L59 9 L57 21" data-head></path>
+            </svg>
+            <span class="cvd-pulse" style="left:87%;top:7%" data-k="pulse" data-at="1.3"><i></i><i></i></span>
+          </div>
+          )}
+
+          {scene === 'shifts' && (
+          <div class="cvd-scene" data-scene="shifts" data-cursor={cursor('shifts')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Roster · This week</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+              <span class="cvd-chips">
+                <span class="cvd-chip cvd-chip--amber" data-k="pop" data-at="0.4">1 open shift</span>
+                <span class="cvd-chip cvd-chip--green" data-k="pop" data-at="5.4"><Icon name="check" size={11} stroke={3} /> Fully covered</span>
+              </span>
+            </div>
+            <div class="cvd-week">
+              {
+                days.map((d, col) => (
+                  <div>
+                    <span class="cvd-day">{d}</span>
+                    {[0, 1].map((row) => {
+                      const open = col === 2 && row === 1;
+                      const label = filled[`${col}-${row}`];
+                      return open ? (
+                        <span class="cvd-shift cvd-shift--open">
+                          Open · 9–3
+                          <span class="cvd-shift__fill" data-k="pop" data-at="3.3">Sarah N · 9–3</span>
+                        </span>
+                      ) : (
+                        <span class:list={['cvd-shift', { 'cvd-shift--on': label }]}>{label}</span>
+                      );
+                    })}
+                  </div>
+                ))
+              }
+            </div>
+            <div class="cvd-card cvd-match" data-k="flash" data-at="1.6" data-dur="1.9">
+              <span class="cvd-label">Best match</span>
+              <span class="cvd-match__who">
+                <span class="cvd-ava">SN</span>
+                <span>
+                  <span class="cvd-strong">Sarah Nguyen</span>
+                  <span class="cvd-match__pct">98% match</span>
+                </span>
+              </span>
+              <span class="cvd-match__go">Assign shift</span>
+            </div>
+            <div class="cvd-tip" style="left:64%;top:64%" data-k="pop" data-at="4.3">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">P</span>Priya · Rostering</span>
+              <span class="cvd-tip__text">Smart matching ranks staff by skills, availability and hours.</span>
+            </div>
+            <span class="cvd-pulse" style="left:50%;top:62%" data-k="pulse" data-at="1.4"><i></i><i></i></span>
+            <span class="cvd-pulse" style="left:46%;top:86%" data-k="pulse" data-at="2.9"><i></i><i></i></span>
+          </div>
+          )}
+
+          {scene === 'docs' && (
+          <div class="cvd-scene" data-scene="docs" data-cursor={cursor('docs')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Document builder</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+              <span class="cvd-chip cvd-chip--blue" data-k="pop" data-at="5.2"><Icon name="check" size={11} stroke={3} /> Draft ready to sign</span>
+            </div>
+            <div class="cvd-doc">
+              <div class="cvd-page">
+                <span class="cvd-page__title">Service Agreement</span>
+                <span class="cvd-meta">Template · NDIS standard terms</span>
+                <span class="cvd-lines">
+                  <span class="cvd-line">
+                    <i class="cvd-write" style="--w:34" data-k="write" data-at="1.6"></i>
+                    <span class="cvd-smart" data-k="pop" data-at="2.1">Liam Carter</span>
+                    <i class="cvd-write" style="--w:22" data-k="write" data-at="2.3"></i>
+                  </span>
+                  <i class="cvd-write" style="--w:88" data-k="write" data-at="2.7"></i>
+                  <span class="cvd-line">
+                    <i class="cvd-write" style="--w:26" data-k="write" data-at="3.1"></i>
+                    <span class="cvd-smart" data-k="pop" data-at="3.5">Plan 12 Mar → 11 Sep</span>
+                  </span>
+                  <i class="cvd-write" style="--w:76" data-k="write" data-at="3.8"></i>
+                  <i class="cvd-write" style="--w:58" data-k="write" data-at="4.1"></i>
+                </span>
+              </div>
+              <div class="cvd-blocks">
+                <span class="cvd-label">Smart blocks</span>
+                {['Participant details', 'Plan dates', 'Rates table', 'Signatures'].map((b) => <span class="cvd-block">{b}</span>)}
+                <span class="cvd-btn cvd-btn--wide" data-k="press" data-at="1.3"><Icon name="sparkles" size={12} /> Generate draft</span>
+              </div>
+            </div>
+            <div class="cvd-tip" style="left:6%;top:68%" data-k="pop" data-at="4.4">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">T</span>Tom · Service delivery</span>
+              <span class="cvd-tip__text">Smart fields pull live data straight from the participant profile.</span>
+            </div>
+            <svg class="cvd-arrow" style="left:30%;top:44%" viewBox="0 0 72 56" data-k="arrow" data-at="4.7">
+              <path d="M6 50 C 22 46, 42 34, 58 12" stroke-dasharray="7 6" data-line></path>
+              <path d="M48 13 L59 9 L57 21" data-head></path>
+            </svg>
+            <span class="cvd-pulse" style="left:82%;top:77%" data-k="pulse" data-at="1.3"><i></i><i></i></span>
+          </div>
+          )}
+
+          {scene === 'incidents' && (
+          <div class="cvd-scene" data-scene="incidents" data-cursor={cursor('incidents')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Incidents</span><i class="cvd-skel cvd-skel--sub" style="--w:128"></i></div>
+              <span class="cvd-swap">
+                <span class="cvd-chip cvd-chip--amber cvd-swap__was" data-k="pop" data-at="2.4">In review</span>
+                <span class="cvd-chip cvd-chip--green" data-k="pop" data-at="5.3"><Icon name="check" size={11} stroke={3} /> Resolved · audit trail saved</span>
+              </span>
+            </div>
+            <div class="cvd-alert" data-k="pop" data-at="0.7">
+              <span class="cvd-alert__icon"><Icon name="triangle-alert" size={16} /></span>
+              <span>
+                <span class="cvd-strong">Medication error, Riverside House</span>
+                <span class="cvd-meta">Reported 2 min ago by Sarah N · Severity: Medium</span>
+              </span>
+              <span class="cvd-ghost">Start review</span>
+            </div>
+            <div class="cvd-card cvd-flow" data-k="pop" data-at="2.1">
+              <span class="cvd-label">Guided workflow</span>
+              <span class="cvd-steps">
+                {
+                  [
+                    ['Reported', null],
+                    ['Review', 2.8],
+                    ['Corrective actions', 3.7],
+                    ['Notify guardian', 4.5],
+                  ].map(([label, at], i) => (
+                    <>
+                      {i > 0 && (
+                        <span class="cvd-steps__line">
+                          <i data-k="fill" data-at={Number(at) - 0.4} data-dur="0.35" />
+                        </span>
+                      )}
+                      <span class="cvd-steps__dot">
+                        <span class="cvd-tick">
+                          <i class="cvd-tick__ring" />
+                          <span class="cvd-tick__on" data-k={at === null ? undefined : 'check'} data-at={at ?? undefined}>
+                            <Icon name="check" size={12} stroke={3.5} />
+                          </span>
+                        </span>
+                        <span class="cvd-steps__label">{label}</span>
+                      </span>
+                    </>
+                  ))
+                }
+              </span>
+            </div>
+            <div class="cvd-tip" style="left:58%;top:68%" data-k="pop" data-at="4.7">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">M</span>Marcus · Compliance</span>
+              <span class="cvd-tip__text">Every step is logged, NDIS audit-ready by default.</span>
+            </div>
+            <span class="cvd-pulse" style="left:88%;top:26%" data-k="pulse" data-at="1.8"><i></i><i></i></span>
+          </div>
+          )}
+
+          {scene === 'billing' && (
+          <div class="cvd-scene" data-scene="billing" data-cursor={cursor('billing')}>
+            <div class="cvd-head">
+              <div><span class="cvd-h">Billing &amp; payroll</span><span class="cvd-meta">Claim period · 1–14 Jul</span></div>
+              <span class="cvd-btn" data-k="press" data-at="1.4">Run claims &amp; pay</span>
+            </div>
+            <div class="cvd-rows cvd-rows--tight" style="padding-right:30%">
+              {
+                invoices.map(([ini, name, meta, amount, at]) => (
+                  <div class="cvd-row">
+                    <span class="cvd-ava">{ini}</span>
+                    <span>
+                      <span class="cvd-strong">{name}</span>
+                      <span class="cvd-meta">{meta}</span>
+                    </span>
+                    <span class="cvd-amount">
+                      <span class="cvd-strong">{amount}</span>
+                      <span class="cvd-chip cvd-chip--green cvd-chip--sm" data-k="pop" data-at={at}><Icon name="check" size={10} stroke={3} /> Claimed</span>
+                    </span>
+                  </div>
+                ))
+              }
+            </div>
+            <div class="cvd-run">
+              <span class="cvd-bar"><i data-k="fill" data-at="1.6" data-dur="1.3"></i></span>
+              <span class="cvd-chips">
+                <span class="cvd-chip cvd-chip--blue" data-k="pop" data-at="4.6">NDIA bulk claim exported</span>
+                <span class="cvd-chip cvd-chip--green" data-k="pop" data-at="5.2"><Icon name="check" size={11} stroke={3} /> Payroll synced to Xero</span>
+              </span>
+            </div>
+            <div class="cvd-tip" style="left:72%;top:38%" data-k="pop" data-at="4.6">
+              <span class="cvd-tip__who"><span class="cvd-tip__ini">P</span>Priya · Finance</span>
+              <span class="cvd-tip__text">Timesheets become NDIS claims and pay runs, no re-keying.</span>
+            </div>
+            <span class="cvd-pulse" style="left:88%;top:7%" data-k="pulse" data-at="1.4"><i></i><i></i></span>
+          </div>
+          )}
+
+          {/* The hero window's pointer, steered by its scene's waypoints. */}
+          {!bare && (
+            <svg class="cvd-cursor" viewBox="0 0 24 24" data-cv="cursor">
+              <path d="M5 3l14 7-6.5 1.5L9 18 5 3z"></path>
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .cvd {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    container-type: inline-size;
+  }
+
+  /* A wall card is the stage alone: 832 design px, the site's 1024 less its 192 px sidebar. */
+  .cvd--bare {
+    --dw: 832;
+  }
+
+  /* Ambient glow behind the card (DashboardDemo: from-[#0052CC]/15 via-[#4A8FE8]/10 to-[#99C2FF]/15). */
+  .cvd-glow {
+    position: absolute;
+    inset: calc(-24 * var(--d, 1px));
+    border-radius: calc(40 * var(--d, 1px));
+    background: linear-gradient(to top right, rgb(0 82 204 / 0.15), rgb(74 143 232 / 0.1), rgb(153 194 255 / 0.15));
+    filter: blur(24px);
+    --d: calc(100cqw / var(--dw, 1024));
+  }
+
+  .cvd-app {
+    --d: calc(100cqw / var(--dw, 1024));
+    --ink: #000918;
+    --slate: #5a6472;
+    /* The site's #8b96a8 captions, one step darker so they reach 4.5:1 on white. */
+    --grey: #657084;
+    --blue: #0052cc;
+    --skel: #e8ecf3;
+    --edge: #eef0f4;
+    --rule: #e4e6e4;
+    position: relative;
+    overflow: hidden;
+    border-radius: calc(24 * var(--d));
+    border: 1px solid var(--rule);
+    background: #fff;
+    box-shadow: 0 calc(18 * var(--d)) calc(60 * var(--d)) rgb(0 9 24 / 0.12);
+    color: var(--ink);
+    font: 500 calc(12 * var(--d)) / 1.35 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    text-align: left;
+  }
+
+  .cvd-app :global(.cv-icon) {
+    flex: none;
+    width: auto;
+    height: 1.15em;
+  }
+
+  /* ---------- Window chrome ---------- */
+  .cvd-chrome {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--d));
+    padding: calc(10 * var(--d)) calc(16 * var(--d));
+    border-bottom: 1px solid var(--edge);
+    background: #fafbfc;
+  }
+
+  .cvd-light {
+    width: calc(10 * var(--d));
+    height: calc(10 * var(--d));
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .cvd-url {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(224 * var(--d));
+    height: calc(24 * var(--d));
+    margin: 0 auto;
+    border-radius: calc(6 * var(--d));
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--edge);
+    color: var(--grey);
+    font-size: calc(10.5 * var(--d));
+  }
+
+  .cvd-spacer {
+    width: calc(54 * var(--d));
+  }
+
+  .cvd-body {
+    display: flex;
+    height: calc(440 * var(--d));
+  }
+
+  /* ---------- Sidebar ---------- */
+  .cvd-side {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    width: calc(192 * var(--d));
+    padding: calc(12 * var(--d));
+    border-right: 1px solid var(--edge);
+    background: #fafbfc;
+  }
+
+  .cvd-org {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--d));
+    padding: 0 calc(6 * var(--d)) calc(12 * var(--d));
+  }
+
+  .cvd-org__icon {
+    display: grid;
+    place-items: center;
+    width: calc(28 * var(--d));
+    height: calc(28 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: linear-gradient(to bottom right, #0052cc, #4a8fe8);
+    color: #fff;
+    font-size: calc(13 * var(--d));
+  }
+
+  .cvd-org__name,
+  .cvd-org__who {
+    display: block;
+  }
+
+  .cvd-org__name {
+    font-size: calc(12 * var(--d));
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .cvd-org__who {
+    color: var(--grey);
+    font-size: calc(9.5 * var(--d));
+  }
+
+  .cvd-nav {
+    position: relative;
+    display: grid;
+    gap: calc(2 * var(--d));
+  }
+
+  .cvd-nav__pill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: calc(33 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: #e8f0fe;
+    transform: translateY(calc(35 * var(--d)));
+  }
+
+  .cvd-nav__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--d));
+    height: calc(33 * var(--d));
+    padding: 0 calc(10 * var(--d));
+    color: var(--slate);
+    font-size: calc(11.5 * var(--d));
+    font-weight: 600;
+  }
+
+  .cvd-nav__item.is-on {
+    color: var(--blue);
+  }
+
+  .cvd-nav__item :global(.cv-icon) {
+    height: calc(14 * var(--d));
+  }
+
+  .cvd-side__foot {
+    display: grid;
+    gap: calc(8 * var(--d));
+    margin-top: auto;
+    padding: 0 calc(6 * var(--d));
+  }
+
+  /* ---------- Stage ---------- */
+  .cvd-stage {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding: calc(20 * var(--d));
+    background: #fff;
+  }
+
+  .cvd-inner {
+    position: relative;
+    height: 100%;
+  }
+
+  .cvd-scene {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cvd-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: calc(12 * var(--d));
+  }
+
+  .cvd-h {
+    display: block;
+    font-size: calc(16 * var(--d));
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .cvd-skel {
+    display: block;
+    width: calc(var(--w) * var(--d));
+    height: calc(8 * var(--d));
+    border-radius: 999px;
+    background: var(--skel);
+  }
+
+  .cvd-skel--sub {
+    margin-top: calc(8 * var(--d));
+  }
+
+  .cvd-skel--thin {
+    height: calc(6 * var(--d));
+  }
+
+  .cvd-stack {
+    display: grid;
+    gap: calc(6 * var(--d));
+  }
+
+  .cvd-meta {
+    display: block;
+    color: var(--grey);
+    font-size: calc(10.5 * var(--d));
+  }
+
+  .cvd-strong {
+    display: block;
+    font-size: calc(12 * var(--d));
+    font-weight: 700;
+  }
+
+  .cvd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--d));
+    height: calc(32 * var(--d));
+    padding: 0 calc(12 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: var(--blue);
+    color: #fff;
+    font-size: calc(11.5 * var(--d));
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .cvd-btn--wide {
+    justify-content: center;
+    width: 100%;
+    margin-top: calc(12 * var(--d));
+  }
+
+  .cvd-rows {
+    display: grid;
+    gap: calc(12 * var(--d));
+    margin-top: calc(20 * var(--d));
+  }
+
+  .cvd-rows--tight {
+    gap: calc(10 * var(--d));
+    margin-top: calc(12 * var(--d));
+  }
+
+  .cvd-row {
+    display: flex;
+    align-items: center;
+    gap: calc(12 * var(--d));
+    padding: calc(12 * var(--d));
+    border: 1px solid var(--edge);
+    border-radius: calc(12 * var(--d));
+    background: #fff;
+  }
+
+  .cvd-row--person {
+    margin-top: calc(16 * var(--d));
+  }
+
+  .cvd-row--check {
+    gap: calc(10 * var(--d));
+  }
+
+  .cvd-push {
+    margin-left: auto;
+  }
+
+  .cvd-ava {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: calc(28 * var(--d));
+    height: calc(28 * var(--d));
+    border-radius: 50%;
+    background: #e8f0fe;
+    color: var(--blue);
+    font-size: calc(9.5 * var(--d));
+    font-weight: 700;
+  }
+
+  .cvd-ava--violet {
+    background: #efe9fe;
+    color: #5a35e8;
+  }
+
+  .cvd-card {
+    border: 1px solid var(--rule);
+    border-radius: calc(16 * var(--d));
+    background: #fff;
+    box-shadow: 0 calc(16 * var(--d)) calc(40 * var(--d)) rgb(0 9 24 / 0.1);
+  }
+
+  .cvd-card__title {
+    display: block;
+    font-size: calc(12.5 * var(--d));
+    font-weight: 700;
+  }
+
+  .cvd-label {
+    display: block;
+    margin-top: calc(10 * var(--d));
+    color: var(--grey);
+    font-size: calc(9.5 * var(--d));
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+
+  .cvd-field {
+    display: flex;
+    align-items: center;
+    height: calc(32 * var(--d));
+    margin-top: calc(4 * var(--d));
+    padding: 0 calc(10 * var(--d));
+    border: 1px solid var(--rule);
+    border-radius: calc(8 * var(--d));
+    background: #fafbfc;
+    font-size: calc(12 * var(--d));
+  }
+
+  .cvd-type {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .cvd-form {
+    position: absolute;
+    right: 0;
+    top: calc(48 * var(--d));
+    width: 43%;
+    padding: calc(16 * var(--d));
+  }
+
+  .cvd-tags,
+  .cvd-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(8 * var(--d));
+  }
+
+  .cvd-tags {
+    margin-top: calc(10 * var(--d));
+  }
+
+  .cvd-tag {
+    padding: calc(4 * var(--d)) calc(8 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: #f0f4fb;
+    color: var(--blue);
+    font-size: calc(10 * var(--d));
+    font-weight: 600;
+  }
+
+  .cvd-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(4 * var(--d));
+    padding: calc(4 * var(--d)) calc(10 * var(--d));
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: calc(10.5 * var(--d));
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cvd-form .cvd-chip {
+    margin-top: calc(12 * var(--d));
+  }
+
+  .cvd-chip--sm {
+    margin-top: calc(2 * var(--d));
+    padding: calc(2 * var(--d)) calc(8 * var(--d));
+  }
+
+  .cvd-chip--green {
+    border-color: #bfe6cc;
+    background: #e6f6ea;
+    color: #1d7d45;
+  }
+
+  .cvd-chip--blue {
+    border-color: #c4d9f8;
+    background: #e8f0fe;
+    color: var(--blue);
+  }
+
+  .cvd-chip--amber {
+    border-color: #f5ddb8;
+    background: #fef3e2;
+    color: #a14a07;
+  }
+
+  /* ---------- Guide tip, arrow, pulse, cursor (demo-ui.tsx) ---------- */
+  .cvd-tip {
+    position: absolute;
+    z-index: 3;
+    width: calc(225 * var(--d));
+    padding: calc(14 * var(--d));
+    border-radius: calc(16 * var(--d));
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 calc(14 * var(--d)) calc(36 * var(--d)) rgb(0 82 204 / 0.38);
+  }
+
+  .cvd-tip::before {
+    content: '';
+    position: absolute;
+    top: calc(-6 * var(--d));
+    left: calc(24 * var(--d));
+    width: calc(14 * var(--d));
+    height: calc(14 * var(--d));
+    border-radius: calc(3 * var(--d));
+    background: var(--blue);
+    transform: rotate(45deg);
+  }
+
+  .cvd-tip__who {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--d));
+    color: rgb(255 255 255 / 0.88);
+    font-size: calc(11 * var(--d));
+    font-weight: 600;
+  }
+
+  .cvd-tip__ini {
+    display: grid;
+    place-items: center;
+    width: calc(24 * var(--d));
+    height: calc(24 * var(--d));
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.25);
+    color: #fff;
+    font-size: calc(9.5 * var(--d));
+    font-weight: 700;
+  }
+
+  .cvd-tip__text {
+    display: block;
+    margin-top: calc(6 * var(--d));
+    font-size: calc(12.5 * var(--d));
+    line-height: 1.375;
+  }
+
+  .cvd-arrow {
+    position: absolute;
+    z-index: 3;
+    width: calc(72 * var(--d));
+    height: calc(56 * var(--d));
+    overflow: visible;
+    fill: none;
+    stroke: var(--blue);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .cvd-arrow--flip {
+    transform: scaleX(-1);
+  }
+
+  .cvd-pulse {
+    position: absolute;
+    z-index: 3;
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .cvd-pulse i {
+    position: absolute;
+    left: calc(-20 * var(--d));
+    top: calc(-20 * var(--d));
+    width: calc(40 * var(--d));
+    height: calc(40 * var(--d));
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  .cvd-pulse i:first-child {
+    border: 2px solid var(--blue);
+  }
+
+  .cvd-pulse i:last-child {
+    background: var(--blue);
+  }
+
+  .cvd-cursor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    display: none;
+    width: calc(26 * var(--d));
+    height: calc(26 * var(--d));
+    margin: calc(-5 * var(--d)) 0 0 calc(-5 * var(--d));
+    fill: var(--blue);
+    stroke: #fff;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+  }
+
+  /* Pointer and click rings exist only while the demo plays: scrubbed in full mode, once in lite. */
+  :global(html:is(.mode-full, .mode-lite)) .cvd-pulse,
+  :global(html:is(.mode-full, .mode-lite)) .cvd-cursor {
+    display: block;
+  }
+
+  /* ---------- Staff checks ---------- */
+  .cvd-tick {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: calc(20 * var(--d));
+    height: calc(20 * var(--d));
+  }
+
+  .cvd-tick__ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #dfe6f0;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .cvd-tick__on {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #1d9d55;
+    color: #fff;
+  }
+
+  .cvd-verdict {
+    position: relative;
+    margin-left: auto;
+    font-size: calc(10.5 * var(--d));
+    font-weight: 600;
+  }
+
+  .cvd-verdict__was {
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: var(--grey);
+    opacity: 0;
+  }
+
+  .cvd-verdict__now {
+    color: #1d7d45;
+  }
+
+  /* ---------- Roster ---------- */
+  .cvd-week {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: calc(8 * var(--d));
+    margin-top: calc(16 * var(--d));
+  }
+
+  .cvd-week > div {
+    display: grid;
+    gap: calc(8 * var(--d));
+  }
+
+  .cvd-day {
+    color: var(--grey);
+    font-size: calc(10 * var(--d));
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .cvd-shift {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: calc(44 * var(--d));
+    padding: 0 calc(4 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: #f4f6f9;
+    font-size: calc(9.5 * var(--d));
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .cvd-shift--on {
+    background: #e8f0fe;
+    color: var(--blue);
+  }
+
+  .cvd-shift--open {
+    border: 2px dashed #e8b45a;
+    background: #fef9ef;
+    color: #a14a07;
+  }
+
+  .cvd-shift__fill {
+    position: absolute;
+    inset: -2px;
+    display: grid;
+    place-items: center;
+    border-radius: calc(6 * var(--d));
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .cvd-match {
+    position: absolute;
+    left: 38%;
+    top: 58%;
+    z-index: 2;
+    width: calc(190 * var(--d));
+    padding: calc(12 * var(--d));
+    border-radius: calc(12 * var(--d));
+    opacity: 0;
+  }
+
+  .cvd-match .cvd-label {
+    margin-top: 0;
+  }
+
+  .cvd-match__who {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--d));
+    margin-top: calc(6 * var(--d));
+  }
+
+  .cvd-match__pct {
+    display: block;
+    color: #1d7d45;
+    font-size: calc(9.5 * var(--d));
+    font-weight: 600;
+  }
+
+  .cvd-match__go {
+    display: block;
+    margin-top: calc(8 * var(--d));
+    padding: calc(6 * var(--d)) 0;
+    border-radius: calc(8 * var(--d));
+    background: var(--blue);
+    color: #fff;
+    font-size: calc(10.5 * var(--d));
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* ---------- Document builder ---------- */
+  .cvd-doc {
+    display: flex;
+    gap: calc(12 * var(--d));
+    margin-top: calc(16 * var(--d));
+  }
+
+  .cvd-page {
+    flex: 1;
+    min-height: calc(210 * var(--d));
+    padding: calc(20 * var(--d));
+    border: 1px solid var(--rule);
+    border-radius: calc(16 * var(--d));
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+
+  .cvd-page__title {
+    display: block;
+    font-size: calc(13.5 * var(--d));
+    font-weight: 700;
+  }
+
+  .cvd-page .cvd-meta {
+    margin-top: calc(4 * var(--d));
+    font-size: calc(10 * var(--d));
+  }
+
+  .cvd-lines {
+    display: grid;
+    gap: calc(10 * var(--d));
+    margin-top: calc(16 * var(--d));
+  }
+
+  .cvd-line {
+    display: flex;
+    align-items: center;
+    gap: calc(6 * var(--d));
+  }
+
+  .cvd-write {
+    display: block;
+    width: calc(var(--w) * 1%);
+    height: calc(8 * var(--d));
+    border-radius: 999px;
+    background: #dfe6f0;
+    transform-origin: 0 50%;
+  }
+
+  .cvd-smart {
+    padding: calc(2 * var(--d)) calc(6 * var(--d));
+    border-radius: calc(6 * var(--d));
+    background: #e8f0fe;
+    color: var(--blue);
+    font-size: calc(9.5 * var(--d));
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .cvd-blocks {
+    flex: none;
+    width: 34%;
+  }
+
+  .cvd-blocks .cvd-label {
+    margin: 0 0 calc(8 * var(--d));
+  }
+
+  .cvd-block {
+    display: block;
+    margin-top: calc(6 * var(--d));
+    padding: calc(8 * var(--d)) calc(10 * var(--d));
+    border: 1px solid var(--edge);
+    border-radius: calc(8 * var(--d));
+    font-size: calc(11 * var(--d));
+    font-weight: 600;
+  }
+
+  /* ---------- Incidents ---------- */
+  .cvd-swap {
+    position: relative;
+  }
+
+  /* "In review" gives way to "Resolved": the last frame shows only the second. */
+  .cvd-swap__was {
+    position: absolute;
+    right: 0;
+    top: 0;
+    opacity: 0;
+  }
+
+  .cvd-alert {
+    display: flex;
+    align-items: center;
+    gap: calc(12 * var(--d));
+    margin-top: calc(16 * var(--d));
+    padding: calc(14 * var(--d));
+    border: 1px solid #f5c6c6;
+    border-left: calc(4 * var(--d)) solid #e05252;
+    border-radius: calc(12 * var(--d));
+    background: #fdf1f1;
+  }
+
+  .cvd-alert__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: calc(32 * var(--d));
+    height: calc(32 * var(--d));
+    border-radius: calc(8 * var(--d));
+    background: #fdeaea;
+    color: #c93d3d;
+    font-size: calc(14 * var(--d));
+  }
+
+  .cvd-alert .cvd-strong {
+    font-size: calc(12.5 * var(--d));
+  }
+
+  .cvd-ghost {
+    margin-left: auto;
+    padding: calc(6 * var(--d)) calc(12 * var(--d));
+    border: 1px solid var(--rule);
+    border-radius: calc(8 * var(--d));
+    background: #fff;
+    font-size: calc(11 * var(--d));
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cvd-flow {
+    margin-top: calc(12 * var(--d));
+    padding: calc(16 * var(--d));
+    border-color: var(--edge);
+    box-shadow: none;
+  }
+
+  .cvd-flow .cvd-label {
+    margin-top: 0;
+  }
+
+  .cvd-steps {
+    display: flex;
+    align-items: flex-start;
+    margin-top: calc(12 * var(--d));
+  }
+
+  .cvd-steps__dot {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(6 * var(--d));
+  }
+
+  .cvd-steps__dot .cvd-tick {
+    width: calc(24 * var(--d));
+    height: calc(24 * var(--d));
+  }
+
+  .cvd-steps__label {
+    color: var(--slate);
+    font-size: calc(9 * var(--d));
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .cvd-steps__line {
+    flex: 1;
+    height: calc(2 * var(--d));
+    margin-top: calc(12 * var(--d));
+    background: var(--edge);
+  }
+
+  .cvd-steps__line i,
+  .cvd-bar i {
+    display: block;
+    height: 100%;
+    background: #1d9d55;
+    transform-origin: 0 50%;
+  }
+
+  /* ---------- Billing ---------- */
+  .cvd-amount {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .cvd-run {
+    position: absolute;
+    left: 0;
+    right: 30%;
+    bottom: calc(4 * var(--d));
+  }
+
+  .cvd-bar {
+    display: block;
+    height: calc(6 * var(--d));
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--edge);
+  }
+
+  .cvd-bar i {
+    border-radius: inherit;
+    background: var(--blue);
+  }
+
+  .cvd-run .cvd-chips {
+    margin-top: calc(8 * var(--d));
+  }
+</style>

@@ -1,0 +1,45 @@
+---
+/** BloodLine's nine-bar mark (Website/index.html). Light bars for dark grounds; `ink` for light ones. */
+interface Props {
+  class?: string;
+  ink?: boolean;
+}
+const { class: className, ink = false } = Astro.props;
+const bars: [number, number, number][] = [
+  [0, 10.5, 10.5],
+  [4, 7, 18.5],
+  [8, 4, 27],
+  [12, 5.5, 30],
+  [16, 9, 29.5],
+  [20, 5.5, 30],
+  [24, 4, 27],
+  [28, 7, 18.5],
+  [32, 10.5, 10.5],
+];
+---
+
+<svg class:list={['bl-mark', { 'bl-mark--ink': ink }, className]} viewBox="0 4 35 34.5" aria-hidden="true" data-bl-mark>
+  {bars.map(([x, y, h], i) => <rect class:list={['bl-mark__bar', { 'bl-mark__bar--accent': i === 6 }]} x={x} y={y} width="3" height={h} />)}
+</svg>
+
+<style>
+  .bl-mark {
+    --mark-bar: #e6f0e8;
+    --mark-accent: #56db8b;
+    display: block;
+    overflow: visible;
+  }
+
+  .bl-mark--ink {
+    --mark-bar: #0f3b4b;
+    --mark-accent: #1e9e5e;
+  }
+
+  .bl-mark__bar {
+    fill: var(--mark-bar);
+  }
+
+  .bl-mark__bar--accent {
+    fill: var(--mark-accent);
+  }
+</style>

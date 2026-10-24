@@ -1,0 +1,2294 @@
+---
+/**
+ * NASA Space Apps Challenge 2026, told in the app's own world. The project is still in
+ * progress, so its name and details are redacted: [[n]] in copy renders as an animated bar
+ * (RedactedText) and the hidden words are not in this source, and the screenshots are
+ * pixelated in the image files themselves. It opens on the sign-in meadow (the team's Figma
+ * artwork), then becomes the app: the dark sidebar, the top bar with the satellite-status
+ * pill, and four pages, each with one tip card at the top carrying a design decision.
+ * Tokens, type, components and motion are ported from the app's own styles.
+ */
+import '@fontsource/lato/400.css';
+import '@fontsource/lato/700.css';
+import '@fontsource/lato/900.css';
+import ChapterSection from '../../components/ChapterSection.astro';
+import RedactedText from '../../components/RedactedText.astro';
+import Icon from './Icon.astro';
+import Meadow from './Meadow.astro';
+import mascot from './art/mascot.svg?url';
+import sheep2 from './art/sheep-2.svg?url';
+import sheep3 from './art/sheep-3.svg?url';
+import sheep4 from './art/sheep-4.svg?url';
+import sheep6 from './art/sheep-6.svg?url';
+import { BAND, PLOT_H, PLOT_W, RISK_A, RISK_ANY, RISK_B, linePath } from './risk';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const shot = (name: string) => ({ src: `${base}shots/nasa/${name}.webp`, srcset: `${base}shots/nasa/${name}-1x.webp 1188w, ${base}shots/nasa/${name}.webp 2376w` });
+const shotSizes = '(min-width: 1024px) 62vw, 92vw';
+
+// The sign-in feature cards, redacted.
+const features = [
+  { icon: 'satellite', title: '[[16]] from space', text: '[[12]] of NASA satellite images show [[20]].' },
+  { icon: 'alert', title: '[[8]] early warning', text: '[[22]] spotted from orbit [[18]].' },
+  { icon: 'calendar', title: 'Safest [[14]]', text: '30 years of NASA weather: [[34]].' },
+] as const;
+
+// Sidebar.
+const nav = [
+  { icon: 'dashboard', label: 'Overview', count: '3', alert: true },
+  { icon: 'map', label: '[[8]]', count: '4' },
+  { icon: 'layers', label: '[[8]]' },
+  { icon: 'planner', label: 'Planner' },
+  { icon: 'insights', label: 'Insights' },
+] as const;
+
+// The demo's ten-season plan as the app's planner shows it: each key is a colour and the
+// length of its hidden label.
+const KINDS: Record<string, [string, number]> = {
+  a: ['#cfb173', 5],
+  b: ['#b5a4c9', 6],
+  c: ['#e2d3a8', 4],
+  d: ['#626735', 7],
+  e: ['#c9a77c', 9],
+  f: ['#d9c48f', 6],
+  g: ['#d69a7f', 7],
+};
+const years = Array.from({ length: 10 }, (_, i) => 2027 + i);
+const rows = [
+  { n: '1', critter: sheep3, plan: ['a', 'b', 'c', 'd', 'd', 'a', 'b', 'c', 'd', 'd'] },
+  { n: '2', critter: sheep6, plan: ['b', 'd', 'c', 'b', 'a', 'd', 'd', 'c', 'b', 'a'] },
+  { n: '3', critter: sheep4, plan: ['e', 'f', 'd', 'g', 'a', 'e', 'f', 'd', 'g', 'a'] },
+  { n: '4', critter: sheep2, plan: ['e', 'd', 'f', 'g', 'a', 'e', 'd', 'f', 'g', 'a'] },
+];
+const score = [61, 62, 61, 64, 62, 63, 64, 64, 65, 64];
+// The planner's KPI tiles for that plan.
+const kpis = [
+  { icon: 'leaf', label: '[[11]] after 10 seasons', value: 64, dec: 0, unit: '/ 100', up: '+3', foot: 'from 61' },
+  { icon: 'shield', label: '[[11]] in the plan', value: 60, dec: 0, unit: '%', foot: '[[36]]' },
+  { icon: 'sprout', label: '[[5]] per season', value: 2.8, dec: 1, unit: 'on average', foot: '[[32]]' },
+  { icon: 'alert', label: '[[8]] steering', value: 0, dec: 0, unit: '[[8]]', foot: '[[30]]' },
+] as const;
+
+// One decision per page, in the tip card at its top.
+const tip = (i: number) => chapter.decisions[i];
+---
+
+<ChapterSection chapter={chapter} next={next} class="ts">
+  <div class="ts-world">
+    <Meadow />
+
+    <!-- Sign-in: the meadow stays as the brand moment. -->
+    <div class="ts-auth" data-ts="auth" data-clear>
+      <div class="ts-auth__inner">
+        <div class="ts-auth__brand">
+          <p class="ts-logo" data-ts="rise">
+            <span class="ts-logo__mark"><img src={mascot} alt="" width="34" height="31" /></span>
+            <span><RedactedText text="[[12]]" /></span>
+          </p>
+          <p class="ts-auth__meta" data-ts="rise">
+            <span>{num} · {chapter.group}</span>
+            <span>{chapter.name} 2026</span>
+            <span class="ts-badge ts-badge--warn">{chapter.status}</span>
+          </p>
+          <h2 class="ts-auth__headline" id={`${chapter.slug}-title`} tabindex="-1" data-focus data-ts="rise">
+            <span class="visually-hidden">{chapter.name}: </span>Plan every <RedactedText text="[[7]]" /> with NASA satellite data.
+          </h2>
+          <p class="ts-auth__lead" data-ts="rise"><RedactedText text={chapter.oneLiner} /></p>
+          <ul class="ts-auth__features" data-ts="features">
+            {
+              features.map((f) => (
+                <li data-ts="feature">
+                  <span class="ts-auth__ficon">
+                    <Icon name={f.icon} size={18} />
+                  </span>
+                  <span>
+                    <strong><RedactedText text={f.title} /></strong>
+                    <RedactedText text={f.text} />
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <aside class="ts-auth__card" aria-labelledby={`${chapter.slug}-card-title`} data-ts="card">
+          <div class="ts-auth__cardhead">
+            <img class="ts-auth__mascot" src={mascot} alt="" width="56" height="51" />
+            <div>
+              <h3 id={`${chapter.slug}-card-title`}><span class="visually-hidden">Project name: </span><RedactedText text="[[12]]" /></h3>
+              <p><RedactedText text="[[28]]" /></p>
+            </div>
+          </div>
+          <dl class="ts-facts">
+            <div>
+              <dt>Event</dt>
+              <dd>{chapter.name} · {chapter.meta[1]}</dd>
+            </div>
+            <div>
+              <dt>Challenge</dt>
+              <dd><RedactedText text="[[44]]" /></dd>
+            </div>
+            <div>
+              <dt>My role</dt>
+              <dd>{chapter.role}</dd>
+            </div>
+          </dl>
+          <span class="ts-btn ts-btn--secondary ts-btn--lg ts-btn--locked">
+            <Icon name="shield" size={18} />
+            Demo hidden while in progress
+          </span>
+          <p class="ts-auth__note">
+            <Icon name="shield" size={14} />
+            Names and details are redacted until the challenge.
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <!-- The app, rebuilt in HTML around page captures (pixelated). -->
+    <div class="ts-app" data-ts="app" data-clear>
+      <div class="ts-canvas" data-ts="canvas" aria-hidden="true"></div>
+
+      <div class="ts-side" data-ts="side" aria-hidden="true">
+        <div class="ts-side__brand">
+          <span class="ts-side__logo"><img src={mascot} alt="" width="30" height="27" /></span>
+          <span class="ts-side__name"><RedactedText text="[[12]]" /><small><RedactedText text="[[24]]" /></small></span>
+        </div>
+        <div class="ts-side__acct">
+          <span class="ts-side__badge">G</span>
+          <span class="ts-side__accttext"><strong>Guest’s <RedactedText text="[[4]]" /></strong><span><RedactedText text="[[18]]" /></span></span>
+        </div>
+        <p class="ts-side__group">Workspace</p>
+        <div class="ts-side__nav">
+          <span class="ts-side__active" data-ts="side-active"></span>
+          {
+            nav.map((item) => (
+              <span class="ts-side__item" data-ts="side-item">
+                <Icon name={item.icon} size={18} />
+                <span class="ts-side__label"><RedactedText text={item.label} /></span>
+                {'count' in item && <span class:list={['ts-side__count', { 'is-alert': 'alert' in item }]}>{item.count}</span>}
+              </span>
+            ))
+          }
+        </div>
+        <div class="ts-side__bottom">
+          <span class="ts-side__item">
+            <Icon name="settings" size={18} />
+            <span class="ts-side__label">Settings</span>
+          </span>
+          <span class="ts-side__item">
+            <Icon name="collapse" size={18} />
+            <span class="ts-side__label">Collapse</span>
+          </span>
+          <div class="ts-side__user">
+            <span class="ts-side__avatar">G</span>
+            <span class="ts-side__accttext"><strong>Guest</strong><span>Saved in this browser</span></span>
+            <Icon name="logout" size={16} />
+          </div>
+        </div>
+      </div>
+
+      <div class="ts-top" data-ts="top" aria-hidden="true">
+        <span class="ts-top__brand">
+          <span class="ts-side__logo"><img src={mascot} alt="" width="30" height="27" /></span>
+          <RedactedText text="[[12]]" />
+        </span>
+        <div class="ts-crumbs">
+          <span class="ts-crumbs__set" data-ts="crumb"><b>Overview</b></span>
+          <span class="ts-crumbs__set" data-ts="crumb"><RedactedText text="[[8]]" /> <Icon name="chevron" size={14} /> <RedactedText text="[[7]]" /> #1 <Icon name="chevron" size={14} /> <b>History</b></span>
+          <span class="ts-crumbs__set" data-ts="crumb"><b>Planner</b></span>
+        </div>
+        <div class="ts-top__right">
+          <span class="ts-top__search"><Icon name="search" size={16} />Search or jump to…<kbd>Ctrl</kbd><kbd>K</kbd></span>
+          <span class="ts-pill">
+            <span class="ts-pill__state ts-pill__state--running" data-ts="pill-running">
+              <svg class="ts-pill__ring" viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="10" cy="10" r="8"></circle>
+                <circle cx="10" cy="10" r="8" data-ts="pill-ring"></circle>
+              </svg>
+              Reading satellites <span class="ts-num" data-ts="pill-count">101/101</span>
+            </span>
+            <span class="ts-pill__state ts-pill__state--ready" data-ts="pill-ready">
+              <Icon name="satellite" size={15} />
+              Satellite record <span class="ts-num">· 101 images</span>
+            </span>
+          </span>
+          <span class="ts-top__icon"><Icon name="moon" size={18} /></span>
+          <span class="ts-top__mascot"><span class="ts-top__face"><img src={mascot} alt="" width="24" height="22" /></span>Ask <RedactedText text="[[6]]" /></span>
+          <span class="ts-top__avatar">G</span>
+        </div>
+      </div>
+
+      <div class="ts-pages">
+        <!-- 01 · Overview: the light and the dark theme. -->
+        <section class="ts-page" data-ts="page" aria-labelledby={`${chapter.slug}-p1`}>
+          <header class="ts-page__head" data-ts="part">
+            <h3 class="ts-page__title" id={`${chapter.slug}-p1`}>Overview</h3>
+            <p class="ts-page__desc">The demo at a glance, in the light theme and the dark one.</p>
+          </header>
+          <div class="ts-tip" data-ts="part">
+            <span class="ts-tip__face"><img src={mascot} alt="" width="32" height="29" /></span>
+            <div class="ts-tip__text">
+              <h4><span class="ts-tip__n">01 · </span>{tip(0).title}.</h4>
+              <p><RedactedText text={tip(0).body} /></p>
+            </div>
+          </div>
+          <figure class="ts-visual ts-themes" data-ts="part">
+            <div class="ts-seg" aria-hidden="true">
+              <span class="ts-seg__thumb" data-ts="seg-thumb"></span>
+              <span class="ts-seg__opt" data-ts="seg-light">Light</span>
+              <span class="ts-seg__opt" data-ts="seg-dark">Dark</span>
+            </div>
+            <div class="ts-fit">
+              <div class="ts-frame ts-frame--themes">
+                <div class="ts-themes__scroll" data-ts="theme-scroll">
+                  <div class="ts-theme">
+                    <img
+                      {...shot('app-overview-light')}
+                      sizes={shotSizes}
+                      alt="The app's Overview page in the light theme, pixelated while the project is in progress."
+                      width="2376"
+                      height="1678"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="ts-theme__label">Light</span>
+                  </div>
+                  <div class="ts-theme ts-theme--dark" data-ts="wipe">
+                    <div class="ts-theme__inner" data-ts="wipe-inner">
+                      <img
+                        {...shot('app-overview-dark')}
+                        sizes={shotSizes}
+                        alt="The same Overview in the dark theme, pixelated."
+                        width="2376"
+                        height="1678"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="ts-theme__label">Dark</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
+        </section>
+
+        <!-- 02 · History: seen from space, and a warning that says why. -->
+        <section class="ts-page" data-ts="page" aria-labelledby={`${chapter.slug}-p2`}>
+          <header class="ts-page__head" data-ts="part">
+            <p class="ts-page__eyebrow"><Icon name="back" size={14} />All <RedactedText text="[[8]]" /></p>
+            <h3 class="ts-page__title" id={`${chapter.slug}-p2`}><RedactedText text="[[7]]" /> #1 · History</h3>
+            <p class="ts-page__desc">What NASA satellites saw here each season.</p>
+          </header>
+          <div class="ts-tip" data-ts="part">
+            <span class="ts-tip__face"><img src={mascot} alt="" width="32" height="29" /></span>
+            <div class="ts-tip__text">
+              <h4><span class="ts-tip__n">02 · </span>{tip(1).title}.</h4>
+              <p><RedactedText text={tip(1).body} /></p>
+            </div>
+          </div>
+          <figure class="ts-visual ts-hist" data-ts="part">
+            <div class="ts-fit">
+              <div class="ts-frame ts-frame--hist" data-ts="hist-frame">
+                <div class="ts-hist__shot">
+                  <img
+                    {...shot('app-history')}
+                    sizes={shotSizes}
+                    alt="The app's history view, pixelated while the project is in progress."
+                    width="2376"
+                    height="1280"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="ts-ring ts-ring--alert" aria-hidden="true" data-ts="ring"></span>
+                  <span class="ts-ring ts-ring--b" aria-hidden="true" data-ts="ring"></span>
+                </div>
+              </div>
+            </div>
+          </figure>
+        </section>
+
+        <!-- 03 · Planner: ten seasons, one row each. -->
+        <section class="ts-page" data-ts="page" aria-labelledby={`${chapter.slug}-p3`}>
+          <header class="ts-page__head ts-page__head--actions" data-ts="part">
+            <div>
+              <h3 class="ts-page__title" id={`${chapter.slug}-p3`}><RedactedText text="[[8]]" /> planner</h3>
+              <p class="ts-page__desc">Ten seasons for every <RedactedText text="[[7]]" />. Click a season to see it on the map, or any cell to see why it was chosen.</p>
+            </div>
+          </header>
+          <div class="ts-tip" data-ts="part">
+            <span class="ts-tip__face"><img src={mascot} alt="" width="32" height="29" /></span>
+            <div class="ts-tip__text">
+              <h4><span class="ts-tip__n">03 · </span>{tip(2).title}.</h4>
+              <p><RedactedText text={tip(2).body} /></p>
+            </div>
+          </div>
+          <div class="ts-kpis" data-ts="part">
+            {
+              kpis.map((k) => (
+                <div class="ts-kpi">
+                  <span class="ts-kpi__label">
+                    <Icon name={k.icon} size={16} />
+                    <RedactedText text={k.label} />
+                  </span>
+                  <span class="ts-kpi__main">
+                    <b class="ts-kpi__value ts-num" data-ts="kpi" data-to={k.value} data-dec={k.dec}>
+                      {k.value.toFixed(k.dec)}
+                    </b>
+                    <span class="ts-kpi__unit"><RedactedText text={k.unit} /></span>
+                  </span>
+                  <span class="ts-kpi__foot">
+                    {'up' in k && (
+                      <span class="ts-kpi__up">
+                        <Icon name="trend" size={14} />
+                        {k.up}
+                      </span>
+                    )}
+                    <RedactedText text={k.foot} />
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+          <div class="ts-visual ts-card ts-gridcard" data-ts="part">
+            <div class="ts-card__head">
+              <span class="ts-card__icon"><Icon name="planner" size={16} /></span>
+              <div>
+                <h4 class="ts-card__title">Plan</h4>
+                <p class="ts-card__sub">Rows are <RedactedText text="[[8]]" />, columns are seasons. The demo plan, rebuilt from the app.</p>
+              </div>
+            </div>
+            <div class="ts-gridwrap" data-scroller role="region" aria-label="Ten-season plan, scrolls sideways on small screens">
+              <div class="ts-gridinner">
+                <span class="ts-grid__col" aria-hidden="true" data-ts="grid-col"></span>
+                <span class="ts-grid__pill" aria-hidden="true" data-ts="grid-pill"></span>
+                <table class="ts-grid">
+                  <caption class="visually-hidden">Ten-season plan for four rows, 2027 to 2036, with labels redacted</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" class="ts-grid__corner"><RedactedText text="[[7]]" /></th>
+                      {
+                        years.map((y, i) => (
+                          <th scope="col">
+                            <span class:list={['ts-grid__season', { 'is-on': i === 0 }]} data-ts="grid-season">
+                              {y}
+                              <small>{i === 0 ? 'Next' : `+${i}`}</small>
+                            </span>
+                          </th>
+                        ))
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {
+                      rows.map((p) => (
+                        <tr>
+                          <th scope="row">
+                            <span class="ts-rname">
+                              <span class="ts-rname__avatar" data-ts="grid-sheep">
+                                <img src={p.critter} alt="" width="26" height="22" />
+                              </span>
+                              <span>
+                                <RedactedText text="[[7]]" /> #{p.n}
+                                <span class="ts-rname__sub"><RedactedText text="[[7]]" /></span>
+                              </span>
+                            </span>
+                          </th>
+                          {p.plan.map((c, i) => (
+                            <td>
+                              <span class="ts-cell" style={`--kind:${KINDS[c][0]}`} data-col={i} data-ts="grid-cell">
+                                <RedactedText text={`[[${KINDS[c][1]}]]`} />
+                              </span>
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th scope="row"><RedactedText text="[[16]]" /></th>
+                      {
+                        score.map((h) => (
+                          <td>
+                            <span class="ts-grid__health">
+                              {h}
+                              <i style={`height:${(h * 0.22).toFixed(1)}px`} data-ts="grid-bar" />
+                            </span>
+                          </td>
+                        ))
+                      }
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Planner, further down: the lowest-risk window. -->
+        <section class="ts-page ts-page--win" data-ts="page" aria-labelledby={`${chapter.slug}-p4`}>
+          <div class="ts-visual ts-win" data-ts="win">
+            <div class="ts-win__surface" data-ts="win-fade"></div>
+            <div class="ts-card__head" data-ts="win-fade">
+              <span class="ts-card__icon"><Icon name="calendar" size={16} /></span>
+              <div>
+                <h3 class="ts-card__title ts-win__title" id={`${chapter.slug}-p4`}><RedactedText text="[[6]]" /> window</h3>
+                <p class="ts-card__sub">30 years of NASA POWER weather</p>
+              </div>
+            </div>
+            <div class="ts-win__item">
+              <div class="ts-win__itembg" data-ts="win-fade"></div>
+              <div class="ts-win__head" data-ts="win-fade">
+                <span class="ts-chip"><i style="--c:#cfb173"></i><RedactedText text="[[5]]" /></span>
+                <span class="ts-win__window" data-ts="win-date"><RedactedText text="[[3]]" /> 29 Apr</span>
+              </div>
+              <p class="ts-win__facts" data-ts="win-fade">
+                <span><RedactedText text="[[7]]" /> ~6 Sep</span>
+                <span><RedactedText text="[[18]]" /> 17% of years</span>
+                <span><RedactedText text="[[16]]" /> 30%</span>
+              </p>
+              <div
+                class="ts-plot"
+                role="img"
+                aria-label="Two opposing risks by date, 1 April to 24 June, from 30 years of NASA POWER weather. One falls and the other rises the later the date; the shaded band marks the date where either is lowest. Labels are redacted while the project is in progress."
+                data-ts="plot"
+              >
+                <span
+                  class="ts-plot__band"
+                  style={`left:${(BAND.left * 100).toFixed(2)}%;width:${(BAND.width * 100).toFixed(2)}%;top:${(BAND.top * 100).toFixed(2)}%;height:${(BAND.height * 100).toFixed(2)}%`}
+                  data-ts="band"></span>
+                <svg class="ts-plot__svg" viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <clipPath id="ts-risk-clip">
+                      <rect x="-4" y="-8" width={PLOT_W + 8} height={PLOT_H + 16} data-ts="risk-clip"></rect>
+                    </clipPath>
+                  </defs>
+                  <path class="ts-plot__a" d={linePath(RISK_A)} data-ts="ra"></path>
+                  <path class="ts-plot__b" d={linePath(RISK_B)} data-ts="rb"></path>
+                  <path class="ts-plot__risk" d={linePath(RISK_ANY)} clip-path="url(#ts-risk-clip)" data-ts="risk"></path>
+                </svg>
+              </div>
+              <p class="ts-plot__axis" data-ts="win-fade"><span>1 Apr</span><span>24 Jun</span></p>
+            </div>
+            <p class="ts-legend" data-ts="win-fade">
+              <span><i class="ts-legend__a"></i><RedactedText text="[[5]]" /></span>
+              <span><i class="ts-legend__b"></i><RedactedText text="[[4]]" /></span>
+              <span><i class="ts-legend__risk"></i>Either</span>
+              <span><i class="ts-legend__window"></i>Best window</span>
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</ChapterSection>
+
+<style>
+  /* Tokens from src/styles/tokens.css (light theme). --warn and --info are darkened
+     a step so they reach 4.5:1 on their tints; --text-3 is only used on the lightest surface
+     (4.6:1). On .ts-world: the <section> belongs to ChapterSection. */
+  .ts-world {
+    --ts-font: 'Lato', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --ts-teal: #6ba7a9;
+    --ts-olive: #989b66;
+    --ts-gold: #cfb173;
+    --ts-rose: #df9c93;
+    --ts-ink: #372f2a;
+    --ts-cream: #ece4d4;
+    --ts-bg: #efe8da;
+    --ts-surface: #fbf8f2;
+    --ts-surface-2: #f5efe4;
+    --ts-surface-3: #ece4d4;
+    --ts-border: rgb(55 47 42 / 0.12);
+    --ts-border-strong: rgb(55 47 42 / 0.22);
+    --ts-text: #372f2a;
+    --ts-text-2: #5b524a;
+    --ts-text-3: #7a7065;
+    --ts-accent: #6f7240;
+    --ts-accent-soft: rgb(152 155 102 / 0.18);
+    --ts-ok: #5f6a2c;
+    --ts-ok-bg: #e7e8d0;
+    --ts-warn: #7d5f20;
+    --ts-warn-bg: #f5ebcf;
+    --ts-bad: #a4483d;
+    --ts-bad-bg: #f7e0db;
+    --ts-info: #397173;
+    --ts-info-bg: #dcebea;
+    --ts-side-bg: #372f2a;
+    --ts-side-bg-2: #2f2824;
+    --ts-side-text: #ece4d4;
+    --ts-side-text-2: rgb(236 228 212 / 0.66);
+    --ts-side-active: rgb(207 177 115 / 0.16);
+    --ts-side-border: rgb(236 228 212 / 0.09);
+    --ts-shadow-1: 0 1px 2px rgb(55 47 42 / 0.06), 0 1px 1px rgb(55 47 42 / 0.04);
+    --ts-shadow-2: 0 4px 16px -6px rgb(55 47 42 / 0.18), 0 1px 3px rgb(55 47 42 / 0.08);
+    --ts-shadow-3: 0 24px 60px -18px rgb(55 47 42 / 0.45), 0 4px 12px -4px rgb(55 47 42 / 0.15);
+    --ts-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --ts-side-w: clamp(212px, 17.5vw, 252px);
+    /* Right edge in full mode: clear of the chapter rail, as every chapter keeps it. */
+    --ts-lane: calc(var(--rail) + var(--gutter));
+    /* The transition overlay (nasa → bloodline) paints above this world, so z-index stays 0. */
+    position: relative;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--ts-text);
+    font: 400 15px/1.45 var(--ts-font);
+  }
+
+  .ts-world ::selection {
+    background: var(--ts-gold);
+    color: var(--ts-ink);
+  }
+
+  .ts-world :focus-visible {
+    outline: 2px solid var(--ts-ink);
+    outline-offset: 3px;
+  }
+
+  .ts-world img {
+    max-width: 100%;
+  }
+
+  .ts-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Meadow (lite / no JS: a band under the sign-in copy) ---------- */
+  .ts-world :global(.ts-meadow) {
+    order: 1;
+    height: clamp(300px, 70vw, 480px);
+  }
+
+  /* ---------- Sign-in ---------- */
+  .ts-auth {
+    order: 0;
+    padding: clamp(64px, 12vw, 120px) var(--gutter) 24px;
+  }
+
+  /* minmax(0, 1fr) throughout the card: a redaction bar's fixed width would otherwise set the
+     grid track's minimum and push the card's contents past its edge. */
+  .ts-auth__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .ts-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .ts-logo__mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 3px;
+    border-radius: 12px;
+    background: var(--ts-cream);
+    box-shadow: 0 2px 0 rgb(55 47 42 / 0.25);
+  }
+
+  .ts-auth__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin-top: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .ts-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ts-badge--warn {
+    background: var(--ts-warn-bg);
+    color: var(--ts-warn);
+  }
+
+  .ts-auth__headline {
+    max-width: 22ch;
+    margin-top: 12px;
+    font-size: clamp(34px, 7vw, 56px);
+    font-weight: 900;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    outline: none;
+  }
+
+  .ts-auth__lead {
+    max-width: 46ch;
+    margin-top: 14px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #2c2521;
+  }
+
+  .ts-auth__features {
+    display: grid;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .ts-auth__features li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    max-width: 470px;
+    padding: 10px 14px 10px 10px;
+    border-radius: 14px;
+    background: rgb(236 228 212 / 0.92);
+    box-shadow: 0 6px 20px -12px rgb(55 47 42 / 0.6);
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  .ts-auth__features strong {
+    display: block;
+    font-size: 14.5px;
+  }
+
+  .ts-auth__ficon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--ts-ink);
+    color: var(--ts-gold);
+  }
+
+  .ts-auth__card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-self: center;
+    max-width: 440px;
+    padding: 26px;
+    border: 1px solid rgb(55 47 42 / 0.12);
+    border-radius: 20px;
+    background: rgb(251 248 242 / 0.97);
+    box-shadow: 0 30px 80px -24px rgb(55 47 42 / 0.6);
+  }
+
+  .ts-auth__cardhead {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .ts-auth__cardhead > div {
+    min-width: 0;
+  }
+
+  .ts-auth__mascot {
+    width: 56px;
+    height: auto;
+    flex: none;
+  }
+
+  .ts-auth__cardhead h3 {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+
+  .ts-auth__cardhead p {
+    color: var(--ts-text-2);
+  }
+
+  .ts-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin: 0;
+  }
+
+  .ts-facts div {
+    padding: 10px 12px;
+    border: 1px solid var(--ts-border-strong);
+    border-radius: 10px;
+    background: var(--ts-surface);
+  }
+
+  .ts-facts dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ts-text-2);
+  }
+
+  .ts-facts dd {
+    margin: 2px 0 0;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .ts-placeholder {
+    font-weight: 400 !important;
+    font-style: italic;
+    color: var(--ts-text-2);
+  }
+
+  .ts-auth__note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ts-text-2);
+    text-align: center;
+  }
+
+  /* ---------- Buttons (ui.css .btn). The Figma gold fill keeps its colour; the label is
+     ink, not the Figma cream (1.6:1), so it reads at 6.4:1. ---------- */
+  .ts-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgb(55 47 42 / 0.16);
+    border-radius: 10px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      transform 0.12s var(--ts-ease),
+      box-shadow 0.12s ease;
+  }
+
+  .ts-btn :global(svg) {
+    flex: none;
+  }
+
+  /* The locked demo button may wrap on narrow cards rather than squeeze out its icon. */
+  .ts-btn--locked {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .ts-btn--secondary {
+    background: #cfb173;
+    color: var(--ts-ink);
+    box-shadow:
+      0 2px 0 0 #94784a,
+      0 4px 10px -6px rgb(55 47 42 / 0.5);
+  }
+
+  .ts-btn--secondary:hover {
+    background: #d8bf86;
+    transform: translateY(-1px);
+    box-shadow:
+      0 3px 0 0 #94784a,
+      0 8px 16px -8px rgb(55 47 42 / 0.55);
+  }
+
+  .ts-btn--ghost {
+    border-color: var(--ts-border-strong);
+    background: var(--ts-surface);
+    color: var(--ts-text);
+    box-shadow: var(--ts-shadow-1);
+  }
+
+  .ts-btn--ghost:hover {
+    background: #f1eadc;
+  }
+
+  .ts-btn--lg {
+    height: 46px;
+    padding: 0 20px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .ts-btn--md {
+    flex: none;
+    height: 38px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  /* ---------- App (lite / no JS: a cream sheet over the meadow) ---------- */
+  .ts-app {
+    order: 2;
+    position: relative;
+    z-index: 1;
+    margin-top: -28px;
+    padding-bottom: 56px;
+    border-radius: 28px 28px 0 0;
+    background: var(--ts-bg);
+    box-shadow: 0 -20px 40px -30px rgb(28 24 20 / 0.6);
+  }
+
+  .ts-canvas,
+  .ts-side,
+  .ts-crumbs,
+  .ts-top__search,
+  .ts-top__icon,
+  .ts-top__mascot,
+  .ts-top__avatar,
+  .ts-pill__state--running,
+  .ts-seg {
+    display: none;
+  }
+
+  /* Sidebar (shell.css .side): dark deep in both themes, with the meadow's grass at its foot. */
+  .ts-side {
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 12px 12px;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--ts-side-bg) 0%, var(--ts-side-bg-2) 100%);
+    color: var(--ts-side-text);
+  }
+
+  .ts-side::before {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 220px;
+    background:
+      radial-gradient(120% 60% at 15% 100%, rgb(113 118 62 / 0.28) 0 58%, transparent 59%),
+      radial-gradient(110% 55% at 95% 100%, rgb(98 103 53 / 0.3) 0 55%, transparent 56%);
+  }
+
+  .ts-side > * {
+    position: relative;
+  }
+
+  .ts-side__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 12px;
+  }
+
+  .ts-side__logo {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    padding: 3px;
+    border-radius: 11px;
+    background: var(--ts-cream);
+    box-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
+  }
+
+  .ts-side__name {
+    display: grid;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .ts-side__name small,
+  .ts-side__accttext span {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ts-side-text-2);
+    white-space: nowrap;
+  }
+
+  .ts-side__acct {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    padding: 9px 10px;
+    border: 1px solid var(--ts-side-border);
+    border-radius: 12px;
+    background: rgb(236 228 212 / 0.05);
+  }
+
+  .ts-side__badge,
+  .ts-side__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--ts-gold);
+    color: var(--ts-ink);
+    font-weight: 900;
+  }
+
+  .ts-side__avatar {
+    border-radius: 50%;
+    background: var(--ts-teal);
+  }
+
+  .ts-side__accttext {
+    display: grid;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .ts-side__accttext strong {
+    font-size: 13px;
+  }
+
+  .ts-side__group {
+    padding: 12px 10px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ts-side-text-2);
+  }
+
+  .ts-side__nav {
+    position: relative;
+    display: grid;
+    gap: 2px;
+  }
+
+  .ts-side__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: var(--ts-side-text-2);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* The active item's tint and gold edge slide between items (shell.css .side__item.is-active). */
+  .ts-side__active {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--ts-side-active);
+  }
+
+  .ts-side__active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--ts-gold);
+  }
+
+  .ts-side__count {
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgb(236 228 212 / 0.12);
+    color: var(--ts-side-text);
+    font-size: 12px;
+  }
+
+  .ts-side__count.is-alert {
+    background: var(--ts-rose);
+    color: var(--ts-ink);
+  }
+
+  .ts-side__bottom {
+    display: grid;
+    gap: 2px;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .ts-side__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+    padding: 10px 6px 2px;
+    border-top: 1px solid var(--ts-side-border);
+    color: var(--ts-side-text-2);
+  }
+
+  .ts-side__user strong {
+    color: var(--ts-side-text);
+  }
+
+  .ts-side__user .ts-side__accttext {
+    flex: 1;
+  }
+
+  /* Top bar (shell.css .top). */
+  .ts-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px var(--gutter);
+    border-bottom: 1px solid var(--ts-border);
+  }
+
+  .ts-top__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .ts-top__brand .ts-side__logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ts-crumbs {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 20px;
+    font-size: 14px;
+    color: var(--ts-text-2);
+    white-space: nowrap;
+  }
+
+  .ts-crumbs__set {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ts-crumbs b {
+    color: var(--ts-text);
+  }
+
+  .ts-top__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .ts-top__search {
+    align-items: center;
+    gap: 8px;
+    width: 240px;
+    height: 36px;
+    padding: 0 6px 0 12px;
+    border: 1px solid var(--ts-border-strong);
+    border-radius: 10px;
+    background: var(--ts-surface);
+    color: var(--ts-text-2);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .ts-top__search kbd {
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border: 1px solid var(--ts-border-strong);
+    border-radius: 6px;
+    background: var(--ts-surface-2);
+    font: 700 11px/1 var(--ts-font);
+  }
+
+  .ts-top__search kbd:first-of-type {
+    margin-left: auto;
+  }
+
+  /* Satellite-status pill (shell.css .sat-pill): reading, then the record is ready. */
+  .ts-pill {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+  }
+
+  .ts-pill__state {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ts-pill__state--running {
+    background: var(--ts-info-bg);
+    color: var(--ts-info);
+  }
+
+  .ts-pill__state--ready {
+    background: var(--ts-ok-bg);
+    color: var(--ts-ok);
+  }
+
+  .ts-pill__ring {
+    width: 16px;
+    height: 16px;
+    transform: rotate(-90deg);
+  }
+
+  .ts-pill__ring circle {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    opacity: 0.25;
+  }
+
+  .ts-pill__ring circle + circle {
+    opacity: 1;
+    stroke-linecap: round;
+    stroke-dasharray: 50.3;
+    stroke-dashoffset: 0;
+  }
+
+  .ts-top__icon {
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    color: var(--ts-text-2);
+  }
+
+  .ts-top__mascot {
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px 0 4px;
+    border: 1px solid var(--ts-border-strong);
+    border-radius: 999px;
+    background: var(--ts-surface);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ts-top__face {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 2px;
+    border-radius: 50%;
+    background: var(--ts-cream);
+  }
+
+  .ts-top__avatar {
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--ts-gold);
+    font-weight: 900;
+  }
+
+  /* ---------- Pages (shell.css .page) ---------- */
+  .ts-pages {
+    display: grid;
+    gap: 64px;
+    max-width: calc(1240px + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 28px var(--gutter) 0;
+  }
+
+  .ts-page {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .ts-page__head--actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+  }
+
+  .ts-page__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ts-text-2);
+  }
+
+  .ts-page__title {
+    font-size: clamp(24px, 3vw, 28px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .ts-page__desc {
+    max-width: 72ch;
+    margin-top: 4px;
+    color: var(--ts-text-2);
+  }
+
+  /* the mascot's inline tip (shell.css .tip), carrying one design decision per page. */
+  .ts-tip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+    border: 1px solid rgb(207 177 115 / 0.4);
+    border-radius: 14px;
+    background: linear-gradient(90deg, var(--ts-warn-bg), var(--ts-surface) 70%);
+  }
+
+  .ts-tip__face {
+    display: grid;
+    place-items: center;
+    flex: none;
+    align-self: flex-start;
+    width: 38px;
+    height: 38px;
+    padding: 3px;
+    border-radius: 50%;
+    background: var(--ts-cream);
+  }
+
+  .ts-tip__text {
+    min-width: 0;
+    color: var(--ts-text-2);
+  }
+
+  .ts-tip__text h4,
+  .ts-tip__text p {
+    display: inline;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .ts-tip__text h4 {
+    margin-right: 0.3em;
+    font-weight: 700;
+    color: var(--ts-text);
+  }
+
+  .ts-tip__n {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Cards (ui.css .card). */
+  .ts-card {
+    min-width: 0;
+    padding: 18px 20px;
+    border: 1px solid var(--ts-border);
+    border-radius: 14px;
+    background: var(--ts-surface);
+    box-shadow: var(--ts-shadow-1);
+  }
+
+  .ts-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .ts-card__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    margin-top: -3px;
+    border-radius: 9px;
+    background: var(--ts-accent-soft);
+    color: var(--ts-accent);
+  }
+
+  .ts-card__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .ts-card__sub {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--ts-text-3);
+  }
+
+  /* Screenshot frames. */
+  .ts-visual {
+    min-width: 0;
+  }
+
+  .ts-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--ts-border);
+    border-radius: 14px;
+    background: var(--ts-bg);
+    box-shadow: var(--ts-shadow-2);
+  }
+
+  .ts-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ts-themes__scroll {
+    display: grid;
+    gap: 2px;
+    background: var(--ts-border);
+  }
+
+  .ts-theme {
+    position: relative;
+  }
+
+  .ts-theme__label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--ts-surface);
+    box-shadow: var(--ts-shadow-2);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* Highlights over the history capture: the risk warning and the neighbour seen from space.
+     They are placed on the image itself, so a cropped frame leaves them where they belong. */
+  .ts-hist__shot {
+    position: relative;
+  }
+
+  .ts-ring {
+    position: absolute;
+    border: 2px solid var(--ts-bad);
+    border-radius: 12px;
+    box-shadow: 0 0 0 4px rgb(164 72 61 / 0.18);
+    pointer-events: none;
+  }
+
+  .ts-ring--alert {
+    left: 3.5%;
+    top: 11.4%;
+    width: 61.2%;
+    height: 12%;
+  }
+
+  .ts-ring--b {
+    left: 68.8%;
+    top: 33.4%;
+    width: 22.5%;
+    height: 7.4%;
+    border-radius: 10px;
+    border-color: #6b5410;
+    box-shadow: 0 0 0 4px rgb(224 190 74 / 0.35);
+  }
+
+  /* KPI tiles (ui.css .kpi). */
+  .ts-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px 16px;
+  }
+
+  .ts-kpi {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--ts-border);
+    border-radius: 14px;
+    background: var(--ts-surface);
+    box-shadow: var(--ts-shadow-1);
+  }
+
+  .ts-kpi__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ts-text-2);
+  }
+
+  .ts-kpi__label :global(.ts-icon) {
+    flex: none;
+    color: var(--ts-text-3);
+  }
+
+  .ts-kpi__value {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .ts-kpi__unit {
+    margin-left: 5px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ts-text-3);
+  }
+
+  .ts-kpi__foot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--ts-text-3);
+  }
+
+  .ts-kpi__up {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--ts-ok);
+    font-weight: 700;
+  }
+
+  /* ---------- Plan grid (planner.css .plan, .plan-cell) ---------- */
+  .ts-gridcard {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .ts-gridcard .ts-card__head {
+    margin: 0;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--ts-border);
+  }
+
+  .ts-gridwrap {
+    --first: 19%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  /* The selected-season marks are placed against the table's own width, even while it scrolls. */
+  .ts-gridinner {
+    position: relative;
+    min-width: 860px;
+  }
+
+  .ts-grid {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+
+  .ts-grid th,
+  .ts-grid td {
+    padding: 5px 4px;
+    border-bottom: 1px solid var(--ts-border);
+  }
+
+  .ts-grid thead th {
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+
+  .ts-grid__corner,
+  .ts-grid tbody th,
+  .ts-grid tfoot th {
+    width: var(--first);
+    padding-left: 20px !important;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ts-text-3);
+  }
+
+  .ts-grid tbody th {
+    font-size: 14px;
+    color: var(--ts-text);
+  }
+
+  .ts-grid tbody tr:last-child th,
+  .ts-grid tbody tr:last-child td,
+  .ts-grid tfoot th,
+  .ts-grid tfoot td {
+    border-bottom: 0;
+  }
+
+  .ts-grid tfoot th,
+  .ts-grid tfoot td {
+    border-top: 1px solid var(--ts-border);
+  }
+
+  .ts-grid__season {
+    display: grid;
+    justify-items: center;
+    padding: 4px 0;
+    color: var(--ts-text-2);
+    font-weight: 900;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ts-grid__season small {
+    font-size: 12px;
+    font-weight: 700;
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  .ts-grid__season.is-on {
+    color: var(--ts-cream);
+  }
+
+  /* The selected season: an ink pill on its header and a soft olive column (planner.css). */
+  .ts-grid__pill,
+  .ts-grid__col {
+    position: absolute;
+    left: var(--first);
+    width: calc((100% - var(--first)) / 10);
+    pointer-events: none;
+  }
+
+  .ts-grid__col {
+    top: 0;
+    bottom: 0;
+    background: var(--ts-accent-soft);
+  }
+
+  /* The ink is painted on the pill itself (inside its padding) so contrast checkers see it. */
+  .ts-grid__pill {
+    z-index: 1;
+    top: 10px;
+    height: 46px;
+    padding: 0 4px;
+    border-radius: 12px / 8px; /* 8px at the content box, matching the border */
+    background: var(--ts-ink) content-box;
+  }
+
+  .ts-grid__pill::before {
+    content: '';
+    position: absolute;
+    inset: 0 4px;
+    border: 1px solid var(--ts-border-strong);
+    border-radius: 8px;
+  }
+
+  .ts-grid thead {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ts-rname {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .ts-rname__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--ts-surface-3);
+    transform-origin: 50% 100%;
+  }
+
+  .ts-rname__avatar img {
+    width: 26px;
+    height: auto;
+  }
+
+  .ts-rname__sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ts-text-3);
+  }
+
+  .ts-cell {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 38px;
+    padding: 0 8px 0 10px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--kind) 38%, var(--ts-surface));
+    box-shadow:
+      inset 3px 0 0 var(--kind),
+      inset 0 0 0 1px color-mix(in srgb, var(--kind) 55%, transparent);
+    color: var(--ts-text);
+    font-size: 12px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ts-grid__health {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    height: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ts-text-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ts-grid__health i {
+    display: block;
+    width: 6px;
+    border-radius: 3px;
+    background: var(--ts-teal);
+    transform-origin: 50% 100%;
+  }
+
+  /* ---------- Risk window (RiskCard.jsx, row.css .risk-chart) ---------- */
+  .ts-win {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+  }
+
+  .ts-win > * {
+    position: relative;
+  }
+
+  .ts-win__surface {
+    position: absolute !important;
+    inset: 0;
+    border: 1px solid var(--ts-border);
+    border-radius: 14px;
+    background: var(--ts-surface);
+    box-shadow: var(--ts-shadow-1);
+  }
+
+  .ts-win__title {
+    font-size: 16px;
+  }
+
+  .ts-win__item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .ts-win__item > * {
+    position: relative;
+  }
+
+  .ts-win__itembg {
+    position: absolute !important;
+    inset: 0;
+    border: 1px solid var(--ts-border);
+    border-radius: 12px;
+    background: var(--ts-surface-2);
+  }
+
+  .ts-win__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .ts-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px 2px 7px;
+    border: 1px solid var(--ts-border);
+    border-radius: 999px;
+    background: var(--ts-surface);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .ts-chip i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .ts-win__window {
+    font-size: 16px;
+    font-weight: 900;
+  }
+
+  .ts-win__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ts-text-2);
+  }
+
+  .ts-win__facts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .ts-plot {
+    position: relative;
+    height: 150px;
+    margin-top: 12px;
+  }
+
+  .ts-plot__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .ts-plot__band {
+    position: absolute;
+    border-radius: 4px;
+    background: rgb(150 153 101 / 0.22);
+  }
+
+  .ts-plot__svg path {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ts-plot__a {
+    stroke: #4a7fb5;
+  }
+
+  .ts-plot__b {
+    stroke: #c0584a;
+  }
+
+  .ts-plot__risk {
+    stroke: var(--ts-text);
+    stroke-dasharray: 4 4;
+    stroke-linecap: butt !important;
+  }
+
+  /* text-2, not the app's text-3: text-3 is 4.2:1 on this inset surface. */
+  .ts-plot__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ts-text-2);
+  }
+
+  .ts-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ts-text-2);
+  }
+
+  .ts-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ts-legend i {
+    display: inline-block;
+    width: 14px;
+    height: 2px;
+    border-radius: 2px;
+  }
+
+  .ts-legend__a {
+    background: #4a7fb5;
+  }
+
+  .ts-legend__b {
+    background: #c0584a;
+  }
+
+  .ts-legend__risk {
+    background: var(--ts-text);
+  }
+
+  .ts-legend__window {
+    height: 10px !important;
+    background: rgb(150 153 101 / 0.35);
+  }
+
+  @media (min-width: 900px) {
+    .ts-themes__scroll {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 760px) {
+    .ts-auth__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+      align-items: start;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport. The meadow, the sign-in and the app
+     shell share the stage; the timeline hands one to the next.
+     ------------------------------------------------------------------ */
+  :global(html.mode-full) .ts-world {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  :global(html.mode-full) .ts-world :global(.ts-meadow) {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    margin: 0;
+  }
+
+  /* Keep the grass line below ~66% of the height so the copy above it always sits on sky or hill. */
+  :global(html.mode-full) .ts-world :global(.ts-meadow__art) {
+    bottom: min(-10px, calc(34vh - 0.2373 * max(100vw, 900px)));
+  }
+
+  /* Layers that move or fade across the whole stage keep their own compositor layer, so they are
+     rastered once (ahead of time) and every scrubbed frame is transform/opacity only. */
+  :global(html.mode-full) .ts-world :global(.ts-mpiece) {
+    will-change: transform, opacity;
+  }
+
+  :global(html.mode-full) .ts-auth {
+    position: absolute;
+    inset: 0;
+    padding: clamp(56px, 9vh, 96px) var(--ts-lane) clamp(24px, 5vh, 56px) var(--gutter);
+  }
+
+  :global(html.mode-full) .ts-auth__inner {
+    height: 100%;
+    max-width: 1240px;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 410px);
+    gap: clamp(32px, 5vw, 80px);
+  }
+
+  :global(html.mode-full) .ts-auth__headline {
+    font-size: clamp(34px, min(3.8vw, 6.2vh), 56px);
+  }
+
+  :global(html.mode-full) .ts-auth__card {
+    align-self: center;
+  }
+
+  @media (max-height: 819px) {
+    :global(html.mode-full) .ts-auth__features {
+      display: none;
+    }
+  }
+
+  :global(html.mode-full) .ts-app {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  :global(html.mode-full) .ts-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--ts-bg);
+  }
+
+  :global(html.mode-full) .ts-side {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    width: var(--ts-side-w);
+  }
+
+  :global(html.mode-full) .ts-top {
+    position: absolute;
+    left: var(--ts-side-w);
+    right: 0;
+    top: 0;
+    z-index: 1;
+    height: 60px;
+    padding: 0 20px;
+    background: color-mix(in srgb, var(--ts-bg) 92%, #fff);
+  }
+
+  :global(html.mode-full) .ts-top__brand {
+    display: none;
+  }
+
+  /* Narrower desktops: the sidebar collapses to icons, as the app's does (shell.css .shell--collapsed). */
+  @media (max-width: 1359px) {
+    :global(html.mode-full) .ts-world {
+      --ts-side-w: 72px;
+    }
+
+    :global(html.mode-full) .ts-side__name,
+    :global(html.mode-full) .ts-side__accttext,
+    :global(html.mode-full) .ts-side__label {
+      display: none;
+    }
+
+    :global(html.mode-full) .ts-side__user :global(.ts-icon) {
+      display: none;
+    }
+
+    :global(html.mode-full) .ts-side__group {
+      height: 1px;
+      margin: 10px 8px;
+      padding: 0;
+      overflow: hidden;
+      background: var(--ts-side-border);
+      color: transparent;
+    }
+
+    :global(html.mode-full) .ts-side__brand,
+    :global(html.mode-full) .ts-side__acct,
+    :global(html.mode-full) .ts-side__item {
+      justify-content: center;
+      padding-inline: 0;
+    }
+
+    :global(html.mode-full) .ts-side__acct {
+      border-color: transparent;
+      background: none;
+    }
+
+    :global(html.mode-full) .ts-side__count {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-size: 10px;
+    }
+
+    :global(html.mode-full) .ts-side__user {
+      justify-content: center;
+      padding-inline: 0;
+    }
+  }
+
+  :global(html.mode-full) .ts-crumbs,
+  :global(html.mode-full) .ts-pill__state--running {
+    display: flex;
+  }
+
+  :global(html.mode-full) .ts-top__icon,
+  :global(html.mode-full) .ts-top__avatar {
+    display: grid;
+  }
+
+  :global(html.mode-full) .ts-top__mascot {
+    display: inline-flex;
+  }
+
+  @media (min-width: 1280px) {
+    :global(html.mode-full) .ts-top__search {
+      display: flex;
+    }
+  }
+
+  :global(html.mode-full) .ts-pages {
+    position: absolute;
+    left: var(--ts-side-w);
+    right: 0;
+    top: 60px;
+    bottom: 0;
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .ts-page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.8vh, 16px);
+    padding: clamp(16px, 2.6vh, 24px) var(--ts-lane) clamp(18px, 3.4vh, 32px) 28px;
+  }
+
+  :global(html.mode-full) .ts-page__head,
+  :global(html.mode-full) .ts-tip {
+    flex: none;
+  }
+
+  :global(html.mode-full) .ts-page__desc {
+    font-size: 14px;
+  }
+
+  @media (max-height: 700px) {
+    :global(html.mode-full) .ts-page__desc {
+      display: none;
+    }
+  }
+
+  :global(html.mode-full) .ts-tip__text h4,
+  :global(html.mode-full) .ts-tip__text p {
+    font-size: clamp(14px, 1.9vh, 16px);
+  }
+
+  /* The capture fills what is left of the page, keeping its own proportions. */
+  :global(html.mode-full) .ts-visual {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  :global(html.mode-full) .ts-fit {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+  }
+
+  /* The full width of the page and as tall as it allows, never taller than the capture; what
+     falls below the fold scrolls (Overview) or is cropped (History, whose highlights sit high). */
+  :global(html.mode-full) .ts-frame--themes {
+    width: 100cqw;
+    height: min(100cqh, 100cqw / 1.416);
+  }
+
+  :global(html.mode-full) .ts-frame--hist {
+    width: 100cqw;
+    height: min(100cqh, 100cqw / 1.856);
+  }
+
+  :global(html.mode-full) .ts-themes__scroll {
+    display: block;
+    background: none;
+  }
+
+  :global(html.mode-full) .ts-theme--dark {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  :global(html.mode-full) .ts-theme__inner {
+    position: absolute;
+    inset: 0;
+  }
+
+  :global(html.mode-full) .ts-theme__label {
+    display: none;
+  }
+
+  /* Theme switch (ui.css .segmented), over the capture's top-right corner. */
+  :global(html.mode-full) .ts-seg {
+    position: absolute;
+    z-index: 2;
+    top: 12px;
+    left: 100cqw;
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--ts-surface-3);
+    box-shadow: var(--ts-shadow-2);
+    transform: translateX(calc(-100% - 12px));
+  }
+
+  :global(html.mode-full) .ts-themes {
+    container-type: size;
+  }
+
+  .ts-seg__opt {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 30px;
+    border-radius: 8px;
+    color: var(--ts-text-2);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .ts-seg__opt:first-of-type {
+    color: var(--ts-text);
+  }
+
+  .ts-seg__thumb {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 64px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--ts-surface);
+    box-shadow:
+      var(--ts-shadow-1),
+      0 0 0 1px var(--ts-border);
+  }
+
+  :global(html.mode-full) .ts-gridcard {
+    flex: none;
+  }
+
+  /* The planner grows with the window, so the page is filled to its foot, not left half empty. */
+  :global(html.mode-full) .ts-kpi {
+    padding: clamp(14px, 2.2vh, 22px) clamp(16px, 1.4vw, 22px);
+    gap: clamp(6px, 1vh, 10px);
+  }
+
+  :global(html.mode-full) .ts-kpi__value {
+    font-size: clamp(28px, 4.2vh, 40px);
+  }
+
+  :global(html.mode-full) .ts-grid th,
+  :global(html.mode-full) .ts-grid td {
+    padding-block: clamp(5px, 0.9vh, 10px);
+  }
+
+  :global(html.mode-full) .ts-cell {
+    height: clamp(38px, 6vh, 60px);
+    font-size: clamp(12px, 1.5vh, 14px);
+  }
+
+  :global(html.mode-full) .ts-gridwrap {
+    overflow: visible;
+  }
+
+  :global(html.mode-full) .ts-gridinner {
+    min-width: 0;
+  }
+
+  @media (max-height: 819px) {
+    :global(html.mode-full) .ts-kpis {
+      display: none;
+    }
+  }
+
+  :global(html.mode-full) .ts-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-height: 760px) {
+    :global(html.mode-full) .ts-cell {
+      height: 32px;
+    }
+
+    :global(html.mode-full) .ts-gridcard .ts-card__sub {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1279px) {
+    :global(html.mode-full) .ts-gridwrap {
+      --first: 17%;
+    }
+
+    :global(html.mode-full) .ts-rname__avatar {
+      display: none;
+    }
+  }
+
+  :global(html.mode-full) .ts-page--win {
+    padding-top: clamp(20px, 4vh, 40px);
+  }
+
+  :global(html.mode-full) .ts-win {
+    flex: 1 1 0;
+  }
+
+  :global(html.mode-full) .ts-win__item {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  :global(html.mode-full) .ts-plot {
+    flex: 1 1 0;
+    min-height: 90px;
+    height: auto;
+  }
+
+  :global(html.mode-full) .ts-win__window {
+    font-size: 20px;
+  }
+</style>

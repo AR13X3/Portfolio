@@ -1,0 +1,51 @@
+---
+/** Phone frame (Galaxy-style, punch-hole camera). Same [data-screen] contract as Browser. Used by Airpoint only. */
+interface Props {
+  label: string;
+  class?: string;
+}
+const { label, class: className } = Astro.props;
+---
+
+<figure class:list={['phone', className]} data-device="phone" aria-label={label}>
+  <div class="phone__screen" role="group" aria-label={`${label}, screens`} data-screens data-scroller>
+    <slot />
+  </div>
+</figure>
+
+<style>
+  .phone {
+    position: relative;
+    width: 100%;
+    padding: 7px;
+    border-radius: 34px;
+    background: #0d0d0e;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.08) inset,
+      0 0 0 1.5px color-mix(in srgb, var(--c-fg) 18%, transparent),
+      0 40px 80px -30px rgb(0 0 0 / 0.55);
+    transform-origin: 50% 100%;
+  }
+
+  /* Punch-hole front camera. */
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: calc(7px + 2.4%);
+    left: 50%;
+    z-index: 3;
+    width: 3.4%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #050506;
+    box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.06);
+    transform: translateX(-50%);
+  }
+
+  .phone__screen {
+    position: relative;
+    aspect-ratio: 390 / 844;
+    border-radius: 28px;
+    background: var(--c-surface);
+  }
+</style>

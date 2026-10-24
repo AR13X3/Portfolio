@@ -1,0 +1,2921 @@
+---
+/**
+ * Compare Best AI, redesigned: the product as it would ship today, in the brand it already has
+ * (navy, Signal Blue, Montserrat, with Inter for figures). No sidebar and no robot: a navy top bar
+ * with a ⌘K search, then three screens, each with the decision it shows. The homepage, whose hero
+ * is a composed stack: a navy Top pick review card with its score's breakdown, a glass Editor's
+ * picks chip and a light Side by side card; the command palette, where one query finds tools, a
+ * comparison and a sponsored deal; the compare page, whose diverging bars point at the winner of
+ * each rated area; and the rankings, a podium and a list, with the deals in their own lane as
+ * tear-off tickets. Scores, prices, counts and deals are the live site's (October 2026); every
+ * tool shows its own icon. Each screen opens out of the thing that led to it (motion.ts, the morph).
+ */
+import '@fontsource-variable/montserrat';
+import '@fontsource-variable/inter';
+import ChapterSection from '../../components/ChapterSection.astro';
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { tools, type ToolId } from './tools';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const [site, compareLink] = chapter.links;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const total = String(chapter.decisions.length).padStart(2, '0');
+// One decision per screen, in chapter.ts's order: the homepage, the compare page, the rankings.
+const notes = chapter.decisions.map((d, i) => ({ n: String(i + 1).padStart(2, '0'), title: d.title }));
+
+const nav = [
+  { key: 'rated', label: 'Top rated' },
+  { key: 'compare', label: 'Compare' },
+  { key: 'deals', label: 'Deals' },
+  { key: 'articles', label: 'Articles' },
+] as const;
+
+const CIRC = 2 * Math.PI * 44;
+const dash = (score: number) => `stroke-dasharray:${((CIRC * score) / 10).toFixed(1)} 400`;
+const mean = (xs: number[]) => Math.round((xs.reduce((s, x) => s + x, 0) / xs.length) * 10) / 10;
+
+// The homepage (October 2026). The Top pick's score is the mean of its four rated areas.
+const pickAreas = [
+  { label: 'Features', v: 9.2 },
+  { label: 'Output', v: 9.0 },
+  { label: 'Ease of use', v: 8.6 },
+  { label: 'Value', v: 8.4 },
+];
+const pickScore = mean(pickAreas.map((a) => a.v));
+const pros = [
+  { good: true, text: 'Deepest keyword data' },
+  { good: true, text: 'Site audits built in' },
+  { good: false, text: 'Priced for teams' },
+];
+const picks: ToolId[] = ['grammarly', 'notion', 'frase', 'pictory'];
+const stats = [
+  { value: '1,904', label: 'tools' },
+  { value: '20', label: 'categories' },
+  { value: 'Weekly', label: 'updates' },
+] as const;
+
+// The command palette: one query, three kinds of answer.
+const found: { id: ToolId; cat: string; score: string }[] = [
+  { id: 'grammarly', cat: 'Writing', score: '8.2' },
+  { id: 'quillbot', cat: 'Writing', score: '7.0' },
+  { id: 'frase', cat: 'SEO writing', score: '7.5' },
+];
+
+// The compare page (app/compare). Each overall score is the mean of its four rated areas.
+const areas = [
+  { label: 'Output quality', a: 8.4, b: 7.0 },
+  { label: 'Ease of use', a: 9.0, b: 7.5 },
+  { label: 'Value for money', a: 7.0, b: 7.5 },
+  { label: 'Features & tools', a: 8.4, b: 6.0 },
+] as const;
+const versus = [
+  { id: 'grammarly' as ToolId, brand: '#027e6f', by: 'Grammarly Inc.', score: mean(areas.map((r) => r.a)), price: ['Free', 'Pro $12/mo'], best: 'Grammar, spelling, style and tone' },
+  { id: 'quillbot' as ToolId, brand: '#45c740', by: 'Learneo, Inc.', score: mean(areas.map((r) => r.b)), price: ['Free', 'From $4.17/mo'], best: 'Paraphrasing academic drafts' },
+];
+const [A, B] = versus.map((v) => tools[v.id].name);
+const winner = versus[0].score >= versus[1].score ? A : B;
+const leads = areas.filter((r) => (winner === A ? r.a > r.b : r.b > r.a)).length;
+const value = areas.find((r) => r.label === 'Value for money')!;
+const bestValue = value.a >= value.b ? A : B;
+
+// The rankings: a podium for the top three, then the list. Equal scores are ordered by name.
+const ranked: { id: ToolId; cat: string; score: number }[] = [
+  { id: 'semrush', cat: 'Marketing', score: 8.8 },
+  { id: 'elevenlabs', cat: 'Audio & Voice', score: 8.5 },
+  { id: 'grammarly', cat: 'Writing', score: 8.2 },
+  { id: 'fireflies', cat: 'Productivity', score: 7.8 },
+  { id: 'notion', cat: 'Productivity', score: 7.8 },
+];
+const deals: { id: ToolId; cat: string; num: string; unit: string; line: string; code?: string }[] = [
+  { id: 'xero', cat: 'Finance', num: '80%', unit: 'off', line: 'Any plan, first 6 months' },
+  { id: 'beehiiv', cat: 'Newsletters', num: '20%', unit: 'off', line: 'New users, first 3 months' },
+  { id: 'kavout', cat: 'Trading', num: '$5', unit: 'off', line: 'Your first payment', code: 'SARA5' },
+];
+---
+
+<ChapterSection chapter={chapter} next={next} class="cb">
+  <div class="cb-world">
+    <svg class="cb-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="cb-arc" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8be3ff"></stop>
+          <stop offset="1" stop-color="#00a8e8"></stop>
+        </linearGradient>
+      </defs>
+    </svg>
+    <i class="cb-ground" aria-hidden="true" data-cb="ground"></i>
+    <header class="cb-top" data-cb="top" data-clear>
+      <img class="cb-brand" src={`${base}shots/comparebestai/logo.webp`} alt="Compare Best AI" width="320" height="140" decoding="async" />
+      <span class="cb-nav" aria-hidden="true">
+        <i class="cb-nav__dot" data-cb="nav-dot"></i>
+        {
+          nav.map((n) => (
+            <span class="cb-nav__item" data-cb-nav={n.key}>
+              {n.label}
+            </span>
+          ))
+        }
+      </span>
+      <span class="cb-cmd" aria-hidden="true" data-cb="cmd">
+        <Icon name="search" size={15} />
+        Search 1,904 tools
+        <kbd>⌘K</kbd>
+      </span>
+      <span class="cb-top__num" aria-hidden="true">{num}</span>
+      <a class="cb-visit" href={site.href} target="_blank" rel="noopener noreferrer">
+        Visit the site<span class="visually-hidden"> (opens in a new tab)</span>
+        <Icon name="arrow-up-right" size={15} />
+      </a>
+    </header>
+
+    <div class="cb-stage">
+      <!-- 1. The homepage: the pitch on the left, a composed stack of the product on the right. -->
+      <div class="cb-scene cb-home" data-cb="home" data-clear>
+        <i class="cb-home__grid" aria-hidden="true" data-cb="home-grid"></i>
+        <div class="cb-home__copy">
+          <h2 class="cb-title" id={`${chapter.slug}-title`} tabindex="-1" data-focus>
+            <span class="visually-hidden">{chapter.name}: </span>
+            <span data-cb="title">Simple comparisons. <span class="cb-title__hi">Smarter choices.</span></span>
+          </h2>
+          <div class="cb-ctas" data-cb="hero-bit">
+            <a class="cb-btn cb-btn--dark" href={compareLink.href} target="_blank" rel="noopener noreferrer">
+              {compareLink.label}<span class="visually-hidden"> (opens in a new tab)</span>
+              <Icon name="arrow-right" size={17} />
+            </a>
+          </div>
+          <ul class="cb-stats" data-cb="hero-bit">
+            {
+              stats.map((s) => (
+                <li>
+                  <b>{s.value}</b>
+                  <span>{s.label}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="cb-note" data-cb="note">
+          <span class="cb-note__n" aria-hidden="true"><b>{notes[0].n}</b>&thinsp;/&thinsp;{total}</span>
+          <h3 class="cb-note__title" data-cb="note-title">{notes[0].title}</h3>
+        </div>
+
+        <div
+          class="cb-stack"
+          role="img"
+          aria-label={`Homepage. Top pick: Semrush, ${pickScore.toFixed(1)} out of 10 (${pickAreas.map((a) => `${a.label} ${a.v.toFixed(1)}`).join(", ")}), from $299 a month. Editor's picks. Side by side: ${A} ${versus[0].score.toFixed(1)}, ${B} ${versus[1].score.toFixed(1)}.`}
+          data-cb="stack"
+        >
+          <i class="cb-stack__aura" data-cb="aura"></i>
+
+          <!-- The Top pick, on navy glass: the one dark card, its score first. -->
+          <div class="cb-hcard" data-cb="tile" data-shell="dark">
+            <span class="cb-hcard__body" data-cb="tile-body">
+              <span class="cb-hcard__label"><Icon name="award" size={14} /> Top pick · Marketing</span>
+              <span class="cb-hcard__who">
+                <Logo tool="semrush" size="lg" />
+                <span>
+                  <b>Semrush</b>
+                  <small>SEO and competitor research</small>
+                </span>
+                <span class="cb-hcard__price">
+                  <small>Pro plan</small>
+                  <b>$299<span>/mo</span></b>
+                </span>
+              </span>
+              <span class="cb-hcard__tags">
+                <span>SEO</span>
+                <span>PPC</span>
+                <span>Content</span>
+              </span>
+              <span class="cb-hcard__score">
+                <span class="cb-ring cb-ring--dark cb-ring--big">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="cb-ring__track" cx="50" cy="50" r="44"></circle>
+                    <circle class="cb-ring__arc" cx="50" cy="50" r="44" style={dash(pickScore)} data-cb="arc" data-score={pickScore}></circle>
+                  </svg>
+                  <!-- The score's arc: a live fill (a looping video) shaped as a gauge: cut to the ring and
+                       to the score (--p), lit on its rim, shaded on its inner edge, with a bright leading tip. -->
+                  <span class="cb-ring__fill" style={`--p:${pickScore / 10}`} data-cb="fill" data-score={pickScore} aria-hidden="true">
+                    <video src={`${base}shots/comparebestai/gauge.mp4`} muted loop playsinline autoplay preload="auto"></video>
+                    <i class="cb-ring__tip"></i>
+                  </span>
+                  <span class="cb-ring__num">
+                    <b data-cb="num" data-score={pickScore}>{pickScore.toFixed(1)}</b><small>/10</small>
+                  </span>
+                </span>
+                <span class="cb-break">
+                  {
+                    pickAreas.map((a) => (
+                      <span class="cb-break__row">
+                        <span>{a.label}</span>
+                        <span class="cb-break__track">
+                          <i style={`--v:${a.v / 10}`} data-cb="break-bar" />
+                        </span>
+                        <b>{a.v.toFixed(1)}</b>
+                      </span>
+                    ))
+                  }
+                </span>
+              </span>
+              <span class="cb-hcard__pros">
+                {
+                  pros.map((p) => (
+                    <span class:list={{ 'is-con': !p.good }}>
+                      <Icon name={p.good ? 'check' : 'minus'} size={14} stroke={2.5} />
+                      {p.text}
+                    </span>
+                  ))
+                }
+              </span>
+              <span class="cb-hcard__foot">
+                <span class="cb-hcard__cta">Read review <Icon name="arrow-right" size={15} /></span>
+              </span>
+            </span>
+          </div>
+
+          <!-- Glass chip on the card's corner: the week's Editor's picks. -->
+          <div class="cb-float" data-cb="tile" data-shell="glass">
+            <span class="cb-float__body" data-cb="tile-body">
+              <span class="cb-avs">
+                {picks.map((id) => <Logo tool={id} size="sm" />)}
+              </span>
+              <span class="cb-float__txt">
+                <b>Editor’s picks</b>
+                <small>{tools[picks[0]].name}, {tools[picks[1]].name} +2</small>
+              </span>
+            </span>
+          </div>
+
+          <!-- A light card in front: the comparison the palette is about to open. -->
+          <div class="cb-mini" data-cb="tile" data-shell="light">
+            <span class="cb-mini__body" data-cb="tile-body">
+              <span class="cb-mini__head">
+                <span class="cb-mini__label"><Icon name="arrow-left-right" size={13} /> Side by side</span>
+                <span class="cb-mini__tag">Writing</span>
+              </span>
+              {
+                versus.map((t) => (
+                  <span class:list={['cb-mini__row', { 'is-win': tools[t.id].name === winner }]}>
+                    <Logo tool={t.id} size="sm" />
+                    <b>{tools[t.id].name}</b>
+                    <span class="cb-mini__track">
+                      <i style={`--v:${t.score / 10}`} data-cb="mini-bar" />
+                    </span>
+                    <span class="cb-mini__score">{t.score.toFixed(1)}</span>
+                  </span>
+                ))
+              }
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. The command palette, over the homepage. -->
+      <div class="cb-k" aria-hidden="true" data-cb="k">
+        <i class="cb-k__scrim" data-cb="scrim"></i>
+        <div class="cb-k__box" data-cb="palette">
+          <span class="cb-k__input">
+            <Icon name="search" size={18} />
+            <span class="cb-k__query">
+              <span class="cb-k__typed" data-cb="typed">writing</span><i class="cb-k__caret"></i>
+            </span>
+            <kbd>esc</kbd>
+          </span>
+          <span class="cb-k__list" data-cb="k-list">
+            <span class="cb-k__rows">
+              <i class="cb-k__sel" data-cb="sel"></i>
+              <span class="cb-k__group" data-cb="k-row">Tools</span>
+              {
+                found.map((t) => (
+                  <span class="cb-k__row" data-cb="k-row">
+                    <Logo tool={t.id} size="sm" />
+                    <b>{tools[t.id].name}</b>
+                    <small>{t.cat}</small>
+                    <span class="cb-star">
+                      <Icon name="star" size={11} />
+                      {t.score}
+                    </span>
+                  </span>
+                ))
+              }
+              <span class="cb-k__group" data-cb="k-row">Compare</span>
+              <span class="cb-k__row" data-cb="k-row" data-cb-target>
+                <span class="cb-k__pair">
+                  <Logo tool="grammarly" size="sm" />
+                  <Logo tool="quillbot" size="sm" />
+                </span>
+                <b>{A} vs {B}</b>
+                <small>Side by side</small>
+                <span class="cb-k__enter" data-cb="enter"><Icon name="corner-down-left" size={13} /></span>
+              </span>
+              <span class="cb-k__group" data-cb="k-row">Deals</span>
+              <span class="cb-k__row" data-cb="k-row">
+                <Logo tool="beehiiv" size="sm" />
+                <b>Beehiiv · 20% off</b>
+                <small>First 3 months</small>
+                <span class="cb-sponsor">Sponsored</span>
+              </span>
+            </span>
+          </span>
+          <span class="cb-k__foot">
+            <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+            <span><kbd>↵</kbd> Open</span>
+            <span><kbd>esc</kbd> Close</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 3. The compare page: a split screen, one bar per rated area, each pointing at its winner. -->
+      <div class="cb-scene cb-vs" data-cb="vs" data-clear>
+        <div class="cb-note" data-cb="note">
+          <span class="cb-note__n" aria-hidden="true"><b>{notes[1].n}</b>&thinsp;/&thinsp;{total}</span>
+          <h3 class="cb-note__title" data-cb="note-title">{notes[1].title}</h3>
+        </div>
+        <!-- A designer's spec callout: a hairline from the decision's evidence to its token (motion.ts places it). -->
+        <span class="cb-spec" data-cb="spec" aria-hidden="true">
+          <i class="cb-spec__line"></i>
+          <i class="cb-spec__run"></i>
+          <i class="cb-spec__dot"></i>
+          <span class="cb-spec__label"><b>Signal</b> #00B0F0 · winner only</span>
+        </span>
+
+        <div
+          class="cb-duel"
+          role="img"
+          aria-label={`Comparison. ${A} scores ${versus[0].score.toFixed(1)} out of 10, ${B} ${versus[1].score.toFixed(1)}. ${areas.map((r) => `${r.label}: ${A} ${r.a.toFixed(1)}, ${B} ${r.b.toFixed(1)}`).join('. ')}. ${winner} leads ${leads} of ${areas.length} areas; best value, ${bestValue}.`}
+          data-cb="duel"
+        >
+          <span class="cb-duel__cat" data-cb="duel-bit"><Icon name="pen-line" size={13} /> Writing assistants</span>
+          <span class="cb-duel__head" data-cb="duel-bit">
+            {
+              versus.map((t, i) => (
+                <span class:list={['cb-side', i === 0 ? 'cb-side--a' : 'cb-side--b', { 'is-win': tools[t.id].name === winner }]} style={`--brand:${t.brand}`} data-cb="side">
+                  <Logo tool={t.id} size="lg" />
+                  <span class="cb-side__who">
+                    <b>{tools[t.id].name}</b>
+                    <small>by {t.by}</small>
+                  </span>
+                  <span class="cb-ring">
+                    <svg viewBox="0 0 100 100">
+                      <circle class="cb-ring__track" cx="50" cy="50" r="44" />
+                      <circle class="cb-ring__arc" cx="50" cy="50" r="44" style={dash(t.score)} data-cb="arc" data-score={t.score} />
+                    </svg>
+                    {tools[t.id].name === winner && (
+                      <span class="cb-ring__fill" style={`--p:${t.score / 10}`} data-cb="fill" data-score={t.score} aria-hidden="true">
+                        <video src={`${base}shots/comparebestai/gauge.mp4`} muted loop playsinline autoplay preload="auto" />
+                        <i class="cb-ring__tip" />
+                      </span>
+                    )}
+                    <span class="cb-ring__num">
+                      <b data-cb="num" data-score={t.score}>
+                        {t.score.toFixed(1)}
+                      </b>
+                      <small>/10</small>
+                    </span>
+                    {tools[t.id].name === winner && (
+                      <span class="cb-win" data-cb="crown">
+                        <Icon name="award" size={11} /> Winner
+                      </span>
+                    )}
+                  </span>
+                </span>
+              ))
+            }
+            <span class="cb-duel__x" data-cb="x">vs</span>
+          </span>
+
+          <span class="cb-duel__legend" data-cb="duel-bit">
+            <span><i></i>{A}</span>
+            <span>{B}<i></i></span>
+          </span>
+
+          <span class="cb-duel__chart" data-cb="duel-bit">
+            {
+              areas.map((r) => {
+                const state = r.a > r.b ? 'a' : r.b > r.a ? 'b' : 'tie';
+                return (
+                  <span class:list={['cb-area', `cb-area--${state}`]} data-cb="area">
+                    <b class="cb-area__va">{r.a.toFixed(1)}</b>
+                    <span class="cb-area__track cb-area__track--a">
+                      <i style={`--v:${r.a / 10}`} data-cb="bar" />
+                    </span>
+                    <span class="cb-area__label">
+                      {r.label}
+                      <small>{state === 'tie' ? 'Tie' : state === 'a' ? `← +${(r.a - r.b).toFixed(1)}` : `+${(r.b - r.a).toFixed(1)} →`}</small>
+                    </span>
+                    <span class="cb-area__track cb-area__track--b">
+                      <i style={`--v:${r.b / 10}`} data-cb="bar" />
+                    </span>
+                    <b class="cb-area__vb">{r.b.toFixed(1)}</b>
+                  </span>
+                );
+              })
+            }
+          </span>
+
+          <span class="cb-duel__foot" data-cb="duel-bit">
+            {
+              versus.map((t) => (
+                <span class="cb-plan" data-cb="plan">
+                  <small>Best for</small>
+                  <b>{t.best}</b>
+                  <span class="cb-plan__chips">
+                    <span class="cb-chip cb-chip--free">{t.price[0]}</span>
+                    <span class="cb-chip">{t.price[1]}</span>
+                  </span>
+                </span>
+              ))
+            }
+          </span>
+        </div>
+
+        <p class="cb-verdict" aria-hidden="true" data-cb="verdict">
+          <span class="cb-verdict__k">Verdict</span>
+          <span><b>{winner}</b> leads {leads} of {areas.length} areas</span>
+          <span class="cb-verdict__alt">Best value <b>{bestValue}</b></span>
+        </p>
+      </div>
+
+      <!-- 4. The rankings, a podium and a list; the deals beside them, as tickets in a lane of their own. -->
+      <div class="cb-scene cb-lanes" data-cb="lanes" data-clear>
+        <div class="cb-note" data-cb="note">
+          <span class="cb-note__n" aria-hidden="true"><b>{notes[2].n}</b>&thinsp;/&thinsp;{total}</span>
+          <h3 class="cb-note__title" data-cb="note-title">{notes[2].title}</h3>
+        </div>
+        <!-- A designer's spec callout: a hairline from the decision's evidence to its token (motion.ts places it). -->
+        <span class="cb-spec" data-cb="spec" aria-hidden="true">
+          <i class="cb-spec__line"></i>
+          <i class="cb-spec__run"></i>
+          <i class="cb-spec__dot"></i>
+          <span class="cb-spec__label"><b>Stub</b> 2px dashed · tear-off</span>
+        </span>
+
+        <div class="cb-lanes__grid">
+          <div
+            class="cb-rank"
+            role="img"
+            aria-label={`Top rated, by editorial score: ${ranked.map((t, i) => `${i + 1}. ${tools[t.id].name}, ${t.score.toFixed(1)}`).join('; ')}.`}
+            data-cb="rank"
+          >
+            <span class="cb-lane__head" data-cb="rank-bit">
+              <b>Top rated</b>
+              <span class="cb-seg">
+                <span class="is-on">All</span>
+                <span>Writing</span>
+                <span>Marketing</span>
+              </span>
+            </span>
+            <ol class="cb-podium">
+              {
+                ranked.slice(0, 3).map((t, i) => (
+                  <li class:list={['cb-pod', `cb-pod--${i + 1}`]} data-cb="pod">
+                    <span class="cb-pod__n">{i + 1}</span>
+                    <Logo tool={t.id} size="lg" />
+                    <span class="cb-pod__score">
+                      <Icon name="star" size={15} />
+                      {t.score.toFixed(1)}
+                    </span>
+                    <b>{tools[t.id].name}</b>
+                    <small>{t.cat}</small>
+                  </li>
+                ))
+              }
+            </ol>
+            <ol class="cb-rank__list" start="4">
+              {
+                ranked.slice(3).map((t, i) => (
+                  <li class="cb-rank__row" data-cb="rank-row">
+                    <span class="cb-rank__n">{i + 4}</span>
+                    <Logo tool={t.id} />
+                    <span class="cb-who">
+                      <b>{tools[t.id].name}</b>
+                      <small>{t.cat}</small>
+                    </span>
+                    <span class="cb-rank__score">
+                      <Icon name="star" size={14} />
+                      {t.score.toFixed(1)}
+                    </span>
+                  </li>
+                ))
+              }
+            </ol>
+            <span class="cb-rank__foot" data-cb="rank-bit">
+              See all 1,904 tools
+              <Icon name="chevron-right" size={15} />
+            </span>
+          </div>
+
+          <div
+            class="cb-deals"
+            role="img"
+            aria-label={`Deals, as sponsored tickets: ${deals.map((d) => `${tools[d.id].name}, ${d.num} ${d.unit}`).join('; ')}.`}
+            data-cb="deals"
+          >
+            <span class="cb-lane__head cb-lane__head--dark">
+              <b>Deals</b>
+              <span class="cb-sponsor cb-sponsor--dark">Sponsored</span>
+            </span>
+            <span class="cb-tickets">
+              {
+                deals.map((d) => (
+                  <span class="cb-ticket" data-cb="ticket">
+                    <span class="cb-ticket__main">
+                      <span class="cb-ticket__who">
+                        <Logo tool={d.id} size="sm" />
+                        <small>
+                          {tools[d.id].name} · {d.cat}
+                        </small>
+                      </span>
+                      <b>
+                        {d.num}
+                        <span>{d.unit}</span>
+                      </b>
+                      <span class="cb-ticket__line">{d.line}</span>
+                    </span>
+                    <span class="cb-ticket__stub" data-cb="stub">
+                      {d.code ? <span class="cb-code">{d.code}</span> : <span class="cb-ticket__get">Get deal</span>}
+                    </span>
+                  </span>
+                ))
+              }
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- One surface that carries each screen out of the thing that opened it (motion.ts). -->
+    <i class="cb-morph" aria-hidden="true" data-cb="morph"></i>
+  </div>
+</ChapterSection>
+
+<style>
+  /* DESIGN.md's tokens and the homepage's elevated layer (app/globals.css). (On .cb-world: the
+     <section> belongs to ChapterSection, outside this component's scope.) Signal Blue (#00B0F0)
+     reads at 2.4:1 on the light page, so blue text there uses #0072A3; the signal itself stays on
+     fills, rings and bars, and on navy, where it reaches 7.6:1. */
+  .cb-world {
+    --signal: #00b0f0;
+    --signal-text: #0072a3;
+    --signal-soft: #e3f6fd;
+    --navy: #0a1020;
+    --navy-up: #142038;
+    --body: #45556c;
+    --muted: #55657d;
+    --page: #f7f9fc;
+    --edge: #dde7f3;
+    --hair: #eef3f9;
+    --amber-bg: #fff6e5;
+    --amber-edge: #fde3b0;
+    --star: #f59e0b;
+    --green: #047857;
+    --green-bg: #e7f7f0;
+    --green-edge: #c4ead9;
+    --lose: #cfd9e6;
+    --font-cb: 'Montserrat Variable', 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-cb-data: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --cb-gutter: clamp(16px, 4vw, 40px);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-1: 0 1px 2px rgb(10 16 32 / 0.04), 0 4px 12px -4px rgb(10 16 32 / 0.06);
+    --shadow-2: 0 1px 2px rgb(10 16 32 / 0.04), 0 12px 32px -12px rgb(10 16 32 / 0.16);
+    --shadow-float: 0 1px 2px rgb(10 16 32 / 0.06), 0 18px 40px -16px rgb(10 16 32 / 0.32);
+    --shadow-navy: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 40px 80px -32px rgb(10 16 32 / 0.65), 0 12px 24px -12px rgb(10 16 32 / 0.35);
+    /* Navy glass: a Signal light from the top right, a deeper blue from the bottom left. */
+    --navy-glass:
+      radial-gradient(90% 60% at 100% 0%, rgb(0 176 240 / 0.24), transparent 60%),
+      radial-gradient(70% 50% at 0% 100%, rgb(0 114 163 / 0.22), transparent 70%),
+      linear-gradient(165deg, var(--navy-up), var(--navy) 62%);
+    position: relative;
+    z-index: 1;
+    color: var(--navy);
+    font: 400 16px/1.6 var(--font-cb);
+  }
+
+  .cb-world ::selection {
+    background: var(--signal);
+    color: var(--navy);
+  }
+
+  .cb-world :focus-visible {
+    outline-color: var(--signal-text);
+  }
+
+  .cb-top :focus-visible {
+    outline-color: var(--signal);
+  }
+
+  /* SplitText's word masks clip at the line box; give descenders room inside them. */
+  .cb-world :global(.cb-w-mask) {
+    padding-bottom: 0.2em;
+    margin-bottom: -0.2em;
+  }
+
+  .cb-world kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid var(--edge);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--muted);
+    font: 600 11px/1 var(--font-cb-data);
+  }
+
+  .cb-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .cb-ground,
+  .cb-morph {
+    display: none;
+  }
+
+  /* ---------- Top bar ---------- */
+  .cb-top {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2.4vw, 36px);
+    height: 64px;
+    padding: 0 var(--cb-gutter);
+    background: var(--navy);
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    color: #fff;
+  }
+
+  .cb-brand {
+    width: auto;
+    height: 34px;
+  }
+
+  .cb-nav {
+    position: relative;
+    display: none;
+    gap: 28px;
+    height: 100%;
+    align-items: center;
+  }
+
+  .cb-nav__item {
+    color: rgb(255 255 255 / 0.62);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .cb-nav__dot {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--signal);
+  }
+
+  :global(html:not(.mode-full)) .cb-nav__dot {
+    display: none;
+  }
+
+  .cb-cmd {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 1;
+    width: clamp(200px, 22vw, 300px);
+    min-width: 150px;
+    height: 38px;
+    margin-left: auto;
+    overflow: hidden;
+    padding: 0 6px 0 14px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 10px;
+    background: rgb(255 255 255 / 0.05);
+    color: rgb(255 255 255 / 0.62);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .cb-cmd kbd {
+    margin-left: auto;
+    border-color: rgb(255 255 255 / 0.14);
+    background: rgb(255 255 255 / 0.06);
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .cb-top__num {
+    margin-left: auto;
+    color: var(--signal);
+    font: 700 13px/1 var(--font-cb-data);
+  }
+
+  /* The portfolio's way out, as quiet as the other chapters' pills. */
+  .cb-visit {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 40px;
+    padding: 0 14px 0 16px;
+    border: 1px solid rgb(255 255 255 / 0.16);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.05);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.25s var(--ease),
+      border-color 0.25s var(--ease);
+  }
+
+  .cb-visit :global(.cb-icon) {
+    color: var(--signal);
+    transition: transform 0.3s var(--ease);
+  }
+
+  .cb-visit:hover {
+    border-color: rgb(255 255 255 / 0.3);
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .cb-visit:hover :global(.cb-icon) {
+    transform: translate(2px, -2px);
+  }
+
+  @media (min-width: 900px) {
+    .cb-nav,
+    .cb-cmd {
+      display: flex;
+    }
+
+    .cb-cmd + .cb-top__num {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .cb-top__num {
+      display: none;
+    }
+
+    .cb-visit {
+      margin-left: auto;
+    }
+  }
+
+  /* ---------- Shared parts ---------- */
+  .cb-who {
+    display: grid;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .cb-who b {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-who small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-star {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding: 4px 8px;
+    border: 1px solid var(--amber-edge);
+    border-radius: 8px;
+    background: var(--amber-bg);
+    color: var(--navy);
+    font: 700 13px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cb-star :global(.cb-icon),
+  .cb-rank__score :global(.cb-icon),
+  .cb-pod__score :global(.cb-icon) {
+    color: var(--star);
+    fill: var(--star);
+  }
+
+  .cb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--body);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cb-chip--free {
+    border-color: var(--green-edge);
+    background: var(--green-bg);
+    color: var(--green);
+  }
+
+  /* A neutral tag: amber belongs to scores, and an offer must never read as one. */
+  .cb-sponsor {
+    flex: none;
+    margin-left: auto;
+    padding: 3px 8px;
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .cb-sponsor--dark {
+    border-color: rgb(255 255 255 / 0.22);
+    background: transparent;
+    color: rgb(255 255 255 / 0.74);
+  }
+
+  /* Score ring: the number sits inside its arc. */
+  .cb-ring {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 96px;
+    aspect-ratio: 1;
+  }
+
+  .cb-ring svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform: rotate(-90deg);
+  }
+
+  .cb-ring__track {
+    fill: none;
+    stroke: #e8eef6;
+    stroke-width: 7;
+  }
+
+  .cb-ring__arc {
+    fill: none;
+    stroke: url(#cb-arc);
+    stroke-width: 7;
+    stroke-linecap: round;
+  }
+
+  .cb-ring__num {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    font-family: var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cb-ring__num b {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .cb-ring__num small {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .cb-ring--dark .cb-ring__track {
+    stroke: rgb(255 255 255 / 0.09);
+  }
+
+  .cb-ring--dark .cb-ring__num small {
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  /* The live arc: the ring's band (r 40.5–47.5 of 50, as the SVG track) intersected with a sweep
+     from twelve o'clock to the score, with round ends drawn as two dots. Edges are crisp, as a
+     gauge's are; the material comes from its own light, not from blur. */
+  .cb-ring__fill {
+    --p: 0;
+    --a: calc(var(--p) * 1turn);
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    mask:
+      radial-gradient(3.5% 3.5% at 50% 6%, #000 82%, #0000 100%) add,
+      radial-gradient(3.5% 3.5% at calc(50% + 44% * sin(var(--a))) calc(50% - 44% * cos(var(--a))), #000 82%, #0000 100%) add,
+      conic-gradient(#000 var(--a), #0000 0) intersect,
+      radial-gradient(closest-side, #0000 80.2%, #000 81.8%, #000 93.8%, #0000 95.4%);
+  }
+
+  .cb-ring__fill video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.1) brightness(1.05);
+  }
+
+  /* Across the band: shade along the inner edge, a soft lift in the middle, a lit rim outside, so
+     the fill reads as a curved tube in the dial rather than a cut-out. */
+  .cb-ring__fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      #0000 80.2%,
+      rgb(4 10 24 / 0.42) 82.6%,
+      rgb(4 10 24 / 0.12) 86%,
+      rgb(255 255 255 / 0.1) 89%,
+      #0000 90.5%,
+      rgb(255 255 255 / 0.2) 92.8%,
+      rgb(255 255 255 / 0.38) 94%,
+      #0000 95.4%
+    );
+  }
+
+  /* The leading tip: a hot point where the fill stops, like a needle. */
+  .cb-ring__tip {
+    position: absolute;
+    left: calc(50% + 44% * sin(var(--a)) - 4%);
+    top: calc(50% - 44% * cos(var(--a)) - 4%);
+    width: 8%;
+    height: 8%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, #fff 25%, rgb(190 240 255 / 0.85) 50%, #0000 100%);
+    z-index: 1;
+  }
+
+  /* Under the fill, the arc lends the dial a faint Signal glow beyond its edges. */
+  /* On a white card: no halo (it reads as blur on white), crisp edge lines instead of a dark inner
+     band, a white sheen through the middle, and a slightly deeper fill. */
+  .cb-side.is-win .cb-ring__arc {
+    stroke-width: 5;
+    filter: drop-shadow(0 2px 2px rgb(0 80 120 / 0.22));
+  }
+
+  .cb-side .cb-ring__fill video {
+    filter: saturate(1.2) brightness(0.96) contrast(1.05);
+  }
+
+  .cb-side .cb-ring__fill::after {
+    background: radial-gradient(
+      closest-side,
+      #0000 80.2%,
+      rgb(0 58 94 / 0.32) 81.8%,
+      #0000 84%,
+      rgb(255 255 255 / 0.26) 87.5%,
+      rgb(255 255 255 / 0.32) 88.5%,
+      #0000 91%,
+      rgb(0 58 94 / 0.26) 94%,
+      #0000 95.4%
+    );
+  }
+
+  .cb-ring--big .cb-ring__arc {
+    filter: drop-shadow(0 0 4px rgb(0 176 240 / 0.55));
+  }
+
+  /* ---------- The decision a screen shows ---------- */
+  .cb-note {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .cb-note__n {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font: 600 12px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  /* A spec callout, as in a design handoff: a dot on the evidence, a hairline up into the space
+     above the card, and the token at its end. Pinned only; motion.ts sets its box (left, top,
+     height: from the label's line down to the dot). */
+  .cb-spec {
+    display: none;
+  }
+
+  :global(html.mode-full) .cb-spec {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    width: 0;
+    pointer-events: none;
+  }
+
+  .cb-spec__line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -0.5px;
+    width: 1px;
+    background: linear-gradient(rgb(0 114 163 / 0.7), rgb(0 114 163 / 0.45));
+    transform-origin: 50% 100%;
+  }
+
+  .cb-spec__dot {
+    position: absolute;
+    bottom: -4.5px;
+    left: -4.5px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--signal-text);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgb(0 114 163 / 0.14);
+  }
+
+  /* The label sits on the line's top end, reading to the right of it. */
+  .cb-spec__label {
+    position: absolute;
+    top: -7px;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 10px;
+    color: var(--muted);
+    font: 500 11.5px/1 var(--c-mono, ui-monospace, monospace);
+    white-space: nowrap;
+  }
+
+  .cb-spec__label::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 7px;
+    height: 1px;
+    background: rgb(0 114 163 / 0.7);
+  }
+
+  .cb-spec__label b {
+    color: var(--signal-text);
+    font-weight: 700;
+  }
+
+  .cb-spec__run {
+    display: none;
+  }
+
+  /* Sideways, into the right margin: the element sits on the evidence; a short drop (--dy) to the
+     row's rule, then a run (--run) out past the card, with the token at its end. */
+  .cb-spec.is-side .cb-spec__dot {
+    top: -4.5px;
+    bottom: auto;
+  }
+
+  .cb-spec.is-side .cb-spec__line {
+    bottom: auto;
+    height: var(--dy);
+    transform-origin: 50% 0;
+  }
+
+  .cb-spec.is-side .cb-spec__run {
+    position: absolute;
+    top: calc(var(--dy) - 0.5px);
+    left: 0;
+    display: block;
+    width: var(--run);
+    height: 1px;
+    background: linear-gradient(90deg, rgb(0 114 163 / 0.7), rgb(0 114 163 / 0.45));
+    transform-origin: 0 50%;
+  }
+
+  .cb-spec.is-side .cb-spec__label {
+    top: calc(var(--dy) - 6px);
+    left: calc(var(--run) + 4px);
+  }
+
+  .cb-note__n::before {
+    content: '';
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--signal);
+  }
+
+  .cb-note__n b {
+    color: var(--signal-text);
+    font-weight: 700;
+  }
+
+  .cb-note__title {
+    margin: 0;
+    color: var(--navy);
+    font: 800 clamp(22px, 2vw, 30px) / 1.12 var(--font-cb);
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  /* ---------- Scenes (stacked; full mode pins them into one frame) ---------- */
+  .cb-scene {
+    position: relative;
+    padding: clamp(48px, 8vw, 88px) var(--cb-gutter);
+  }
+
+  /* ---------- 1. Homepage ---------- */
+  .cb-home {
+    display: grid;
+    gap: 40px;
+    overflow: hidden;
+  }
+
+  .cb-home__grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgb(10 16 32 / 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 80% 70% at 30% 40%, #000 20%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .cb-home__copy {
+    position: relative;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: clamp(26px, 3.6vh, 38px);
+  }
+
+  .cb-title {
+    max-width: 11ch;
+    margin: 0;
+    color: var(--navy);
+    font: 800 clamp(44px, 5vw, 76px) / 0.98 var(--font-cb);
+    letter-spacing: -0.04em;
+    text-wrap: balance;
+  }
+
+  .cb-title__hi {
+    color: var(--signal-text);
+  }
+
+  .cb-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 20px 0 24px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      transform 0.3s var(--ease),
+      box-shadow 0.3s var(--ease);
+  }
+
+  .cb-btn--dark {
+    background: linear-gradient(180deg, #1a2540, var(--navy));
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      0 10px 24px -10px rgb(10 16 32 / 0.6);
+  }
+
+  .cb-btn--dark :global(.cb-icon) {
+    color: var(--signal);
+    transition: transform 0.3s var(--ease);
+  }
+
+  .cb-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .cb-btn:hover :global(.cb-icon) {
+    transform: translateX(3px);
+  }
+
+  .cb-stats {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cb-stats li {
+    display: grid;
+    gap: 3px;
+    padding: 0 clamp(14px, 1.6vw, 24px);
+    border-left: 1px solid var(--edge);
+    line-height: 1.15;
+  }
+
+  .cb-stats li:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .cb-stats b {
+    font: 700 clamp(18px, 1.6vw, 22px) / 1.1 var(--font-cb-data);
+    letter-spacing: -0.02em;
+  }
+
+  .cb-stats span {
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+
+  /* The stack: a navy review card, a glass chip on its top corner, a light card in front of its
+     foot, over the screen's one glow. Phones keep the overlaps in a column. */
+  .cb-stack {
+    position: relative;
+    padding-top: 30px;
+    container-type: inline-size;
+  }
+
+  .cb-stack__aura {
+    position: absolute;
+    inset: -14% -12% -10% -16%;
+    background:
+      radial-gradient(40% 36% at 62% 44%, rgb(0 176 240 / 0.22), transparent 72%),
+      radial-gradient(28% 28% at 30% 74%, rgb(0 114 163 / 0.14), transparent 72%);
+    mask-image: radial-gradient(closest-side, #000 60%, transparent);
+    pointer-events: none;
+  }
+
+  .cb-hcard {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    padding: clamp(20px, 2.3vw, 30px);
+    border: 1px solid rgb(255 255 255 / 0.07);
+    border-radius: 28px;
+    background: var(--navy-glass);
+    color: #fff;
+    box-shadow: var(--shadow-navy);
+  }
+
+  .cb-hcard__body {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.2vh, 22px);
+    height: 100%;
+  }
+
+  .cb-hcard__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgb(255 255 255 / 0.72);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cb-hcard__label :global(.cb-icon) {
+    color: var(--signal);
+  }
+
+  .cb-hcard__who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .cb-hcard__who > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+    line-height: 1.15;
+  }
+
+  /* The price sits with the name, clear of the cards that overlap the corners. */
+  .cb-hcard__price {
+    display: grid;
+    justify-items: end;
+    flex: none;
+    margin-left: auto;
+    line-height: 1.15;
+  }
+
+  .cb-hcard__who .cb-hcard__price small {
+    color: rgb(255 255 255 / 0.6);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .cb-hcard__who .cb-hcard__price b {
+    color: #fff;
+    font: 700 22px/1.1 var(--font-cb-data);
+    letter-spacing: -0.02em;
+  }
+
+  .cb-hcard__who .cb-hcard__price b span {
+    color: rgb(255 255 255 / 0.6);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .cb-hcard__who b {
+    font-size: clamp(24px, 2.3vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .cb-hcard__who small {
+    overflow: hidden;
+    color: rgb(255 255 255 / 0.64);
+    font-size: 13.5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-hcard__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cb-hcard__tags span {
+    padding: 4px 11px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.06);
+    color: rgb(255 255 255 / 0.82);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* The score, then where it comes from: a glass panel inside the card. */
+  .cb-hcard__score {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(16px, 2.2vw, 30px);
+    padding: clamp(14px, 2vh, 20px) clamp(14px, 1.8vw, 22px);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    border-radius: 20px;
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+
+  .cb-ring--big {
+    width: clamp(108px, 15.5vh, 144px);
+  }
+
+  .cb-ring--big .cb-ring__num b {
+    font-size: clamp(30px, 4.4vh, 42px);
+  }
+
+  .cb-break {
+    display: grid;
+    gap: clamp(8px, 1.4vh, 12px);
+    min-width: 0;
+  }
+
+  .cb-break__row {
+    display: grid;
+    grid-template-columns: minmax(0, 6.6em) minmax(0, 1fr) 2.1em;
+    align-items: center;
+    gap: 10px;
+    color: rgb(255 255 255 / 0.72);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cb-break__track {
+    height: 6px;
+    border-radius: 99px;
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .cb-break__track i {
+    display: block;
+    width: calc(var(--v) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5fd4ff, var(--signal));
+    transform-origin: 0 50%;
+  }
+
+  .cb-break__row b {
+    color: #fff;
+    font: 700 13px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .cb-hcard__pros {
+    display: grid;
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .cb-hcard__pros span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgb(255 255 255 / 0.84);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .cb-hcard__pros :global(.cb-icon) {
+    flex: none;
+    padding: 3px;
+    border-radius: 50%;
+    background: rgb(0 176 240 / 0.16);
+    color: var(--signal);
+    box-sizing: content-box;
+  }
+
+  .cb-hcard__pros .is-con {
+    color: rgb(255 255 255 / 0.62);
+  }
+
+  .cb-hcard__pros .is-con :global(.cb-icon) {
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(255 255 255 / 0.62);
+  }
+
+  .cb-hcard__foot {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    margin-top: auto;
+  }
+
+  .cb-hcard__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px 0 16px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #2ec0f5, var(--signal));
+    color: var(--navy);
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 6px 16px -8px rgb(0 0 0 / 0.5);
+  }
+
+  /* Glass chip: frosted white over the navy card's corner. */
+  .cb-float {
+    position: absolute;
+    top: 0;
+    right: 14px;
+    z-index: 2;
+    padding: 9px 16px 9px 9px;
+    border: 1px solid rgb(255 255 255 / 0.8);
+    border-radius: 18px;
+    background: rgb(255 255 255 / 0.74);
+    box-shadow: var(--shadow-float);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+
+  .cb-float__body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cb-avs {
+    display: flex;
+  }
+
+  /* Stacked icons: each sits over the next, so the first (the one named first) stays whole. */
+  .cb-avs :global(.cb-logo + .cb-logo),
+  .cb-k__pair :global(.cb-logo + .cb-logo) {
+    margin-left: -8px;
+  }
+
+  .cb-avs :global(.cb-logo),
+  .cb-k__pair :global(.cb-logo) {
+    box-shadow: 0 0 0 2px #fff;
+  }
+
+  .cb-avs :global(.cb-logo:nth-child(1)),
+  .cb-k__pair :global(.cb-logo:nth-child(1)) {
+    z-index: 4;
+  }
+
+  .cb-avs :global(.cb-logo:nth-child(2)) {
+    z-index: 3;
+  }
+
+  .cb-avs :global(.cb-logo:nth-child(3)) {
+    z-index: 2;
+  }
+
+  /* On navy, an icon's edge is a light hairline. */
+  .cb-hcard :global(.cb-logo::after) {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  }
+
+  .cb-float__txt {
+    display: grid;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .cb-float__txt b {
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  .cb-float__txt small {
+    color: #3d4b60;
+    font-size: 11.5px;
+  }
+
+  /* Light card in front of the navy one, with a hairline that catches the Signal light. */
+  .cb-mini {
+    position: relative;
+    z-index: 2;
+    width: min(330px, 88%);
+    margin: -34px 0 0 14px;
+    padding: 16px 18px 18px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(140deg, rgb(0 176 240 / 0.55), var(--edge) 45%) border-box;
+    box-shadow: var(--shadow-float);
+  }
+
+  .cb-mini__body {
+    display: grid;
+    gap: 12px;
+  }
+
+  .cb-mini__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .cb-mini__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cb-mini__label :global(.cb-icon) {
+    color: var(--signal-text);
+  }
+
+  .cb-mini__tag {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--signal-soft);
+    color: var(--signal-text);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  .cb-mini__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 5.6em) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cb-mini__row b {
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-mini__track {
+    height: 8px;
+    border-radius: 99px;
+    background: #f1f5fa;
+  }
+
+  .cb-mini__track i {
+    display: block;
+    width: calc(var(--v) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--lose);
+    transform-origin: 0 50%;
+  }
+
+  .cb-mini__row.is-win .cb-mini__track i {
+    background: linear-gradient(90deg, #5fd4ff, var(--signal));
+  }
+
+  .cb-mini__score {
+    font: 700 14px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Unpinned, the light card overlaps the navy one's foot: the foot keeps clear of it. */
+  :global(html:not(.mode-full)) .cb-hcard {
+    padding-bottom: 58px;
+  }
+
+  /* Narrow stacks: the breakdown drops under the ring. */
+  @container (max-width: 420px) {
+    .cb-hcard__score {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+    }
+
+    .cb-hcard__who .cb-hcard__price small {
+      display: none;
+    }
+
+    .cb-hcard__who > span:nth-child(2) small {
+      white-space: normal;
+    }
+
+    .cb-hcard__who .cb-hcard__price b {
+      font-size: 18px;
+    }
+
+    .cb-break {
+      width: 100%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cb-home {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(32px, 4vw, 64px);
+      align-items: center;
+    }
+
+    /* Without the pin (reduced motion), the decision heads its screen, as notes 02 and 03 do, and
+       the screens leave the rail room to name the chapter, as they do pinned. */
+    :global(html:not(.mode-full)) .cb-home .cb-note {
+      grid-column: 1 / -1;
+      order: -1;
+    }
+
+    :global(html:not(.mode-full)) .cb-scene,
+    :global(html:not(.mode-full)) .cb-k {
+      padding-right: calc(var(--rail) + clamp(40px, 9vw, 124px));
+    }
+  }
+
+  /* ---------- 2. Command palette ---------- */
+  .cb-k {
+    position: relative;
+    padding: 0 var(--cb-gutter) clamp(48px, 8vw, 88px);
+  }
+
+  .cb-k__scrim {
+    display: none;
+  }
+
+  .cb-k__box {
+    display: grid;
+    width: min(100%, 640px);
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--edge);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgb(10 16 32 / 0.05),
+      0 32px 64px -24px rgb(10 16 32 / 0.45);
+  }
+
+  .cb-k__input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 60px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--edge);
+    color: var(--muted);
+  }
+
+  .cb-k__query {
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    color: var(--navy);
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .cb-k__typed {
+    white-space: pre;
+  }
+
+  .cb-k__caret {
+    flex: none;
+    width: 2px;
+    height: 22px;
+    margin-left: 2px;
+    background: var(--signal);
+    animation: cb-blink 1s steps(1) infinite;
+  }
+
+  @keyframes cb-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cb-k__caret {
+      animation: none;
+    }
+  }
+
+  /* The list clips the results so the box can grow with them. */
+  .cb-k__list {
+    display: block;
+    overflow: hidden;
+  }
+
+  .cb-k__rows {
+    position: relative;
+    display: grid;
+    padding: 6px 8px 8px;
+  }
+
+  .cb-k__sel {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    right: 8px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--signal-soft);
+    box-shadow: inset 0 0 0 1px rgb(0 176 240 / 0.35);
+    opacity: 0;
+  }
+
+  .cb-k__sel::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--signal);
+  }
+
+  .cb-k__group {
+    position: relative;
+    padding: 10px 10px 4px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cb-k__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    padding: 0 10px 0 12px;
+    font-size: 14px;
+  }
+
+  .cb-k__row b {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-k__row small {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 520px) {
+    .cb-k__row small {
+      display: none;
+    }
+  }
+
+  .cb-k__pair {
+    display: flex;
+    flex: none;
+  }
+
+  .cb-k__enter {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin-left: auto;
+    border-radius: 7px;
+    background: var(--signal);
+    color: var(--navy);
+  }
+
+  .cb-k__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--edge);
+    background: var(--page);
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .cb-k__foot > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .cb-k__foot > span:last-child {
+    margin-left: auto;
+  }
+
+  .cb-k__foot kbd {
+    min-width: 20px;
+    height: 20px;
+  }
+
+  /* ---------- 3. Compare ---------- */
+  .cb-vs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding-top: 0;
+  }
+
+  .cb-duel {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(18px, 2.8vh, 28px);
+    padding: clamp(24px, 3vw, 36px) clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px);
+    border: 1px solid var(--edge);
+    border-radius: 26px;
+    background: linear-gradient(180deg, #fff 70%, #fbfcfe);
+    box-shadow: var(--shadow-2);
+  }
+
+  /* The page's category, as a tab on the card's top edge. */
+  .cb-duel__cat {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--body);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    box-shadow: var(--shadow-1);
+  }
+
+  .cb-duel__cat :global(.cb-icon) {
+    color: var(--signal-text);
+  }
+
+  .cb-duel__head {
+    position: relative;
+    display: grid;
+    gap: 18px;
+  }
+
+  .cb-side {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  /* Each tool's icon sits on a soft pool of its own colour. */
+  .cb-side :global(.cb-logo) {
+    box-shadow:
+      0 1px 2px rgb(10 16 32 / 0.06),
+      0 14px 28px -12px var(--brand);
+  }
+
+  .cb-side__who {
+    display: grid;
+    justify-items: start;
+    gap: 2px;
+    min-width: 0;
+    margin-right: auto;
+  }
+
+  /* The score is the largest thing on the card: names step down to it. */
+  .cb-side .cb-ring {
+    width: 116px;
+  }
+
+  .cb-side .cb-ring__num b {
+    font-size: 38px;
+  }
+
+  .cb-side__who b {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: clamp(20px, 1.7vw, 24px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-side__who small {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .cb-side:not(.is-win) .cb-ring__arc {
+    stroke: #a6b6cb;
+  }
+
+  /* The winner's badge hangs off its ring, so both names keep one baseline. */
+  .cb-win {
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px 3px 8px;
+    border-radius: 999px;
+    background: var(--navy);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    box-shadow: 0 0 0 3px #fff;
+  }
+
+  .cb-win :global(.cb-icon) {
+    color: var(--signal);
+  }
+
+  .cb-duel__x {
+    display: none;
+  }
+
+  /* Narrow screens stack the sides, so the chart says which side is which. */
+  .cb-duel__legend {
+    display: flex;
+    justify-content: space-between;
+    color: var(--body);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .cb-duel__legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cb-duel__legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--signal);
+  }
+
+  .cb-duel__legend span:last-child i {
+    background: #a6b6cb;
+  }
+
+  .cb-duel__chart {
+    display: grid;
+  }
+
+  /* One rated area: A's bar grows left from the centre, B's grows right. */
+  .cb-area {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) 34px;
+    grid-template-areas:
+      'label label label label'
+      'va ta tb vb';
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 6px;
+    padding: 10px 0;
+    border-top: 1px solid var(--hair);
+  }
+
+  .cb-area__va {
+    grid-area: va;
+  }
+
+  .cb-area__vb {
+    grid-area: vb;
+    text-align: right;
+  }
+
+  .cb-area__va,
+  .cb-area__vb {
+    color: var(--muted);
+    font: 700 15px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cb-area__track {
+    height: 12px;
+    border-radius: 99px;
+    background: #f1f5fa;
+  }
+
+  .cb-area__track--a {
+    grid-area: ta;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .cb-area__track--b {
+    grid-area: tb;
+  }
+
+  .cb-area__track i {
+    display: block;
+    width: calc(var(--v) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--lose);
+  }
+
+  .cb-area__track--a i {
+    transform-origin: 100% 50%;
+  }
+
+  .cb-area__track--b i {
+    transform-origin: 0 50%;
+  }
+
+  .cb-area__label {
+    grid-area: label;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .cb-area__label small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  /* The winner's bar is lit, light at the centre line; the other side and a tie stay neutral. */
+  .cb-area--a .cb-area__track--a i {
+    background: linear-gradient(270deg, #5fd4ff, var(--signal));
+  }
+
+  .cb-area--b .cb-area__track--b i {
+    background: linear-gradient(90deg, #5fd4ff, var(--signal));
+  }
+
+  .cb-area--a .cb-area__va,
+  .cb-area--b .cb-area__vb {
+    color: var(--navy);
+  }
+
+  .cb-area--a .cb-area__label small,
+  .cb-area--b .cb-area__label small {
+    color: var(--signal-text);
+  }
+
+  .cb-duel__foot {
+    display: grid;
+    gap: 12px;
+  }
+
+  .cb-plan {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    background: var(--page);
+  }
+
+  .cb-plan small {
+    color: var(--signal-text);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cb-plan b {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .cb-plan__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cb-verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin: 0;
+    padding: 14px 20px;
+    border-radius: 18px;
+    background: var(--navy-glass);
+    color: rgb(255 255 255 / 0.78);
+    font-size: 14px;
+    box-shadow: var(--shadow-navy);
+  }
+
+  .cb-verdict b {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .cb-verdict__k {
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgb(0 176 240 / 0.14);
+    color: var(--signal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cb-verdict__alt {
+    margin-left: auto;
+  }
+
+  @media (min-width: 720px) {
+    .cb-duel__head {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 80px;
+    }
+
+    .cb-side--b {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
+
+    .cb-side--b .cb-side__who {
+      justify-items: end;
+      margin-right: 0;
+      margin-left: auto;
+    }
+
+    .cb-duel__x {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      margin: -22px 0 0 -22px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #1a2540, var(--navy));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow:
+        0 0 0 6px #fff,
+        0 10px 24px -8px rgb(10 16 32 / 0.6);
+    }
+
+    .cb-duel__legend {
+      display: none;
+    }
+
+    .cb-area {
+      grid-template-columns: 40px minmax(0, 1fr) 176px minmax(0, 1fr) 40px;
+      grid-template-areas: 'va ta label tb vb';
+      padding: 11px 0;
+    }
+
+    .cb-area__label {
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      line-height: 1.3;
+    }
+
+    .cb-duel__foot {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 80px;
+    }
+
+    .cb-duel__foot .cb-plan:last-child {
+      justify-items: end;
+      text-align: right;
+    }
+  }
+
+  /* Side by side but not yet wide: smaller icons and rings leave the names their room. */
+  @media (min-width: 720px) and (max-width: 999px) {
+    .cb-side :global(.cb-logo) {
+      --s: 44px;
+    }
+
+    .cb-side .cb-ring {
+      width: 84px;
+    }
+
+    .cb-side .cb-ring__num b {
+      font-size: 24px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .cb-side {
+      gap: 12px;
+    }
+
+    .cb-side :global(.cb-logo) {
+      --s: 44px;
+    }
+
+    .cb-side .cb-ring {
+      width: 76px;
+    }
+
+    .cb-side .cb-ring__num b {
+      font-size: 22px;
+    }
+  }
+
+  /* ---------- 4. Rankings and deals ---------- */
+  .cb-lanes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding-top: 0;
+  }
+
+  .cb-lanes__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .cb-lane__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+
+  .cb-lane__head b {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .cb-lane__head .cb-sponsor {
+    margin-left: 0;
+  }
+
+  /* A segmented filter, set to All. */
+  .cb-seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 11px;
+    background: #eef3f9;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .cb-seg span {
+    padding: 5px 11px;
+    border-radius: 8px;
+    color: var(--muted);
+  }
+
+  .cb-seg .is-on {
+    background: #fff;
+    color: var(--navy);
+    box-shadow: 0 1px 2px rgb(10 16 32 / 0.08), 0 2px 6px -2px rgb(10 16 32 / 0.1);
+  }
+
+  .cb-rank {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: clamp(20px, 2.4vw, 28px);
+    border: 1px solid var(--edge);
+    border-radius: 26px;
+    background: #fff;
+    box-shadow: var(--shadow-2);
+  }
+
+  /* The podium: first in the middle and highest, its outlined numeral in Signal. */
+  .cb-podium {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cb-pod {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 20px 10px 14px;
+    border: 1px solid var(--edge);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff, var(--page));
+    text-align: center;
+  }
+
+  .cb-pod--1 {
+    order: 2;
+    padding-top: 44px;
+    border-color: transparent;
+    background:
+      linear-gradient(180deg, #effaff, #fff 70%) padding-box,
+      linear-gradient(160deg, rgb(0 176 240 / 0.7), var(--edge) 55%) border-box;
+    box-shadow: 0 18px 36px -20px rgb(0 114 163 / 0.5);
+  }
+
+  .cb-pod--2 {
+    order: 1;
+    padding-top: 30px;
+  }
+
+  .cb-pod--3 {
+    order: 3;
+  }
+
+  .cb-pod__n {
+    position: absolute;
+    top: 6px;
+    left: 12px;
+    color: transparent;
+    font: 800 40px/1 var(--font-cb-data);
+    letter-spacing: -0.04em;
+    -webkit-text-stroke: 1.4px #c4d1e2;
+  }
+
+  .cb-pod--1 .cb-pod__n {
+    font-size: 52px;
+    -webkit-text-stroke-color: var(--signal);
+  }
+
+  .cb-pod :global(.cb-logo) {
+    margin-bottom: 8px;
+  }
+
+  .cb-pod b {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 14.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-pod small {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-pod__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    padding: 5px 12px;
+    border: 1px solid var(--amber-edge);
+    border-radius: 999px;
+    background: var(--amber-bg);
+    font: 700 18px/1 var(--font-cb-data);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cb-pod--1 .cb-pod__score {
+    border-color: rgb(0 176 240 / 0.45);
+    box-shadow: 0 0 0 3px rgb(0 176 240 / 0.12);
+  }
+
+  .cb-rank__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cb-rank__row {
+    display: grid;
+    grid-template-columns: 22px auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 4px;
+  }
+
+  .cb-rank__row + .cb-rank__row {
+    border-top: 1px solid var(--hair);
+  }
+
+  .cb-rank__n {
+    color: var(--muted);
+    font: 700 14px/1 var(--font-cb-data);
+    text-align: center;
+  }
+
+  .cb-rank__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: 700 18px/1 var(--font-cb-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Pinned to the card's foot, so the rankings end level with the deals beside them. */
+  .cb-rank__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--hair);
+    color: var(--signal-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Deals: a curated lane, so navy glass; each offer a tear-off ticket. */
+  .cb-deals {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 16px;
+    padding: clamp(20px, 2.4vw, 28px);
+    border: 1px solid rgb(255 255 255 / 0.06);
+    border-radius: 26px;
+    background: var(--navy-glass);
+    color: #fff;
+    box-shadow: var(--shadow-navy);
+  }
+
+  .cb-tickets {
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 14px;
+  }
+
+  /* A tear-off ticket: the stub is cut off by a dashed line with a notch at each end. */
+  .cb-ticket {
+    --notch: 7px;
+    --stub: 100px;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--stub);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--navy);
+    mask:
+      radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  }
+
+  .cb-ticket__main {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 13px 16px;
+  }
+
+  .cb-ticket__who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .cb-ticket__who :global(.cb-logo) {
+    --s: 22px;
+  }
+
+  .cb-ticket__who small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .cb-ticket__main > b {
+    font: 800 28px/1.05 var(--font-cb-data);
+    letter-spacing: -0.035em;
+  }
+
+  .cb-ticket__main > b span {
+    margin-left: 4px;
+    color: var(--muted);
+    font: 600 14px/1 var(--font-cb);
+    letter-spacing: 0;
+  }
+
+  .cb-ticket__line {
+    color: var(--body);
+    font-size: 12.5px;
+  }
+
+  .cb-ticket__stub {
+    display: grid;
+    place-items: center;
+    border-left: 2px dashed #b9c8da;
+    background: linear-gradient(180deg, #ecf8fe, var(--signal-soft));
+  }
+
+  .cb-ticket__get {
+    padding: 7px 11px;
+    border-radius: 9px;
+    background: #fff;
+    color: var(--signal-text);
+    font-size: 12.5px;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgb(10 16 32 / 0.08);
+  }
+
+  .cb-code {
+    padding: 6px 8px;
+    border: 1px dashed var(--signal-text);
+    border-radius: 6px;
+    color: var(--signal-text);
+    font: 700 13px/1 var(--font-cb-data);
+    letter-spacing: 0.08em;
+  }
+
+  @media (min-width: 1024px) {
+    .cb-lanes__grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: stretch;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .cb-podium {
+      gap: 8px;
+    }
+
+    .cb-pod {
+      padding-inline: 6px;
+    }
+
+    .cb-pod :global(.cb-logo) {
+      --s: 44px;
+    }
+
+    .cb-pod b {
+      font-size: 12.5px;
+    }
+
+    .cb-ticket {
+      --stub: 84px;
+    }
+
+    .cb-pod small {
+      font-size: 11px;
+    }
+
+    .cb-seg span:last-child {
+      display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport under the top bar. The homepage,
+     the palette over it, the compare page and the rankings take the
+     same frame in turn, each with its decision in the top left.
+     ------------------------------------------------------------------ */
+  /* The column edges every screen and the top bar share. The right one leaves the rail room to
+     name the chapter without printing over a screen. */
+  /* Pinned, the world shows from the pin's start on (motion.ts toggles .is-in by scroll). */
+  :global(html.mode-full) .cb-world:not(.is-in) {
+    visibility: hidden;
+  }
+
+  :global(html.mode-full) .cb-world {
+    --pl: clamp(32px, 4vw, 64px);
+    --pr: calc(var(--rail) + clamp(40px, 9vw, 124px));
+    --pv: clamp(24px, 4.5vh, 48px);
+    --note: clamp(64px, 9vh, 84px);
+    position: absolute;
+    inset: 0;
+  }
+
+  /* An opaque page under the screens: whatever the transition left behind stays behind it. */
+  :global(html.mode-full) .cb-ground {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--page);
+  }
+
+  :global(html.mode-full) .cb-top {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 3;
+    padding: 0 var(--pr) 0 var(--pl);
+  }
+
+  :global(html.mode-full) .cb-stage {
+    position: absolute;
+    inset: 64px 0 0;
+    overflow: hidden;
+  }
+
+  :global(html.mode-full) .cb-scene,
+  :global(html.mode-full) .cb-k {
+    position: absolute;
+    inset: 0;
+    padding: var(--pv) var(--pr) var(--pv) var(--pl);
+  }
+
+  :global(html.mode-full) .cb-note {
+    position: absolute;
+    top: clamp(18px, 3.4vh, 34px);
+    left: var(--pl);
+    z-index: 1;
+  }
+
+  /* The surface a screen opens out of: drawn over the stage, under nothing. */
+  :global(html.mode-full) .cb-morph {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    display: block;
+    border: 1px solid var(--edge);
+    background: #fff;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  :global(html.mode-full) .cb-home {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :global(html.mode-full) .cb-home__copy {
+    padding-top: var(--note);
+  }
+
+  /* Pinned, the stack is a composition: the navy card in the middle, the glass chip over its top
+     right corner, the light card over its bottom left. */
+  :global(html.mode-full) .cb-stack {
+    height: min(100%, 700px);
+    align-self: center;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .cb-hcard {
+    position: absolute;
+    inset: 7% 3% 12% 8%;
+  }
+
+  /* The chip overlaps the card's top edge, so the two read as layers. */
+  :global(html.mode-full) .cb-float {
+    top: 3.5%;
+    right: 0;
+  }
+
+  :global(html.mode-full) .cb-mini {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: min(330px, 50%);
+    margin: 0;
+  }
+
+  @container (max-width: 520px) {
+    :global(html.mode-full) .cb-mini {
+      width: min(330px, 64%);
+    }
+  }
+
+  /* Portrait frames (a tablet held upright): the pitch sits above the stack. */
+  @media (max-aspect-ratio: 4 / 5) {
+    :global(html.mode-full) .cb-home {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: center;
+    }
+
+    :global(html.mode-full) .cb-stack {
+      height: min(100%, 720px);
+    }
+
+    :global(html.mode-full) .cb-vs,
+    :global(html.mode-full) .cb-lanes {
+      align-content: start;
+    }
+
+    :global(html.mode-full) .cb-lanes__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* The palette centres on the window, as a palette does. */
+  :global(html.mode-full) .cb-k {
+    z-index: 2;
+    padding-top: clamp(28px, 9vh, 96px);
+    padding-inline: var(--pl);
+  }
+
+  :global(html.mode-full) .cb-k__scrim {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: rgb(10 16 32 / 0.45);
+    backdrop-filter: blur(3px);
+  }
+
+  :global(html.mode-full) .cb-k__box {
+    position: relative;
+  }
+
+  :global(html.mode-full) .cb-vs,
+  :global(html.mode-full) .cb-lanes {
+    align-content: center;
+    padding-top: calc(var(--pv) + var(--note));
+  }
+
+  /* Every screen starts on the column the note, the brand and the hero share. */
+  :global(html.mode-full) .cb-duel,
+  :global(html.mode-full) .cb-verdict,
+  :global(html.mode-full) .cb-lanes__grid {
+    width: min(100%, 1200px);
+    justify-self: start;
+  }
+
+  /* Short windows: keep each screen inside the frame, and keep the cards full. */
+  @media (max-height: 820px) {
+    :global(html.mode-full) .cb-duel__foot,
+    :global(html.mode-full) .cb-hcard__tags {
+      display: none;
+    }
+
+    :global(html.mode-full) .cb-k__row,
+    :global(html.mode-full) .cb-k__sel {
+      height: 38px;
+    }
+
+    :global(html.mode-full) .cb-note__title {
+      font-size: clamp(20px, 1.8vw, 26px);
+    }
+
+    :global(html.mode-full) .cb-side .cb-ring {
+      width: 100px;
+    }
+
+    :global(html.mode-full) .cb-side .cb-ring__num b {
+      font-size: 32px;
+    }
+  }
+
+  /* Laptops with browser chrome (about 600 to 680px of frame). */
+  @media (max-height: 680px) {
+    :global(html.mode-full) .cb-hcard__pros .is-con,
+    :global(html.mode-full) .cb-duel__cat,
+    :global(html.mode-full) .cb-side__who small,
+    :global(html.mode-full) .cb-spec {
+      display: none;
+    }
+
+    :global(html.mode-full) .cb-side .cb-ring {
+      width: 88px;
+    }
+
+    :global(html.mode-full) .cb-side .cb-ring__num b {
+      font-size: 28px;
+    }
+
+    :global(html.mode-full) .cb-duel {
+      gap: 12px;
+      padding-block: 18px;
+    }
+
+    :global(html.mode-full) .cb-area {
+      padding-block: 6px;
+    }
+
+    :global(html.mode-full) .cb-vs,
+    :global(html.mode-full) .cb-lanes {
+      --note: 58px;
+    }
+  }
+
+  @media (max-height: 620px) {
+    :global(html.mode-full) .cb-rank__list,
+    :global(html.mode-full) .cb-ticket__line,
+    :global(html.mode-full) .cb-hcard__pros {
+      display: none;
+    }
+  }
+
+  /* Windows High Contrast drops background fills: draw the score bars in the system ink. */
+  @media (forced-colors: active) {
+    .cb-break__track i,
+    .cb-area__track i,
+    .cb-mini__track i {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    .cb-break__track,
+    .cb-area__track,
+    .cb-mini__track {
+      outline: 1px solid CanvasText;
+    }
+  }
+</style>

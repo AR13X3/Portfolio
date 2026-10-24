@@ -1,0 +1,491 @@
+---
+/**
+ * Halation's inspector (halation/js/ui/panel.js, controls.js, schema.js; styles from
+ * css/app.css "inspector" and "controls: every setting is a bar"). One body per look the
+ * chapter shows, open on the tab that look is about, with the values it really uses (read from
+ * the live editor); the motion crossfades between them. Decorative: role="img" with a summary.
+ */
+import Icon from './Icon.astro';
+
+const TYPES = [
+  ['none', 'None'],
+  ['reeded', 'Reeded'],
+  ['wavy', 'Wavy'],
+  ['rings', 'Rings'],
+  ['tiles', 'Tiles'],
+  ['hammered', 'Hammered'],
+  ['water', 'Water'],
+  ['crystal', 'Crystal'],
+  ['rain', 'Rain'],
+  ['pyramid', 'Pyramids'],
+];
+// The Flow tab's types (the live editor's chips).
+const FLOWS = [
+  ['none', 'None'],
+  ['silk', 'Silk'],
+  ['bands', 'Bands'],
+  ['mesh', 'Mesh'],
+  ['ribbons', 'Ribbons'],
+  ['threads', 'Threads'],
+  ['fluid', 'Fluid'],
+  ['image', 'Image'],
+];
+const TABS = ['canvas', 'silk', 'glassObject', 'color', 'sphere', 'reeded', 'sun', 'halftone', 'dither', 'motion', 'download'];
+
+type Row = { label: string; value: string; unit?: string; fill?: number; select?: boolean; key?: string };
+type Body = {
+  id: string;
+  /** The tab it is open on: 'reeded' (Glass), 'silk' (Flow) or 'sphere' (Surface). */
+  tab: string;
+  title: string;
+  /** The chips row, and which chip is selected. */
+  chips?: string[][];
+  type?: string;
+  badge?: string;
+  groups: [string, Row[]][];
+};
+
+// Slider fills use the app's own mapping: pos = ((v - min) / (max - min)) ^ (1 / curve).
+const pos = (v: number, min: number, max: number, curve = 1) => Math.pow((v - min) / (max - min), 1 / curve);
+const flutes = (v: number) => pos(v, 2, 160, 2);
+const refraction = (v: number) => pos(v, -2, 2);
+const ior = (v: number) => pos(v, 1.05, 2.4);
+const surface: Row[] = [
+  { label: 'Reflections', value: '0.00', fill: 0 },
+  { label: 'Highlight', value: '0.00', fill: 0 },
+  { label: 'Edge shadow', value: '0.20', fill: 0.2 },
+];
+const light = (r: number, disp: number, caus: number): Row[] => [
+  { label: 'Refraction', value: r.toFixed(2), fill: refraction(r) },
+  { label: 'Index (IOR)', value: '1.50', fill: ior(1.5) },
+  { label: 'Frost', value: '0.00', fill: 0 },
+  { label: 'Streak', value: '0.00', fill: 0 },
+  { label: 'Dispersion', value: disp.toFixed(2), fill: disp },
+  { label: 'Caustics', value: caus.toFixed(2), fill: caus },
+];
+const full: Row[] = [{ label: 'Pane', value: 'Full canvas', select: true }];
+
+const bodies: Body[] = [
+  {
+    id: 'coral',
+    tab: 'reeded',
+    title: 'Glass',
+    chips: TYPES,
+    type: 'reeded',
+    badge: 'Reeded',
+    groups: [
+      ['Shape', [
+        { label: 'Flutes', value: '12.0', fill: flutes(12) },
+        { label: 'Angle', value: '0', unit: '°', fill: 0.5 },
+        { label: 'Profile', value: 'Linear', select: true },
+        { label: 'Irregularity', value: '0.00', fill: 0 },
+      ]],
+      ['Coverage', full],
+      ['Light path', light(-0.8, 0, 0)],
+      ['Surface', surface],
+    ],
+  },
+  {
+    // Indigo Harp: no glass; the look is its Flow, Threads.
+    id: 'indigo',
+    tab: 'silk',
+    title: 'Flow',
+    chips: FLOWS,
+    type: 'threads',
+    badge: 'Threads',
+    groups: [
+      ['', [
+        { label: 'Scale', value: '4.00', fill: 1 },
+        { label: 'Turbulence', value: '1.00', fill: 0.333 },
+        { label: 'Threads', value: '15.5', fill: 0.416 },
+        { label: 'Thread weight', value: '1.00', unit: 'px', fill: 0.091 },
+        { label: 'Glow', value: '0.33', fill: 0.33 },
+        { label: 'Bundle width', value: '1.10', fill: 0.356 },
+        { label: 'Converge', value: '0.69', fill: 0.69 },
+        { label: 'Depth of field', value: '0.68', fill: 0.68 },
+        { label: 'Breakup', value: '0.14', fill: 0.14 },
+        { label: 'Soften', value: '0.00', fill: 0 },
+        { label: 'Swirl', value: '0.00', fill: 0.5 },
+        { label: 'Rotate', value: '25', unit: '°', fill: 0.569 },
+      ]],
+      ['Silhouette', [{ label: 'Form', value: 'None', select: true }]],
+    ],
+  },
+  {
+    // Emerald Pour: no glass; the look is its liquid Surface over a Silk flow.
+    id: 'emerald',
+    tab: 'sphere',
+    title: 'Surface',
+    groups: [
+      ['', [
+        { label: 'Relief', value: '0.00', fill: 0 },
+        { label: 'Gloss', value: '0.67', fill: 0.67 },
+        { label: 'Gloss tightness', value: '0.79', fill: 0.79 },
+        { label: 'Chrome', value: '0.00', fill: 0 },
+        { label: 'Liquid', value: '0.89', fill: 0.89 },
+        { label: 'Iridescence', value: '0.00', fill: 0 },
+        { label: 'Sparkle', value: '0.35', fill: 0.35 },
+        { label: 'Sparkle density', value: '0.21', fill: 0.21 },
+        { label: 'Sparkle size', value: '0.35', fill: 0.35 },
+      ]],
+    ],
+  },
+  {
+    id: 'pane',
+    tab: 'reeded',
+    title: 'Glass',
+    chips: TYPES,
+    type: 'reeded',
+    badge: 'Reeded',
+    groups: [
+      ['Shape', [
+        { label: 'Flutes', value: '12.0', fill: flutes(12) },
+        { label: 'Angle', value: '0', unit: '°', fill: 0.5 },
+        { label: 'Profile', value: 'Linear', select: true },
+        { label: 'Irregularity', value: '0.00', fill: 0 },
+      ]],
+      ['Coverage', [
+        { label: 'Pane', value: 'Right side', select: true, key: 'pane' },
+        { label: 'Pane size', value: '0.50', fill: pos(0.5, 0.05, 1), key: 'size' },
+        { label: 'Pane offset', value: '0.00', fill: 0.5 },
+      ]],
+      ['Light path', light(-0.8, 0, 0)],
+      ['Surface', surface],
+    ],
+  },
+];
+---
+
+<div
+  class="insp"
+  role="img"
+  aria-label="Recreated Halation inspector on the Glass tab: glass type chips, then bar sliders for flutes, angle, profile, coverage, refraction, index of refraction, frost, streak, dispersion and caustics."
+>
+  <div class="insp__top">
+    <span class="insp__search"><Icon name="search" /><span>Search settings</span><kbd>/</kbd></span>
+  </div>
+  <div class="insp__tabs">
+    {
+      TABS.map((t) => (
+        <span class="insp__tab">
+          {t === 'color' ? (
+            <span class="insp__swatch">
+              <i data-hx-swatch="coral" />
+              <i data-hx-swatch="indigo" />
+              <i data-hx-swatch="emerald" />
+            </span>
+          ) : (
+            <Icon name={t} />
+          )}
+        </span>
+      ))
+    }
+    {bodies.map((b) => <i class="insp__tabon" style={`--at:${TABS.indexOf(b.tab)}`} data-hx-body={b.id} />)}
+  </div>
+  <div class="insp__bodies">
+    {
+      bodies.map((b) => (
+        <div class="insp__body" data-hx-body={b.id}>
+          <div class="insp__head">
+            <span class="insp__title">{b.title}</span>
+            {b.badge && <span class="insp__badge">{b.badge}</span>}
+            <span class="insp__btns">
+              <Icon name="dice" />
+              <Icon name="reset" />
+            </span>
+          </div>
+          {b.chips && (
+            <div class="insp__chips">
+              {b.chips.map(([id, label]) => (
+                <span class:list={['insp__chip', { 'is-on': id === b.type }]}>
+                  <Icon name={id} />
+                  <span>{label}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          {b.groups.map(([group, rows]) => (
+            <>
+              {group && <span class="insp__sub">{group}</span>}
+              {rows.map((r) => (
+                <span class:list={['insp__ctl', { 'is-select': r.select }]} data-hx-row={r.key}>
+                  {r.fill !== undefined && <i class="insp__fill" style={`transform:scaleX(${r.fill.toFixed(4)})`} />}
+                  <span class="insp__label">{r.label}</span>
+                  <span class="insp__value">
+                    {r.value}
+                    {r.unit && <span class="insp__unit">{r.unit}</span>}
+                    {r.select && <Icon name="chevron" />}
+                  </span>
+                </span>
+              ))}
+            </>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* css/app.css: .inspector, .panel-top, .tabs, .section-head, .chips, .ctl */
+  .insp {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    font: 12.5px/1.4 var(--hx-font);
+    color: var(--hx-text);
+  }
+
+  .insp__top {
+    padding: 10px 10px 0;
+  }
+
+  .insp__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 9px 0 10px;
+    border-radius: 11px;
+    background: var(--hx-well);
+    color: var(--hx-muted);
+  }
+
+  .insp__search :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+
+  .insp__search kbd {
+    margin-left: auto;
+    min-width: 18px;
+    padding: 0 5px;
+    border: 1px solid var(--hx-hair);
+    border-radius: 5px;
+    font: 11px var(--hx-font);
+    text-align: center;
+    color: var(--hx-muted);
+  }
+
+  .insp__tabs {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 2px;
+    margin: 8px 10px 0;
+    padding: 3px;
+    border-radius: 13px;
+    background: var(--hx-well);
+  }
+
+  .insp__tab {
+    display: grid;
+    place-items: center;
+    height: 30px;
+    border-radius: 9px;
+    color: var(--hx-muted);
+  }
+
+  .insp__tab :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+
+  .insp__tabs {
+    position: relative;
+  }
+
+  /* The lit tab, one per body: it sits under its tab and crossfades with the body. */
+  .insp__tabon {
+    position: absolute;
+    top: 3px;
+    left: calc(3px + var(--at) * (100% - 6px + 2px) / 11);
+    width: calc((100% - 6px - 20px) / 11);
+    height: 30px;
+    border-radius: 9px;
+    background: var(--hx-wash-3);
+    pointer-events: none;
+  }
+
+  .insp__tab {
+    position: relative;
+    z-index: 1;
+  }
+
+  .insp__swatch {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+  }
+
+  /* The Color tab's dot shows the look's palette (palette.js gradientCss at 135°). */
+  .insp__swatch i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .insp__swatch i[data-hx-swatch='coral'] {
+    background: linear-gradient(135deg, #1b0f2e, #7a2e5c, #ff7a59, #ffd8b0);
+  }
+
+  .insp__swatch i[data-hx-swatch='indigo'] {
+    background: linear-gradient(135deg, #04050e, #151a52 33%, #3f49a4 50%, #6e7dff 67%, #fff);
+  }
+
+  .insp__swatch i[data-hx-swatch='emerald'] {
+    background: linear-gradient(135deg, #000b04, #085531 33%, #0e8352 50%, #0cb881 67%, #f3fff5);
+  }
+
+  .insp__bodies {
+    position: relative;
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    padding: 0 10px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  }
+
+  .insp__body {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .insp__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding-left: 4px;
+  }
+
+  .insp__title {
+    font: 600 17px var(--hx-display);
+    letter-spacing: -0.01em;
+  }
+
+  .insp__badge {
+    flex: 1;
+    color: var(--hx-muted);
+  }
+
+  .insp__btns {
+    display: flex;
+    gap: 8px;
+    padding-right: 6px;
+    color: var(--hx-muted);
+  }
+
+  .insp__btns :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .insp__chips {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    margin: 1px 0 4px;
+  }
+
+  .insp__chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 9px 2px 7px;
+    border-radius: 11px;
+    background: var(--hx-wash);
+    color: var(--hx-muted);
+  }
+
+  .insp__chip :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .insp__chip span {
+    max-width: 100%;
+    font-size: 10.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .insp__chip.is-on {
+    background: rgb(255 255 255 / 0.2);
+    color: var(--hx-text);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+  }
+
+  .insp__sub {
+    margin: 12px 4px 1px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--hx-faint);
+  }
+
+  /* Every setting is a bar; the fill shows the value. */
+  .insp__ctl {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: var(--hx-wash);
+    overflow: hidden;
+  }
+
+  .insp__fill {
+    position: absolute;
+    inset: 0;
+    background: rgb(255 255 255 / 0.13);
+    transform-origin: 0 50%;
+  }
+
+  .insp__label,
+  .insp__value {
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .insp__label {
+    color: var(--hx-text-2);
+  }
+
+  .insp__value {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .insp__unit {
+    color: var(--hx-faint);
+    font-size: 11px;
+  }
+
+  .insp__value :global(svg) {
+    width: 14px;
+    height: 14px;
+    margin-right: -4px;
+    color: var(--hx-muted);
+  }
+</style>

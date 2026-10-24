@@ -1,0 +1,189 @@
+---
+/**
+ * model.explain(site): the forecast written out as the product it is
+ * (frontend/src/components/ModelEquation.tsx, lib/equation.ts). Ruled rows for who comes,
+ * what they spend and the horizon, results lined up on the right, the final total in an ink
+ * cell. The explanation pane sits under the ledger, as the app lays it out below 1100px.
+ * Real terms for the winning demo site.
+ */
+import { DYNAMICS, LAYERS, RUNS, SITES } from './data';
+import { money, whole } from './format';
+
+const site = SITES.find((s) => s.rank === 1)!;
+
+const CAPTIONS: Record<string, [string, string]> = {
+  demand: ['Demand', 'people in reach'],
+  fit: ['Demographic fit', 'fit'],
+  anchors: ['Anchors', 'anchors'],
+  competition: ['Competition', 'share won'],
+  behaviour: ['Customer agents', 'behaviour'],
+  price: ['Price response', 'prices'],
+  spend: ['Spend', 'per customer'],
+  capacity: ['Capacity', 'capacity'],
+};
+// ModelEquation.tsx ABOUT: what each layer is.
+const ABOUT: Record<string, string> = {
+  demand: 'Residents, workers and commuters within walking reach, weighted by when they’re around.',
+  fit: 'Local demographics against the business’s customer profile: age, income, housing.',
+  anchors: 'Stations, supermarkets, schools and hospitals that bring people past the door.',
+  competition: 'A Huff gravity model over every rival, plus an ‘elsewhere’ option: the share of local demand this site wins.',
+  behaviour: 'Thousands of simulated customers choosing by distance, price, quality and habit, against the plain gravity model.',
+  price: 'Nearby rivals re-price in best-response rounds after you open.',
+  spend: 'How often a regular comes each month, times what they spend per visit.',
+  months: 'Revenue is projected month by month for three years from opening.',
+  time: 'Ramp-up from opening, seasons, school holidays and approved developments landing on schedule.',
+};
+
+type Unit = 'people' | 'customers' | 'month' | 'total';
+interface Term {
+  key: string;
+  name: string;
+  caption: string;
+  shown: string;
+  before: number | null;
+  after: number;
+  unit: Unit;
+}
+const shownOf = (l: (typeof LAYERS)[number]) =>
+  l.unit === 'share'
+    ? `${(l.factor * 100).toFixed(l.factor < 0.1 ? 1 : 0)}%`
+    : l.unit.startsWith('$')
+      ? `$${Math.round(l.factor)}`
+      : l.unit === 'x'
+        ? l.factor.toFixed(2)
+        : whole(l.factor);
+const terms: Term[] = [];
+let value: number | null = null;
+let unit: Unit = 'people';
+for (const l of LAYERS) {
+  const before: number | null = value;
+  value = value === null ? l.factor : value * l.factor;
+  if (l.unit === 'share') unit = 'customers';
+  if (l.unit.startsWith('$')) unit = 'month';
+  const [name, caption] = CAPTIONS[l.key] ?? [l.label, 'factor'];
+  terms.push({ key: l.key, name, caption, shown: shownOf(l), before, after: value, unit });
+}
+const months = site.months.length;
+const mature = value ?? 0;
+terms.push({ key: 'months', name: 'Horizon', caption: 'months', shown: String(months), before: mature, after: mature * months, unit: 'total' });
+terms.push({ key: 'time', name: 'Ramp-up & seasons', caption: 'ramp & seasons', shown: DYNAMICS.factor.toFixed(2), before: mature * months, after: site.total, unit: 'total' });
+
+const rowOf = (u: Unit) => (u === 'people' || u === 'customers' ? 'customers' : u === 'month' ? 'revenue' : 'horizon');
+const rows: { id: string; terms: { t: Term; i: number }[]; carry: { v: number; u: 'customers' | 'month' } | null; result: number }[] = [];
+terms.forEach((t, i) => {
+  const id = rowOf(t.unit);
+  let row = rows[rows.length - 1];
+  if (!row || row.id !== id) {
+    const carry = row ? { v: row.result, u: (row.id === 'customers' ? 'customers' : 'month') as 'customers' | 'month' } : null;
+    row = { id, terms: [], carry, result: 0 };
+    rows.push(row);
+  }
+  row.terms.push({ t, i });
+  row.result = t.after;
+});
+const fmt = (id: string, v: number) => (id === 'customers' ? whole(v) : money(v));
+const caption = (id: string) => (id === 'customers' ? 'customers' : id === 'revenue' ? 'a month' : `over ${months} months`);
+const running = (v: number, u: Unit) =>
+  u === 'people' ? `${whole(v)} people` : u === 'customers' ? `${whole(v)} customers` : u === 'month' ? `${money(v)} a month` : `${money(v)} over the horizon`;
+// The pane steps through these terms as the ledger plays.
+const STEPS = ['demand', 'fit', 'anchors', 'competition'];
+const panes = STEPS.map((key) => {
+  const i = terms.findIndex((t) => t.key === key);
+  const t = terms[i];
+  return { i, n: terms.length, t, about: ABOUT[key], from: t.before === null ? null : running(t.before, terms[i - 1].unit), to: running(t.after, t.unit) };
+});
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="ss-card ss-eq" data-ss="eq">
+  <div class="ss-card__head">
+    <div>
+      <p class="ss-kicker ss-mono" aria-hidden="true"><span data-ss="decode">model.explain(site)</span><i class="ss-cursor"></i></p>
+      <h4 class="ss-eq__title">Every forecast is a product you can read</h4>
+      <p class="ss-card__note">Shown for <strong>{site.label}</strong>. Every assumption is a line of YAML.</p>
+    </div>
+  </div>
+  <div class="ss-explain">
+    <div class="ss-ledger" role="group" aria-label={`${site.label}: the forecast as a product of its layers`}>
+      {
+        rows.map((r, ri) => (
+          <div class:list={['ss-ledger__row', { 'is-active': ri === 0 }]} data-ss="lrow">
+            <span class="ss-ledger__label ss-mono">
+              <span class="ss-ledger__n">{pad(ri + 1)}</span>
+              {r.id}/
+            </span>
+            <div class="ss-ledger__terms">
+              {r.carry && (
+                <span class="ss-term ss-term--carry">
+                  <span class="ss-term__value">{r.carry.u === 'customers' ? whole(r.carry.v) : money(r.carry.v)}</span>
+                  <span class="ss-term__caption">{r.carry.u === 'customers' ? 'customers' : 'a month'}</span>
+                </span>
+              )}
+              {r.terms.map(({ t, i }, k) => (
+                <>
+                  {(k > 0 || r.carry) && (
+                    <span class="ss-eq__op" aria-hidden="true">
+                      ×
+                    </span>
+                  )}
+                  <span class="ss-term" data-ss="term" data-key={t.key} data-i={i}>
+                    <i class="ss-term__fill" aria-hidden="true" />
+                    <span class="ss-term__value">{t.shown}</span>
+                    <span class="ss-term__caption">{t.caption}</span>
+                    <i class="ss-term__timer" aria-hidden="true" />
+                  </span>
+                </>
+              ))}
+            </div>
+            <div class:list={['ss-ledger__result', { 'is-final': ri === rows.length - 1 }]} data-ss={ri === rows.length - 1 ? 'final' : undefined}>
+              <span class="ss-ledger__eq" aria-hidden="true">
+                =
+              </span>
+              <span class="ss-ledger__value">{fmt(r.id, r.result)}</span>
+              <span class="ss-term__caption">{caption(r.id)}</span>
+            </div>
+          </div>
+        ))
+      }
+      <div class="ss-ledger__row ss-ledger__row--range">
+        <span class="ss-ledger__label ss-mono">
+          <span class="ss-ledger__n">{pad(rows.length + 1)}</span>
+          range/
+        </span>
+        <div class="ss-ledger__terms">
+          <span class="ss-ledger__note">{RUNS} scenarios vary spend, distance decay, ramp-up and habit; 80% of them land in this range.</span>
+        </div>
+        <div class="ss-ledger__result">
+          <span class="ss-ledger__value ss-ledger__value--range">
+            {money(site.p10)}–{money(site.p90)}
+          </span>
+          <span class="ss-term__caption">P10–P90</span>
+        </div>
+      </div>
+    </div>
+    <div class="ss-explain__detail">
+      {
+        panes.map((p, k) => (
+          <div class:list={['ss-explain__pane', { 'is-shown': k === 0 }]} data-ss="pane">
+            <span class="ss-explain__step ss-mono">
+              {pad(p.i + 1)} / {pad(p.n)}
+            </span>
+            <span class="ss-explain__name">{p.t.name}</span>
+            <span class="ss-explain__about">{p.about}</span>
+            <span class="ss-explain__flow">
+              {p.from && (
+                <>
+                  <span>{p.from}</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </>
+              )}
+              <strong>{p.to}</strong>
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>

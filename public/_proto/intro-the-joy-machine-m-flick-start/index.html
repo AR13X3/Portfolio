@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toufiq Ahmed Joy, Product Design Lead, Sydney</title>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<meta name="description" content="Prototype: The Joy Machine intro. The full stop on his name sets off a chain reaction through seven products and opens chapter 01, CareVisor.">
+<!-- The site's own font files (fontsource), latin subsets. -->
+<link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  /* ?nojs previews the page without its script. Phones and tablets (lite) hold the intro until the
+     two shell faces are in (machine.js, 1.2s at most; 3s here if the script never arrives). */
+  (function () {
+    var h = document.documentElement;
+    if (/[?&]nojs/.test(location.search)) return;
+    h.classList.replace('no-js', 'js');
+    if (matchMedia('(max-width: 1023.98px), (max-height: 599.98px)').matches) {
+      h.classList.add('lite-wait');
+      setTimeout(function () { h.classList.remove('lite-wait'); }, 3000);
+    }
+  })();
+</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#carevisor">Skip to the first chapter</a>
+
+<!-- Background stack: one fixed layer per section, crossfaded by opacity (the engine's BgStack). -->
+<div class="bg" aria-hidden="true">
+  <i class="bg__layer bg__layer--intro"></i>
+  <i class="bg__layer bg__layer--cv"></i>
+</div>
+
+<!-- Progress rail stand-in (decorative here; the real rail is a list of links). -->
+<div class="rail" aria-hidden="true"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+<main>
+<section id="top" class="intro" data-section="intro" aria-labelledby="intro-title">
+  <!-- The stage. On desktop it is display: contents; on phones and tablets it is the sticky frame of the strip. -->
+  <div class="intro__stick" data-stick>
+  <header class="bar">
+    <div class="bar__in">
+      <p class="who"><span class="who__mark" aria-hidden="true"></span>Product Design Lead, Sydney</p>
+      <ul class="links">
+        <li><a href="https://github.com/AR13X3" target="_blank" rel="noopener noreferrer">GitHub<span class="vh"> (opens in a new tab)</span></a></li>
+        <li><a href="https://www.linkedin.com/in/toufiqahmedjoy" target="_blank" rel="noopener noreferrer">LinkedIn<span class="vh"> (opens in a new tab)</span></a></li>
+        <li><a href="mailto:joytoufiqahmed@gmail.com">Email</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="cam">
+    <i class="grid" aria-hidden="true"></i>
+
+    <h1 id="intro-title" class="name">
+      <span class="w" style="--d:.10s"><span class="w__i">Toufiq</span></span>
+      <span class="w" style="--d:.18s"><span class="w__i">Ahmed</span></span>
+      <span class="name__last"><span class="w" style="--d:.26s"><span class="w__i">Joy</span></span><span class="name__end" aria-hidden="true"><span class="dot-land"><span class="dot-idle"><span class="dot-lean"><span class="dot" data-dot><span class="dot__sq"><span class="dot__ink"></span></span></span></span></span></span></span></span><span class="vh">, Product Design Lead in Sydney.</span>
+    </h1>
+
+    <div class="machine">
+      <div class="machine__in">
+        <p class="statement"><span class="statement__in">I design websites and app interfaces, then wire up the automations that run them.<span class="statement__more"> This portfolio is wired the same way.</span></span></p>
+
+        <div class="stage">
+          <svg class="guide" viewBox="0 0 1272 580" preserveAspectRatio="none" aria-hidden="true"><g class="guide__in"><path d=""/></g></svg>
+
+          <ol class="stations" aria-label="Seven projects">
+            <!-- 01 CareVisor: the homepage demo's window on its prism. The last part: the dot presses its button. -->
+            <li class="st st--cv" data-st="carevisor" style="--x:452;--y:452;--w:290;--h:128;--ox:145;--oy:64;--k:6;--tx:300;--ty:104;--tw:290;--th:128;--mx:149;--my:336;--ms:.72;--mplx:-28;--mply:74">
+              <a class="st__link" href="#carevisor">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 290 128">
+                      <defs>
+                        <clipPath id="cv-clip"><rect width="290" height="128" rx="12"/></clipPath>
+                        <linearGradient id="cv-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0052cc"/><stop offset="1" stop-color="#4a8fe8"/></linearGradient>
+                      </defs>
+                      <g clip-path="url(#cv-clip)">
+                        <rect width="290" height="128" fill="#e9f0fa"/>
+                        <image href="../../shots/carevisor/prism.webp" x="-40" y="-30" width="370" height="231" preserveAspectRatio="xMidYMid slice"/>
+                        <rect width="290" height="128" fill="rgb(241 246 252 / .32)"/>
+                        <rect x="16" y="19" width="262" height="140" rx="10" fill="#000918" opacity=".07"/>
+                        <rect x="14" y="14" width="262" height="140" rx="10" fill="#fff" stroke="#e4e6e4"/>
+                        <path d="M14 24a10 10 0 0 1 10-10h242a10 10 0 0 1 10 10v10H14z" fill="#fafbfc"/>
+                        <path d="M14 34H276" stroke="#eef0f4"/>
+                        <circle cx="26" cy="24" r="3" fill="#f0645c"/><circle cx="35" cy="24" r="3" fill="#f5bd4f"/><circle cx="44" cy="24" r="3" fill="#61c454"/>
+                        <rect x="108" y="18.5" width="78" height="11" rx="3" fill="#fff" stroke="#eef0f4"/>
+                        <text x="147" y="26.4" text-anchor="middle" class="t-inter" font-size="6.4" font-weight="500" fill="#657084">app.carevisor.com</text>
+                        <rect x="14" y="34" width="48" height="120" fill="#fafbfc"/><path d="M62 34V154" stroke="#eef0f4"/>
+                        <rect x="21" y="41" width="12" height="12" rx="3.5" fill="url(#cv-tile)"/>
+                        <rect x="36" y="44" width="20" height="3" rx="1.5" fill="#dfe4ec"/><rect x="36" y="49" width="13" height="2.4" rx="1.2" fill="#e8ecf3"/>
+                        <rect x="19" y="60" width="39" height="11" rx="3" fill="#e8f0fe"/><rect x="23" y="64.5" width="22" height="2.4" rx="1.2" fill="#0052cc"/>
+                        <rect x="23" y="78" width="26" height="2.4" rx="1.2" fill="#dfe4ec"/><rect x="23" y="89" width="20" height="2.4" rx="1.2" fill="#dfe4ec"/><rect x="23" y="100" width="24" height="2.4" rx="1.2" fill="#dfe4ec"/><rect x="23" y="111" width="18" height="2.4" rx="1.2" fill="#dfe4ec"/>
+                        <text x="72" y="51" class="t-inter" font-size="12.5" font-weight="700" fill="#000918">Participants</text>
+                        <rect x="72" y="57" width="58" height="4" rx="2" fill="#e8ecf3"/>
+                        <g class="cv-ready" aria-hidden="true"><rect x="168" y="40" width="98" height="24" rx="6" fill="none" stroke="#0052cc" stroke-width="1.5" stroke-opacity=".35"/></g>
+                        <rect data-r="cv-ring" x="168" y="40" width="98" height="24" rx="6" fill="none" stroke="#0052cc" stroke-width="1.5" opacity="0"/>
+                        <g data-r="cv-btn"><rect class="cv-btn-bg" x="168" y="40" width="98" height="24" rx="6" fill="#0052cc"/><text x="217" y="55.4" text-anchor="middle" class="t-inter" font-size="9.6" font-weight="600" fill="#fff">+ New participant</text></g>
+                        <rect data-r="cv-dot" x="210" y="28" width="14" height="12" fill="#101114" opacity="0"/>
+                        <rect x="72" y="72" width="194" height="26" rx="7" fill="#fff" stroke="#eef0f4"/>
+                        <circle cx="86" cy="85" r="8" fill="#e8f0fe"/><text x="86" y="87.6" text-anchor="middle" class="t-inter" font-size="7" font-weight="700" fill="#0052cc">LC</text>
+                        <rect x="100" y="80" width="56" height="4" rx="2" fill="#e8ecf3"/><rect x="100" y="87.5" width="32" height="3" rx="1.5" fill="#eef1f6"/>
+                        <rect x="72" y="104" width="194" height="26" rx="7" fill="#fff" stroke="#eef0f4"/>
+                        <circle cx="86" cy="117" r="8" fill="#e8f0fe"/><text x="86" y="119.6" text-anchor="middle" class="t-inter" font-size="7" font-weight="700" fill="#0052cc">MT</text>
+                        <rect x="100" y="112" width="48" height="4" rx="2" fill="#e8ecf3"/><rect x="100" y="119.5" width="32" height="3" rx="1.5" fill="#eef1f6"/>
+                      </g>
+                      <rect x=".5" y=".5" width="289" height="127" rx="12" fill="none" stroke="rgb(16 17 20 / .1)"/>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">01<span class="tag__fill" aria-hidden="true">01</span></span><span class="tag__name">CareVisor</span><span class="vh">, </span><span class="tag__meta">ReSkill AI</span></span>
+              </a>
+            </li>
+
+            <!-- 02 Halation: the editor, its canvas and dock. The dot rides its top edge and scrubs the playhead. -->
+            <li class="st st--hx" data-st="halation" style="--x:240;--y:424;--w:186;--h:120;--r:3deg;--ox:93;--oy:60;--k:5;--tx:0;--ty:130;--tw:206;--th:130;--mx:57;--my:258;--ms:.6;--mr:2deg;--mplx:0;--mply:78">
+              <a class="st__link" href="#halation">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 186 120">
+                      <defs><clipPath id="hx-clip"><rect x="6" y="20" width="174" height="72" rx="4"/></clipPath></defs>
+                      <rect width="186" height="120" rx="10" fill="#08080a"/>
+                      <circle cx="12" cy="10.5" r="3" fill="#55555c"/><circle data-r="rec-dot" cx="12" cy="10.5" r="3" fill="#ff3438" opacity="0"/>
+                      <text x="19" y="13.6" class="t-mono" font-size="8.5" font-weight="600" fill="#8e8e95">REC</text>
+                      <text data-r="rec-txt" x="19" y="13.6" class="t-mono" font-size="8.5" font-weight="600" fill="#ff3438" opacity="0">REC</text>
+                      <text data-r="name-coral" x="174" y="13.6" text-anchor="end" class="t-sys" font-size="8.5" font-weight="600" fill="#c5c3c0">Coral Reeds</text>
+                      <text data-r="name-emerald" x="174" y="13.6" text-anchor="end" class="t-sys" font-size="8.5" font-weight="600" fill="#c5c3c0" opacity="0">Emerald Pour</text>
+                      <text data-r="name-indigo" x="174" y="13.6" text-anchor="end" class="t-sys" font-size="8.5" font-weight="600" fill="#c5c3c0" opacity="0">Indigo Harp</text>
+                      <g clip-path="url(#hx-clip)">
+                        <image href="../../shots/halation/loop-coral-reeds-poster.webp" x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice"/>
+                        <image data-r="look-emerald" href="../../shots/halation/loop-emerald-pour-poster.webp" x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice" opacity="0"/>
+                        <image data-r="look-indigo" href="../../shots/halation/loop-indigo-harp-poster.webp" x="6" y="20" width="174" height="72" preserveAspectRatio="xMidYMid slice" opacity="0"/>
+                        <rect x="6" y="60" width="174" height="32" fill="#fff" fill-opacity=".1"/>
+                        <path d="M6 60.5H180" stroke="#fff" stroke-opacity=".28"/>
+                      </g>
+                      <path d="M10 100.5v11l8-5.5z" fill="#f4f2ee"/>
+                      <text x="23" y="109.6" class="t-mono" font-size="8.5" font-weight="600" fill="#f4f2ee"><tspan data-r="hx-time">1.6</tspan><tspan fill="#8e8e95"> / 10 s</tspan></text>
+                      <rect x="74" y="104.8" width="104" height="2.5" rx="1.25" fill="#2b2b31"/>
+                      <rect data-r="scrub-fill" x="74" y="104.8" width="104" height="2.5" rx="1.25" fill="#f4f2ee" fill-opacity=".85" transform="matrix(0.16 0 0 1 62.16 0)"/>
+                      <g class="hx-hover"><g class="hx-nudge"><g data-r="playhead" transform="translate(16.64 0)">
+                        <rect x="70.5" y="99" width="7" height="14" rx="2" fill="#ff3438" opacity=".25"/>
+                        <rect x="72.5" y="99.5" width="3" height="13" rx="1" fill="#ff3438"/>
+                      </g></g></g>
+                      <path d="M164 0h8c9 0 15-4 19-11l3 1.6c-5 8.6-12 12.4-22 12.4h-8z" fill="#101114"/>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">02<span class="tag__fill" aria-hidden="true">02</span></span><span class="tag__name">Halation</span><span class="vh">, </span><span class="tag__meta">Open source</span></span>
+              </a>
+            </li>
+
+            <!-- 03 SiteScore: a crop of its hex map. The dot hops two cells and SiteScore picks site 1. -->
+            <li class="st st--ss" data-st="sitescore" style="--x:30;--y:350;--w:180;--h:108;--r:4deg;--ox:90;--oy:54;--k:4;--tx:0;--ty:120;--tw:190;--th:122;--mx:17;--my:186;--ms:.58;--mr:3deg;--mplx:0;--mply:68">
+              <a class="st__link" href="#sitescore">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 180 108">
+                      <defs>
+                        <clipPath id="ss-clip"><rect width="180" height="108" rx="10"/></clipPath>
+                        <path id="hx" d="M9 0 4.5 7.79-4.5 7.79-9 0-4.5-7.79 4.5-7.79z"/>
+                      </defs>
+                      <rect x="3" y="7" width="180" height="108" rx="10" fill="#161616" opacity=".07"/>
+                      <g clip-path="url(#ss-clip)">
+                        <rect width="180" height="108" fill="#fbfaf8"/>
+                        <path d="M-6 78C30 66 62 92 104 70s60-46 84-40" fill="none" stroke="#e6e3de" stroke-width="5"/>
+                        <path d="M50-6 70 116M140-6 120 116" fill="none" stroke="#ebe8e3" stroke-width="3"/>
+                        <g opacity=".92"><use href="#hx" x="8.0" y="6.0" fill="#e9e8e4"/><use href="#hx" x="8.0" y="23.3" fill="#e9e8e4"/><use href="#hx" x="8.0" y="40.6" fill="#f4d4d5"/><use href="#hx" x="8.0" y="58.0" fill="#e9e8e4"/><use href="#hx" x="8.0" y="75.3" fill="#f4d4d5"/><use href="#hx" x="8.0" y="92.6" fill="#e9e8e4"/><use href="#hx" x="8.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="23.0" y="14.7" fill="#e9e8e4"/><use href="#hx" x="23.0" y="32.0" fill="#e9e8e4"/><use href="#hx" x="23.0" y="49.3" fill="#f4d4d5"/><use href="#hx" x="23.0" y="66.6" fill="#eeb3b5"/><use href="#hx" x="23.0" y="83.9" fill="#e9e8e4"/><use href="#hx" x="23.0" y="101.3" fill="#f4d4d5"/><use href="#hx" x="38.0" y="6.0" fill="#e9e8e4"/><use href="#hx" x="38.0" y="23.3" fill="#e9e8e4"/><use href="#hx" x="38.0" y="40.6" fill="#e9e8e4"/><use href="#hx" x="38.0" y="58.0" fill="#f4d4d5"/><use href="#hx" x="38.0" y="75.3" fill="#f4d4d5"/><use href="#hx" x="38.0" y="92.6" fill="#e9e8e4"/><use href="#hx" x="38.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="53.0" y="14.7" fill="#e9e8e4"/><use href="#hx" x="53.0" y="32.0" fill="#e9e8e4"/><use href="#hx" x="53.0" y="49.3" fill="#e9e8e4"/><use href="#hx" x="53.0" y="66.6" fill="#e9e8e4"/><use href="#hx" x="53.0" y="83.9" fill="#f4d4d5"/><use href="#hx" x="53.0" y="101.3" fill="#e9e8e4"/><use href="#hx" x="68.0" y="6.0" fill="#f4d4d5"/><use href="#hx" x="68.0" y="23.3" fill="#e9e8e4"/><use href="#hx" x="68.0" y="40.6" fill="#e9e8e4"/><use href="#hx" x="68.0" y="58.0" fill="#e9e8e4"/><use href="#hx" x="68.0" y="75.3" fill="#e9e8e4"/><use href="#hx" x="68.0" y="92.6" fill="#e9e8e4"/><use href="#hx" x="68.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="83.0" y="14.7" fill="#e9e8e4"/><use href="#hx" x="83.0" y="32.0" fill="#e9e8e4"/><use href="#hx" x="83.0" y="49.3" fill="#e9e8e4"/><use href="#hx" x="83.0" y="66.6" fill="#e9e8e4"/><use href="#hx" x="83.0" y="83.9" fill="#f4d4d5"/><use href="#hx" x="83.0" y="101.3" fill="#e9e8e4"/><use href="#hx" x="98.0" y="6.0" fill="#e9e8e4"/><use href="#hx" x="98.0" y="23.3" fill="#e9e8e4"/><use href="#hx" x="98.0" y="40.6" fill="#e9e8e4"/><use href="#hx" x="98.0" y="58.0" fill="#e9e8e4"/><use href="#hx" x="98.0" y="75.3" fill="#e9e8e4"/><use href="#hx" x="98.0" y="92.6" fill="#f4d4d5"/><use href="#hx" x="98.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="113.0" y="14.7" fill="#e9e8e4"/><use href="#hx" x="113.0" y="32.0" fill="#e9e8e4"/><use href="#hx" x="113.0" y="49.3" fill="#e9e8e4"/><use href="#hx" x="113.0" y="66.6" fill="#e9e8e4"/><use href="#hx" x="113.0" y="83.9" fill="#e9e8e4"/><use href="#hx" x="113.0" y="101.3" fill="#eeb3b5"/><use href="#hx" x="128.0" y="6.0" fill="#e9e8e4"/><use href="#hx" x="128.0" y="23.3" fill="#e9e8e4"/><use href="#hx" x="128.0" y="40.6" fill="#e9e8e4"/><use href="#hx" x="128.0" y="58.0" fill="#e9e8e4"/><use href="#hx" x="128.0" y="75.3" fill="#e9e8e4"/><use href="#hx" x="128.0" y="92.6" fill="#f4d4d5"/><use href="#hx" x="128.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="143.0" y="14.7" fill="#e9e8e4"/><use href="#hx" x="143.0" y="32.0" fill="#e9e8e4"/><use href="#hx" x="143.0" y="49.3" fill="#e9e8e4"/><use href="#hx" x="143.0" y="66.6" fill="#e9e8e4"/><use href="#hx" x="143.0" y="83.9" fill="#e9e8e4"/><use href="#hx" x="143.0" y="101.3" fill="#f4d4d5"/><use href="#hx" x="158.0" y="6.0" fill="#f4d4d5"/><use href="#hx" x="158.0" y="23.3" fill="#f4d4d5"/><use href="#hx" x="158.0" y="40.6" fill="#e9e8e4"/><use href="#hx" x="158.0" y="58.0" fill="#e9e8e4"/><use href="#hx" x="158.0" y="75.3" fill="#e9e8e4"/><use href="#hx" x="158.0" y="92.6" fill="#e9e8e4"/><use href="#hx" x="158.0" y="109.9" fill="#e9e8e4"/><use href="#hx" x="173.0" y="14.7" fill="#eeb3b5"/><use href="#hx" x="173.0" y="32.0" fill="#f4d4d5"/><use href="#hx" x="173.0" y="49.3" fill="#e9e8e4"/><use href="#hx" x="173.0" y="66.6" fill="#e9e8e4"/><use href="#hx" x="173.0" y="83.9" fill="#e9e8e4"/><use href="#hx" x="173.0" y="101.3" fill="#e9e8e4"/></g>
+                        <g class="ss-breathe-set"><use class="ss-breathe" href="#hx" x="38.0" y="58.0" fill="#e5484d"/><use class="ss-breathe" href="#hx" x="158.0" y="23.3" fill="#e5484d"/><use class="ss-breathe" href="#hx" x="128.0" y="92.6" fill="#e5484d"/></g>
+                        <use data-r="h1" href="#hx" x="83" y="31.98" fill="#f6d3d4" opacity="0"/>
+                        <use data-r="h2" href="#hx" x="113" y="49.3" fill="#ee9fa2" opacity="0"/>
+                        <use data-r="h3" href="#hx" x="143" y="66.62" fill="#e5484d" opacity="0"/>
+                        <!-- Phones: the dot crosses the map the other way (right to left), inking each cell it hops on. -->
+                        <use data-r="h1m" href="#hx" x="143" y="49.3" fill="#e8777b" stroke="#101114" stroke-width="1.6" opacity="0"/>
+                        <use data-r="h2m" href="#hx" x="113" y="66.62" fill="#e5585d" stroke="#101114" stroke-width="1.6" opacity="0"/>
+                        <use data-r="h3m" href="#hx" x="83" y="83.94" fill="#e5484d" stroke="#101114" stroke-width="1.6" opacity="0"/>
+                      </g>
+                      <rect x=".5" y=".5" width="179" height="107" rx="10" fill="none" stroke="#d6d5d0"/>
+                      <g class="ss-peek"><path d="M153 66.62 148 75.28H138L133 66.62 138 57.96H148z" fill="#e5484d" stroke="#fff" stroke-width="1.5"/><text x="143" y="70.6" text-anchor="middle" class="t-inter" font-size="11" font-weight="700" fill="#161616">1</text></g>
+                      <g data-r="ss-marker" opacity="0"><path d="M153 66.62 148 75.28H138L133 66.62 138 57.96H148z" fill="#e5484d" stroke="#fff" stroke-width="1.5"/><text x="143" y="70.6" text-anchor="middle" class="t-inter" font-size="11" font-weight="700" fill="#161616">1</text></g>
+                      <g data-r="ss-marker-m" opacity="0"><path d="M93 83.94 88 92.6H78L73 83.94 78 75.28H88z" fill="#e5484d" stroke="#fff" stroke-width="1.5"/><text x="83" y="87.92" text-anchor="middle" class="t-inter" font-size="11" font-weight="700" fill="#161616">1</text></g>
+                      <rect x="134" y="8" width="38" height="16" rx="8" fill="#161616"/>
+                      <path d="M144 12.5l3.2 1.85v3.7L144 19.9l-3.2-1.85v-3.7z" fill="none" stroke="#fff" stroke-width="1.1"/>
+                      <text x="151" y="19.4" class="t-inter" font-size="8" font-weight="600" fill="#fff">Heat</text>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">03<span class="tag__fill" aria-hidden="true">03</span></span><span class="tag__name">SiteScore</span><span class="vh">, </span><span class="tag__meta">Personal project</span></span>
+              </a>
+            </li>
+
+            <!-- 04 NASA Space Apps: the redaction bar is a tube. The dot goes in and, being ink on ink, is redacted. -->
+            <li class="st st--na" data-st="nasa" style="--x:382;--y:258;--w:180;--h:100;--ox:90;--oy:50;--k:3;--tx:188;--ty:78;--tw:200;--th:116;--mx:125;--my:153;--ms:.58;--mplx:0;--mply:63">
+              <a class="st__link" href="#nasa">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 180 100">
+                      <defs>
+                        <clipPath id="na-clip"><rect width="180" height="100" rx="12"/></clipPath>
+                        <clipPath id="bar-clip"><rect x="-10" y="-13" width="200" height="30" rx="3"/></clipPath>
+                        <linearGradient id="sheen" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+                      </defs>
+                      <g clip-path="url(#na-clip)">
+                        <rect width="180" height="100" fill="#6ba7a9"/>
+                        <image href="../../shots/nasa/panel.webp" x="0" y="-14" width="180" height="135" preserveAspectRatio="xMidYMid slice"/>
+                      </g>
+                      <rect x=".5" y=".5" width="179" height="99" rx="12" fill="none" stroke="rgb(16 17 20 / .14)"/>
+                      <rect x="10" y="72" width="76" height="19" rx="9.5" fill="#fbf8f2"/>
+                      <text x="48" y="85.2" text-anchor="middle" class="t-lato" font-size="10.5" font-weight="700" fill="#372f2a">In progress</text>
+                      <g transform="rotate(-5 90 2)">
+                        <rect x="-10" y="-13" width="200" height="30" rx="3" fill="#101114"/>
+                        <g clip-path="url(#bar-clip)">
+                          <rect class="na-sheen" x="-70" y="-13" width="60" height="30" fill="url(#sheen)"/>
+                          <rect data-r="sheen" x="-70" y="-13" width="60" height="30" fill="url(#sheen)" opacity="0"/>
+                        </g>
+                        <rect x="-5" y="-1" width="5" height="5" class="bolt"/><rect x="180" y="-1" width="5" height="5" class="bolt"/>
+                      </g>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">04<span class="tag__fill" aria-hidden="true">04</span></span><span class="tag__name">NASA Space Apps Challenge</span><span class="vh">, </span><span class="tag__meta">In progress</span></span>
+              </a>
+            </li>
+
+            <!-- 05 BloodLine: the hero's range card. The ruler is a rail; when the dot rolls past 130 it is flagged. -->
+            <li class="st st--bl" data-st="bloodline" style="--x:588;--y:200;--w:200;--h:112;--ox:100;--oy:56;--k:2;--tx:212;--ty:80;--tw:200;--th:122;--mx:232;--my:125;--ms:.6;--mplx:96;--mply:73">
+              <a class="st__link" href="#bloodline">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 200 112">
+                      <rect x="0" y="-5.5" width="200" height="3" rx="1.5" fill="#9aa39e"/>
+                      <rect data-r="bl-amber" x="0" y="-5.5" width="60" height="3" rx="1.5" fill="#e9ad4c" opacity="0"/>
+                      <rect x="60" y="-5.5" width="100" height="3" fill="#7fc4d4"/>
+                      <rect x=".5" y=".5" width="199" height="111" rx="16" fill="#0b1a13" stroke="rgb(220 238 226 / .18)"/>
+                      <text x="60" y="16" text-anchor="middle" class="t-mono" font-size="9.5" fill="#a6bcad">130</text>
+                      <text x="160" y="16" text-anchor="middle" class="t-mono" font-size="9.5" fill="#a6bcad">180</text>
+                      <text x="14" y="45" class="t-urb" font-size="13.5" font-weight="600" fill="#eaf2ec">Haemoglobin</text>
+                      <circle class="bl-now" cx="186" cy="12" r="3" fill="#dcebd2"/>
+                      <g class="bl-peek"><rect x="104" y="31" width="84" height="20" rx="10" fill="#e9ad4c" fill-opacity=".17"/><text x="146" y="44.6" text-anchor="middle" class="t-urb" font-size="10.5" font-weight="600" fill="#f3c57a">Outside range</text></g>
+                      <g data-r="bl-chip" opacity="0"><rect x="104" y="31" width="84" height="20" rx="10" fill="#e9ad4c" fill-opacity=".17"/><text x="146" y="44.6" text-anchor="middle" class="t-urb" font-size="10.5" font-weight="600" fill="#f3c57a">Outside range</text></g>
+                      <text x="13" y="93" class="t-urb" font-size="38" font-weight="300" fill="#eaf2ec" letter-spacing="-1">118</text>
+                      <text data-r="bl-val-amber" x="13" y="93" class="t-urb" font-size="38" font-weight="300" fill="#f3c57a" letter-spacing="-1" opacity="0">118</text>
+                      <text x="78" y="93" class="t-urb" font-size="13" font-weight="600" fill="#a6bcad">g/L</text>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">05<span class="tag__fill" aria-hidden="true">05</span></span><span class="tag__name">BloodLine</span><span class="vh">, </span><span class="tag__meta">Hack48 Sydney</span></span>
+              </a>
+            </li>
+
+            <!-- 06 Airpoint: the S Pen is a lever. The dot presses its side button and lights the point. -->
+            <li class="st st--ap" data-st="airpoint" style="--x:785;--y:119;--w:240;--h:18;--r:-15deg;--ox:120;--oy:9;--k:1;--tx:54;--ty:80;--tw:240;--th:104;--py:28;--mx:210;--my:61.6;--ms:.58;--mr:14deg;--mplx:104;--mply:-34">
+              <a class="st__link" href="#airpoint">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 240 18">
+                      <g class="ap-btn-hover"><g data-r="pen-btn"><rect x="56" y="-1.8" width="24" height="4.4" rx="2.2" fill="#2a2f3a" stroke="#3b4150" stroke-width=".8"/></g></g>
+                      <path d="M30 1.5H231a7.5 7.5 0 0 1 0 15H30z" fill="#15181f" stroke="#353b48"/>
+                      <path d="M30 1.5 7 7.4v3.2L30 16.5z" fill="#1c2029" stroke="#353b48"/>
+                      <path d="M40 5H224" stroke="#fff" stroke-opacity=".08" stroke-width="1.5" stroke-linecap="round"/>
+                      <circle cx="4.2" cy="9" r="3.4" fill="#3b69ff"/>
+                      <circle data-r="pen-green" cx="4.2" cy="9" r="3.4" fill="#3dd68c" opacity="0"/>
+                      <circle class="ap-ping" cx="4.2" cy="9" r="6" fill="none" stroke="#3b69ff" stroke-width="1.2"/>
+                      <circle data-r="pen-ping" cx="4.2" cy="9" r="6" fill="none" stroke="#3dd68c" stroke-width="1.4" opacity="0"/>
+                      <rect x="117" y="6" width="6" height="6" class="bolt"/>
+                    </svg>
+                  </span></span></span></span></span>
+                  <span class="ap-hang" aria-hidden="true"></span>
+                  <span class="ap-pill-wrap"><span class="st__in">
+                    <svg class="ap-pill" viewBox="0 0 132 26" aria-hidden="true">
+                      <rect x=".5" y=".5" width="131" height="25" rx="12.5" fill="#15181f" stroke="#2a2f3a"/>
+                      <circle cx="14" cy="13" r="3.6" fill="#3b69ff"/>
+                      <circle data-r="ap-dot-green" cx="14" cy="13" r="3.6" fill="#3dd68c" opacity="0"/>
+                      <text data-r="ap-listen" x="25" y="17" class="t-sora" font-size="11" font-weight="600" fill="#a3a9b5">Listening</text>
+                      <text data-r="ap-point" x="25" y="17" class="t-sora" font-size="11" font-weight="600" fill="#f4f4f1" opacity="0">Pointing at Joy</text>
+                    </svg>
+                  </span></span>
+                </span>
+                <span class="tag"><span class="tag__num">06<span class="tag__fill" aria-hidden="true">06</span></span><span class="tag__name">Airpoint</span><span class="vh">, </span><span class="tag__meta">Open source</span></span>
+              </a>
+            </li>
+
+            <!-- 07 Compare Best AI: a score card hung on one bolt. The dot lands on it first. -->
+            <li class="st st--cb" data-st="comparebestai" style="--x:1062;--y:34;--w:206;--h:128;--r:-9deg;--ox:103;--oy:10;--k:0;--tx:24;--ty:168;--tw:216;--th:150;--py:10;--mx:44;--my:8;--ms:.56;--mr:6deg;--mplx:-28;--mply:54">
+              <a class="st__link" href="#comparebestai">
+                <span class="st__box">
+                  <span class="st__pose"><span class="st__in"><span class="st__idle"><span class="st__react"><span class="st__hover" aria-hidden="true">
+                    <svg class="art" viewBox="0 0 206 128">
+                      <rect x="3" y="7" width="206" height="128" rx="14" fill="#0a1020" opacity=".07"/>
+                      <rect x=".5" y=".5" width="205" height="127" rx="14" fill="#fff" stroke="#dfe5ee"/>
+                      <image href="../../shots/comparebestai/logo.webp" x="13" y="17" width="64" height="28"/>
+                      <rect x="130.5" y="18.5" width="61" height="20" rx="6" fill="#fff" stroke="#9fdcf3"/>
+                      <text x="161" y="32.2" text-anchor="middle" class="t-mont" font-size="9.8" font-weight="600" fill="#0072a3">Top pick</text>
+                      <g class="cba-hover"><g class="cba-twinkle"><g data-r="star">
+                        <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" transform="translate(12 55) scale(1.2)" fill="#fff7e6" stroke="#f59e0b" stroke-width="1.5"/>
+                        <path data-r="star-fill" d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" transform="translate(12 55) scale(1.2)" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" opacity="0"/>
+                      </g></g></g>
+                      <text x="46" y="82" class="t-mont" font-size="35" font-weight="800" fill="#0a1020" letter-spacing="-1">9.2</text>
+                      <text x="106" y="82" class="t-mont" font-size="13" font-weight="600" fill="#45556c">/10</text>
+                      <rect x="14" y="97" width="178" height="5" rx="2.5" fill="#eef2f7"/>
+                      <rect x="14" y="97" width="164" height="5" rx="2.5" fill="#00b0f0"/>
+                      <text x="14" y="118" class="t-mont" font-size="9.8" font-weight="600" fill="#45556c">Overall score</text>
+                      <rect x="100" y="7" width="6" height="6" class="bolt"/>
+                    </svg>
+                  </span></span></span></span></span>
+                </span>
+                <span class="tag"><span class="tag__num">07<span class="tag__fill" aria-hidden="true">07</span></span><span class="tag__name">Compare Best AI</span><span class="vh">, </span><span class="tag__meta">Creative lead</span></span>
+              </a>
+            </li>
+          </ol>
+          <svg class="debug" viewBox="0 0 1272 580" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <!-- Phones and tablets: the plan, drawn on the tower (the script redraws it from the measured parts). -->
+          <svg class="mguide" viewBox="0 0 358 430" aria-hidden="true" data-mguide><path class="mguide__path" d="M102.5 -30.1L103.6 -33.7L104.7 -36.7L105.8 -39.4L106.9 -41.6L108 -43.3L109.1 -44.7L110.2 -45.5L111.3 -46L112.4 -46L113.5 -45.6L114.6 -44.7L115.7 -43.4L116.8 -41.6L117.9 -39.5L119 -36.8L120.1 -33.8L121.2 -30.3L122.3 -26.3L123.4 -21.9L124.5 -17.1L125.6 -11.9L126.7 -6.2L127.8 -0.1L128.9 6.5L128.9 6.5L130.1 6.6L131.3 6.8L132.4 6.9L133.6 7L134.8 7.1L136 7.3L137.2 7.4L138.4 7.5L139.5 7.6L140.7 7.8L141.9 7.9L143.1 8L144.3 8.1L145.5 8.2L146.6 8.4L147.8 8.5L149 8.6L150.2 8.7L151.4 8.9L152.6 9L153.7 9.1L154.9 9.2L156.1 9.4L157.3 9.5L157.3 9.5L164 10.3L170.8 11.2L177.5 12.2L184.2 13.4L191 14.8L197.7 16.2L204.4 17.9L211.1 19.6L217.9 21.5L224.6 23.5L231.3 25.7L238.1 28L244.8 30.5L251.5 33.1L258.3 35.9L265 38.7L271.7 41.8L278.5 44.9L285.2 48.2L291.9 51.7L298.7 55.3L305.4 59L312.1 62.9L318.8 66.9L318.8 66.9L320 67.1L321.1 67.4L322.2 67.6L323.4 67.9L324.5 68.1L325.6 68.4L326.8 68.7L327.9 68.9L329 69.2L330.2 69.4L331.3 69.7L332.4 69.9L333.5 70.2L334.7 70.4L335.8 70.7L336.9 71L338.1 71.2L339.2 71.5L340.3 71.7L341.5 72L342.6 72.2L343.7 72.5L344.9 72.8L346 73L346 73L346 73.1L346.1 73.3L346.1 73.7L346.2 74.3L346.2 75L346.3 75.8L346.3 76.8L346.4 78L346.4 79.3L346.5 80.8L346.5 82.4L346.6 84.2L346.6 86.1L346.7 88.2L346.7 90.4L346.8 92.8L346.8 95.4L346.9 98.1L346.9 100.9L347 103.9L347 107.1L347.1 110.4L347.1 113.8L347.2 117.4L347.2 117.4L342.5 117.4L337.8 117.4L333.1 117.4L328.4 117.4L323.7 117.4L319 117.4L314.3 117.4L309.6 117.4L304.9 117.4L300.2 117.4L295.5 117.4L290.8 117.4L286.1 117.4L281.4 117.4L276.7 117.4L272 117.4L267.3 117.4L262.6 117.4L257.9 117.4L253.2 117.4L248.5 117.4L243.8 117.4L239.1 117.4L234.4 117.4L234.4 117.4L234 117.5L233.7 117.7L233.3 118L233 118.3L232.6 118.9L232.2 119.5L231.9 120.2L231.5 121.1L231.2 122L230.8 123.1L230.4 124.3L230.1 125.6L229.7 127L229.3 128.5L229 130.1L228.6 131.9L228.3 133.7L227.9 135.7L227.5 137.8L227.2 140L226.8 142.3L226.5 144.7L226.1 147.3L225.7 149.9L225.7 149.9L221.4 150.3L217 150.7L212.6 151.1L208.2 151.5L203.8 151.8L199.4 152.2L195.1 152.6L190.7 153L186.3 153.4L181.9 153.7L177.5 154.1L173.2 154.5L168.8 154.9L164.4 155.3L160 155.6L155.6 156L151.2 156.4L146.9 156.8L142.5 157.2L138.1 157.6L133.7 157.9L129.3 158.3L125 158.7L120.6 159.1L120.6 159.1L119.7 159.2L118.9 159.5L118.1 160L117.2 160.7L116.4 161.5L115.6 162.4L114.7 163.5L113.9 164.8L113 166.3L112.2 167.9L111.4 169.6L110.5 171.6L109.7 173.7L108.9 175.9L108 178.3L107.2 180.9L106.4 183.6L105.5 186.5L104.7 189.6L103.8 192.8L103 196.2L102.2 199.7L101.3 203.4L100.5 207.3L100.5 207.3L99.8 205.4L99 203.7L98.3 202.2L97.5 200.9L96.8 199.9L96 199L95.3 198.3L94.5 197.8L93.8 197.4L93 197.3L92.3 197.4L91.6 197.7L90.8 198.2L90.1 198.8L89.3 199.7L88.6 200.8L87.8 202L87.1 203.5L86.3 205.1L85.6 207L84.8 209L84.1 211.3L83.3 213.7L82.6 216.3L82.6 216.3L81.9 214.5L81.1 212.8L80.4 211.3L79.6 210L78.9 208.9L78.1 208L77.4 207.3L76.6 206.8L75.9 206.5L75.1 206.4L74.4 206.5L73.6 206.8L72.9 207.2L72.2 207.9L71.4 208.8L70.7 209.8L69.9 211.1L69.2 212.6L68.4 214.2L67.7 216.1L66.9 218.1L66.2 220.3L65.4 222.8L64.7 225.4L64.7 225.4L65.2 222.8L65.7 220.5L66.2 218.5L66.7 216.9L67.1 215.5L67.6 214.5L68.1 213.9L68.6 213.5L69.1 213.5L69.6 213.8L70.1 214.5L70.6 215.4L71.1 216.7L71.5 218.3L72 220.3L72.5 222.5L73 225.1L73.5 228.1L74 231.3L74.5 234.9L75 238.8L75.5 243L75.9 247.6L76.4 252.4L76.4 252.4L79.9 252.6L83.3 252.7L86.8 252.8L90.2 252.9L93.7 253L97.1 253.2L100.6 253.3L104 253.4L107.5 253.5L110.9 253.6L114.4 253.8L117.8 253.9L121.3 254L124.7 254.1L128.1 254.2L131.6 254.4L135 254.5L138.5 254.6L141.9 254.7L145.4 254.8L148.8 255L152.3 255.1L155.7 255.2L159.2 255.3L159.2 255.3L165.3 248.1L171.4 241.8L177.4 236.6L183.5 232.4L189.6 229.2L195.7 227L201.8 225.9L207.9 225.7L214 226.5L220 228.4L226.1 231.2L232.2 235.1L238.3 240L244.4 245.9L250.5 252.8L256.6 260.7L262.6 269.6L268.7 279.6L274.8 290.5L280.9 302.4L287 315.4L293.1 329.4L299.2 344.4L305.2 360.4" data-mguide-path/><g class="mguide__charge" data-charge></g><g class="mguide__marks" data-marks><rect x="127.4" y="5.0" width="3" height="3"/><rect x="317.3" y="65.4" width="3" height="3"/><rect x="345.7" y="115.9" width="3" height="3"/><rect x="224.2" y="148.4" width="3" height="3"/><rect x="99.0" y="205.8" width="3" height="3"/><rect x="81.1" y="214.8" width="3" height="3"/><rect x="63.2" y="223.9" width="3" height="3"/><rect x="74.9" y="250.9" width="3" height="3"/><rect x="303.7" y="358.9" width="3" height="3"/></g><g class="mguide__debug" data-mdebug></g></svg>
+        </div>
+
+        <div class="foot">
+          <div class="foot__in">
+            <button class="switch" type="button" role="switch" aria-checked="true">
+              <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+              <span class="switch__label">Idle motion</span>
+              <span class="switch__state" aria-hidden="true">On</span>
+            </button>
+            <a class="cue" href="#carevisor">Scroll to set it off<span class="vh">, starting with CareVisor</span> <span class="cue__arrow" aria-hidden="true">↓</span></a>
+            <!-- Phones and tablets: the one control that sets the machine off (a link to 01 without script). -->
+            <a class="cue-m" href="#carevisor" data-cue><span data-cue-t>Scroll to 01 CareVisor</span><span class="vh" data-cue-vh></span><svg class="cue-m__arrow" viewBox="0 0 12 12" aria-hidden="true" data-cue-arrow><path d="M10 10 2 2M2 8V2h6"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The cut: the button's ripple keeps growing into CareVisor's own ground. -->
+  <div class="reveal" aria-hidden="true">
+    <div class="reveal__disc"><div class="reveal__world"></div></div>
+    <div class="reveal__ring"></div>
+  </div>
+
+  <!-- Phones and tablets only (inert on desktop). The press: 01's window again, laid out at the size it is
+       pressed at, with the dot that falls onto its button; above the ripple, so the ground opens behind it. -->
+  <div class="press" aria-hidden="true">
+    <div class="press__win" data-press-win></div>
+    <span class="press__dot" data-press-dot><span class="press__sq"><span class="press__ink"></span></span></span>
+  </div>
+  <span class="hit" aria-hidden="true" data-hit></span>
+  <i class="thread" aria-hidden="true" data-thread></i>
+  <i class="ghost" aria-hidden="true" data-ghost></i>
+  <!-- The slate: which part is live (it repeats the parts' link names, so it is hidden from assistive tech). -->
+  <div class="ro" aria-hidden="true" data-ro>
+    <p class="ro__line" data-line="0"><span class="ro__num">07</span><b>Compare Best AI</b><span class="ro__meta">Creative lead</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="1"><span class="ro__num">06</span><b>Airpoint</b><span class="ro__meta">Open source</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="2"><span class="ro__num">05</span><b>BloodLine</b><span class="ro__meta">Hack48 Sydney</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="3"><span class="ro__num">04</span><b>NASA Space Apps</b><span class="ro__meta">In progress</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="4"><span class="ro__num">03</span><b>SiteScore</b><span class="ro__meta">Personal project</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="5"><span class="ro__num">02</span><b>Halation</b><span class="ro__meta">Open source</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line" data-line="6"><span class="ro__num">01</span><b>CareVisor</b><span class="ro__meta">ReSkill AI</span><span class="ro__tap">Tap again to open</span></p>
+    <p class="ro__line ro__line--done" data-line="7"><b>Ran 07 → 01.</b><span class="ro__meta">The full stop pressed CareVisor’s button.</span></p>
+  </div>
+  <a class="skip-run" href="#carevisor" data-skip-run><span>Skip</span><span class="vh"> intro</span><svg class="skip-run__arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v8.5M2.5 6.5 6 10l3.5-3.5"/></svg></a>
+  <!-- 100svh, measured: the strip's length and the layout never follow the URL bar. -->
+  <i class="intro__probe" aria-hidden="true" data-probe></i>
+  </div>
+</section>
+
+<!-- ======================= Chapter 01 mock: CareVisor's opening frame ======================= -->
+<section id="carevisor" class="cv" data-section="carevisor" aria-labelledby="carevisor-title">
+  <div class="cv-world">
+    <header class="cv-nav">
+      <span class="cv-brand">
+        <svg class="cv-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="13" fill="#3567ba"/>
+          <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path class="cv-mark-line" d="M6 38.6H13.4C15 38.6 15.6 33 16.6 33S17.9 38.9 18.8 38.9H20L28.2 15L35.8 38.9H40.6C42.6 38.9 43.9 31.7 45.2 31.7S46.9 38.9 48.4 38.9H58"/>
+            <path class="cv-mark-line" d="M38.2 22.4V38.6"/>
+          </g>
+          <path class="cv-mark-pop" d="M25 27.6H31.6" stroke="#a9c1ea" stroke-width="2.4" stroke-linecap="round"/>
+          <circle class="cv-mark-pop" cx="38.2" cy="17.4" r="2" fill="#5ea2f2"/>
+        </svg>
+        <span class="cv-brand__name">Care<span>Visor</span></span>
+        <span class="cv-brand__sep" aria-hidden="true"></span>
+        <span class="cv-brand__tag">NDIS service provider platform</span>
+      </span>
+      <p class="cv-nav__meta"><span>01 · Work</span><span>ReSkill AI</span><span>Since Oct 2025</span><span>NDIS software</span></p>
+      <a class="cv-btn cv-btn--solid cv-btn--sm" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer">Visit the site<span class="vh"> (opens in a new tab)</span></a>
+    </header>
+
+    <div class="cv-hero">
+      <h2 class="cv-hero__title" id="carevisor-title" tabindex="-1"><span class="cvw"><span>The</span></span> <span class="cvw"><span>complete</span></span> <span class="cvw"><span>NDIS</span></span> <span class="cvw"><span>compliance</span></span> <span class="cvw"><span>and</span></span><br class="cv-br"> <span class="cvw"><span class="cv-blue">Audit&#8209;Ready</span></span> <span class="cvw"><span>platform.</span></span></h2>
+      <p class="cv-hero__lede">The NDIS service provider platform, built in Australia. It takes a provider’s team from participant intake to payroll, with every shift, document, incident and claim connected.</p>
+      <p class="cv-hero__role"><span>My role</span>Designed the website and the product UI</p>
+      <div class="cv-hero__ctas">
+        <a class="cv-btn cv-btn--solid" href="https://carevisor.com.au" target="_blank" rel="noopener noreferrer">Visit carevisor.com.au<span class="vh"> (opens in a new tab)</span>
+          <svg class="cv-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="cv-product" aria-hidden="true">
+      <ol class="cv-tabs">
+        <li class="cv-tab is-on"><span class="cv-tile" style="--tile:#e8f0fe;--tile-ink:#0052cc"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span><span class="cv-tab__cap">Guided onboarding</span><span class="cv-tab__title">Participant Intake</span><span class="cv-tab__track"><i></i></span></li>
+        <li class="cv-tab"><span class="cv-tile" style="--tile:#efe9fe;--tile-ink:#6d4aff"><svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="cv-tab__cap">Compliance-first hiring</span><span class="cv-tab__title">Staff Intake</span><span class="cv-tab__track"><i></i></span></li>
+        <li class="cv-tab"><span class="cv-tile" style="--tile:#fef3e2;--tile-ink:#d97706"><svg viewBox="0 0 24 24"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg></span><span class="cv-tab__cap">Roster on autopilot</span><span class="cv-tab__title">Shift Management</span><span class="cv-tab__track"><i></i></span></li>
+        <li class="cv-tab"><span class="cv-tile" style="--tile:#e0f5f1;--tile-ink:#0f9d8f"><svg viewBox="0 0 24 24"><path d="m18.226 5.226-2.52-2.52A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-.351"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span><span class="cv-tab__cap">Smart templates</span><span class="cv-tab__title">Document Builder</span><span class="cv-tab__track"><i></i></span></li>
+        <li class="cv-tab"><span class="cv-tile" style="--tile:#fdeaea;--tile-ink:#e05252"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="cv-tab__cap">Audit-ready workflows</span><span class="cv-tab__title">Incident Management</span><span class="cv-tab__track"><i></i></span></li>
+        <li class="cv-tab"><span class="cv-tile" style="--tile:#e6f6ea;--tile-ink:#1d9d55"><svg viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span><span class="cv-tab__cap">Claims without chaos</span><span class="cv-tab__title">Billing &amp; Payroll</span><span class="cv-tab__track"><i></i></span></li>
+      </ol>
+      <div class="cvd">
+        <div class="cvd-chrome"><i style="--c:#f0645c"></i><i style="--c:#f5bd4f"></i><i style="--c:#61c454"></i><span class="cvd-url">app.carevisor.com</span><span class="cvd-sp"></span></div>
+        <div class="cvd-body">
+          <div class="cvd-side">
+            <div class="cvd-org"><span class="cvd-org__icon"></span><span><b>Sunrise Care</b><small>Aisha · Admin</small></span></div>
+            <span class="cvd-nav">Dashboard</span><span class="cvd-nav is-on">Participants</span><span class="cvd-nav">Team</span><span class="cvd-nav">Roster</span><span class="cvd-nav">Documents</span><span class="cvd-nav">Incidents</span><span class="cvd-nav">Billing</span>
+          </div>
+          <div class="cvd-stage">
+            <div class="cvd-head"><div><b class="cvd-h">Participants</b><i class="cvd-skel" style="--w:128px"></i></div><span class="cvd-btn">+ New participant</span></div>
+            <div class="cvd-row"><span class="cvd-ava">LC</span><span class="cvd-stack"><i class="cvd-skel" style="--w:112px"></i><i class="cvd-skel cvd-skel--thin" style="--w:64px"></i></span></div>
+            <div class="cvd-row"><span class="cvd-ava">MT</span><span class="cvd-stack"><i class="cvd-skel" style="--w:96px"></i><i class="cvd-skel cvd-skel--thin" style="--w:64px"></i></span></div>
+            <div class="cvd-row"><span class="cvd-ava">AR</span><span class="cvd-stack"><i class="cvd-skel" style="--w:128px"></i><i class="cvd-skel cvd-skel--thin" style="--w:64px"></i></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The rest of chapter 01 would play here. -->
+<div class="tail" data-section="tail">
+  <p class="tail__note">End of the prototype. CareVisor's chapter continues from here.</p>
+</div>
+</main>
+
+<div class="hud" aria-hidden="true"></div>
+<p class="toast" role="status" data-toast></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="machine.js"></script>
+</body>
+</html>

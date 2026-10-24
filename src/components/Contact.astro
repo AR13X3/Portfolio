@@ -1,0 +1,99 @@
+---
+import { site } from '../data/site';
+// A break after the @ is the only sensible place to wrap the address on a narrow phone.
+const [user, domain] = site.email.split('@');
+---
+
+<section id="contact" class="contact" data-section="contact" aria-labelledby="contact-title">
+  <div class="contact__frame">
+    <p class="label contact__label" data-reveal>Contact</p>
+    <h2 class="contact__title" id="contact-title" tabindex="-1" data-focus data-reveal>Say hello.</h2>
+    <a class="contact__email" href={`mailto:${site.email}`} data-reveal>{user}@<wbr />{domain}</a>
+    <ul class="contact__links" data-reveal>
+      <li>
+        <a href={site.links.linkedin} target="_blank" rel="noopener noreferrer">
+          LinkedIn<span class="visually-hidden"> (opens in a new tab)</span>
+          <svg aria-hidden="true" viewBox="0 0 12 12" width="11" height="11"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+        </a>
+      </li>
+      <li>
+        <a href={site.links.github} target="_blank" rel="noopener noreferrer">
+          GitHub<span class="visually-hidden"> (opens in a new tab)</span>
+          <svg aria-hidden="true" viewBox="0 0 12 12" width="11" height="11"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    display: grid;
+    min-height: 100svh;
+    padding: clamp(96px, 16vh, 180px) var(--gutter) clamp(64px, 10vh, 120px);
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  html.mode-full .contact {
+    padding-right: calc(var(--rail) + var(--gutter));
+  }
+
+  .contact__frame {
+    align-self: center;
+    max-width: 1360px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .contact__label {
+    color: var(--ink-2);
+  }
+
+  .contact__title {
+    margin-top: 18px;
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    font-weight: 560;
+    font-stretch: 118%;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    outline: none;
+  }
+
+  .contact__email {
+    display: inline-block;
+    margin-top: clamp(24px, 4vh, 40px);
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 5.6vw, 4.75rem);
+    font-weight: 560;
+    font-stretch: 118%;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    overflow-wrap: break-word;
+    text-decoration-line: underline;
+    text-decoration-thickness: 0.04em;
+    text-underline-offset: 0.14em;
+  }
+
+  .contact__links {
+    display: flex;
+    gap: 8px 28px;
+    margin-top: clamp(24px, 4vh, 40px);
+  }
+
+  .contact__links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .contact__links a:hover {
+    text-decoration: underline;
+  }
+</style>

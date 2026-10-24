@@ -1,0 +1,958 @@
+---
+/**
+ * Airpoint, told in the app's own language: Ink and Electric, Sora over Roboto, the Loop,
+ * AirCards and pill buttons, the onboarding pager's dots, the link stage, the live pad and
+ * the Windows tray. The phone shows the real app (the README screenshots, in a punch-hole
+ * frame); the PC beside it is the app's own drawing of a desktop (OnboardingScreen.kt
+ * DesktopArt), where the cursor moves when the pen does. Source: github.com/AR13X3/airpoint
+ * (MIT, by AR13X3).
+ */
+import '@fontsource-variable/sora';
+import '@fontsource-variable/roboto';
+import ChapterSection from '../../components/ChapterSection.astro';
+import Phone from '../../components/Phone.astro';
+import Screen from '../../components/Screen.astro';
+import Shot from '../../components/Shot.astro';
+import Icon from './Icon.astro';
+import LinkStage from './LinkStage.astro';
+import Loop from './Loop.astro';
+import Monitor from './Monitor.astro';
+import { CURSOR, GESTURE_A, GESTURE_B, PAD, TRAIL_LAYERS, padPoint, smooth } from './geometry';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const [repo, release] = chapter.links;
+const newTab = '(opens in a new tab)';
+
+// The PIN and PC name in the README screenshots (a one-time emulator code and a demo PC).
+const PIN = '793 754';
+const PC_NAME = 'Joy';
+
+// The live pad overlay draws in the screenshot's own 1080 × 2400 pixels.
+const dp = PAD.dp;
+const padA = smooth(GESTURE_A.map(padPoint));
+const padB = smooth(GESTURE_B.map(padPoint));
+const [px0, py0] = padPoint(GESTURE_A[0]);
+
+const screens = [
+  {
+    src: 'shots/airpoint/repo-onboarding.webp',
+    alt: 'Airpoint’s welcome screen: the blue Loop mark above “Your S Pen, now a mouse.”, a line about waving to move and pressing to click, and a Next button.',
+  },
+  {
+    src: 'shots/airpoint/repo-pairing-radar.webp',
+    alt: 'Connect a computer: a radar sweep around the Loop has found one computer, shown as a green blip, and lists Joy at 10.0.2.2 below it.',
+  },
+  {
+    src: 'shots/airpoint/repo-paired-pin.webp',
+    alt: 'PIN accepted: a green check, “Paired with Joy”, “From now on it reconnects on its own.” and six green PIN cells.',
+  },
+  {
+    src: 'shots/airpoint/repo-home-live-dark.webp',
+    alt: 'Home while pointing: S Pen, Phone and Joy linked with checks, “Pointing at Joy”, a Stop button, Joy connected, and the live pad that mirrors the pen.',
+    pad: true,
+  },
+];
+
+const trays = [
+  { state: 'paused', name: 'Grey', meaning: 'Paused' },
+  { state: 'listening', name: 'Blue point', meaning: 'Listening for a phone' },
+  { state: 'connected', name: 'Green point', meaning: 'A phone is connected' },
+];
+---
+
+<ChapterSection chapter={chapter} next={next} class="ap">
+  <div class="ap-world">
+    <header class="ap-nav" data-ap="nav" data-clear>
+      <span class="ap-brand">
+        <Loop id="ap-nav-loop" write class="ap-brand__mark" />
+        <span class="ap-brand__name" data-ap="brand-name">Airpoint</span>
+      </span>
+      <p class="ap-nav__meta" data-ap="nav-meta">
+        <span>{num}</span>
+      </p>
+      <span class="ap-nav__cta" data-ap="nav-btn">
+        <a class="ap-btn ap-btn--neutral ap-btn--compact" href={repo.href} target="_blank" rel="noopener noreferrer">
+          <Icon name="code" class="ap-btn__icon" />
+          {repo.label}<span class="visually-hidden"> {newTab}</span>
+        </a>
+      </span>
+    </header>
+
+    <div class="ap-hero" data-ap="hero" data-clear>
+      <h2 class="ap-title" id={`${chapter.slug}-title`} tabindex="-1" data-focus>
+        <span class="visually-hidden">{chapter.name}. </span>
+        <span class="ap-title__text" data-ap="title">Your S&nbsp;Pen,<br /> now a&nbsp;mouse.</span>
+      </h2>
+      <p class="ap-ctas" data-ap="hero-in">
+        <a class="ap-btn ap-btn--primary" href={repo.href} target="_blank" rel="noopener noreferrer">
+          View the code<span class="visually-hidden"> on GitHub {newTab}</span>
+          <Icon name="arrowRight" class="ap-btn__icon" />
+        </a>
+        <a class="ap-btn ap-btn--ghost" href={release.href} target="_blank" rel="noopener noreferrer">
+          {release.label}<span class="visually-hidden"> {newTab}</span>
+        </a>
+      </p>
+    </div>
+
+    <div class="ap-stage">
+      <div class="ap-handset">
+        <Phone label="The Airpoint app on a Galaxy phone" class="ap-phone">
+          {
+            screens.map((s) => (
+              <Screen>
+                <div class="ap-shot">
+                  <Shot src={s.src} alt={s.alt} width={720} height={1600} sizes="300px" />
+                  {s.pad && (
+                    <svg class="ap-pad" viewBox="0 0 1080 2400" aria-hidden="true" focusable="false" data-ap="pad">
+                      <rect x={PAD.patch.x} y={PAD.patch.y} width={PAD.patch.w} height={PAD.patch.h} fill="#090b0f" />
+                      {PAD.patchDots.map(([x, y]) => (
+                        <circle cx={x} cy={y} r={1.1 * dp} fill="#282c37" />
+                      ))}
+                      <path d={padA} class="ap-pad__guide" data-ap="pad-path-a" />
+                      <path d={padB} class="ap-pad__guide" data-ap="pad-path-b" />
+                      <g class="ap-pad__trail" data-ap="pad-trail">
+                        {TRAIL_LAYERS.map((l) => (
+                          <path d={`${padA} ${padB.replace(/^M[^C]+/, '')}`} stroke-width={l.width * dp} stroke-opacity={l.alpha} data-window={l.window} />
+                        ))}
+                      </g>
+                      <circle class="ap-pad__ripple" data-ap="pad-ripple" r={8 * dp} cx="0" cy="0" />
+                      <g data-ap="pad-cursor" transform={`translate(${px0.toFixed(1)} ${py0.toFixed(1)})`}>
+                        <circle r={CURSOR.halo * dp} class="ap-pad__halo" data-ap="pad-halo" />
+                        <circle r={CURSOR.core * dp} class="ap-pad__core" data-ap="pad-core" />
+                        <circle r={CURSOR.punch * dp} fill="#090b0f" />
+                      </g>
+                    </svg>
+                  )}
+                </div>
+              </Screen>
+            ))
+          }
+        </Phone>
+        <p class="ap-swipe">Swipe sideways for pairing and pointing</p>
+      </div>
+      <Monitor pin={PIN} class="ap-stage__pc" />
+    </div>
+
+    <div class="ap-why" data-ap="why" data-clear>
+      <div class="ap-why__head">
+        <h3 class="visually-hidden" data-ap="why-label">Design decisions</h3>
+        <span class="ap-dots" aria-hidden="true" data-ap="dots">
+          {
+            chapter.decisions.map(() => (
+              <span class="ap-dots__slot" data-ap="dot">
+                <i class="ap-dots__dot" />
+                <i class="ap-dots__pill" />
+              </span>
+            ))
+          }
+        </span>
+      </div>
+      <ol class="ap-why__list">
+        {
+          chapter.decisions.map((d, i) => (
+            <li class="ap-why__item">
+              <div class="ap-page" data-ap="page">
+                <h4 class="ap-page__title">{d.title}</h4>
+              </div>
+              {i === 0 && (
+                <figure
+                  class="ap-card ap-blues"
+                  data-ap="card"
+                  role="img"
+                  aria-label="Airpoint’s Start pointing button: white text on Electric UI, #3B69FF, at 4.52 to 1. On the brand blue, #3D6BFF, the same white would only reach 4.43 to 1."
+                >
+                  <div class="ap-session" data-ap="session">
+                    <span class="ap-session__band" data-ap="session-band" />
+                    <span class="ap-session__label" data-ap="session-start">
+                      <Loop class="ap-session__loop" />
+                      Start pointing
+                    </span>
+                    <span class="ap-session__label ap-session__label--busy" data-ap="session-busy">
+                      Connecting
+                      <span class="ap-session__dots">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    </span>
+                  </div>
+                  <div class="ap-swatches">
+                    <div class="ap-swatch">
+                      <i style="background:#3d6bff" />
+                      <span>
+                        <b>Electric</b>
+                        <small>#3D6BFF · the mark and app icon</small>
+                      </span>
+                      <em>4.43 : 1</em>
+                    </div>
+                    <div class="ap-swatch">
+                      <i style="background:#3b69ff" />
+                      <span>
+                        <b>Electric UI</b>
+                        <small>#3B69FF · buttons and fills</small>
+                      </span>
+                      <em class="is-pass">
+                        <Icon name="check" />
+                        4.52 : 1
+                      </em>
+                    </div>
+                  </div>
+                </figure>
+              )}
+              {i === 1 && (
+                <figure
+                  class="ap-card ap-trays"
+                  data-ap="card"
+                  role="img"
+                  aria-label="The tray icon’s three states: all grey when paused, a blue point while listening for a phone, a green point when a phone is connected."
+                >
+                  <p class="ap-label">In the Windows tray</p>
+                  <ul>
+                    {trays.map((t) => (
+                      <li class={`ap-trays__row ap-trays__row--${t.state}`} data-ap="tray-row">
+                        <span class="ap-trays__hl" data-ap="tray-hl" />
+                        <span class="ap-trays__icon">
+                          <Loop cut="small" />
+                        </span>
+                        <span class="ap-trays__text">
+                          <b>{t.name}</b>
+                          <small>{t.meaning}</small>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </figure>
+              )}
+              {i === 2 && (
+                <figure
+                  class="ap-card ap-links"
+                  data-ap="card"
+                  role="img"
+                  aria-label={`Airpoint’s link stage: S Pen, Phone and ${PC_NAME}, each checked and joined by live wires. Particles run along the wires as the pen moves, and a click sends a green packet that rings the PC.`}
+                >
+                  <LinkStage pcName={PC_NAME} />
+                </figure>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</ChapterSection>
+
+<style>
+  /* Tokens from android/.../ui/theme/Theme.kt (DarkColors), Type.kt and Radii. They live on
+     .ap-world: the <section> belongs to ChapterSection, outside this component's scope. */
+  .ap-world {
+    --ink: #0d0f14;
+    --surface: #15181f;
+    --raised: #1d2129;
+    --sunken: #090b0f;
+    --tile: #1d2129;
+    --outline: #242934;
+    --outline-strong: #353b48;
+    --text: #f4f4f1;
+    --text-2: #a3a9b5;
+    --text-3: #828894;
+    --accent: #3b69ff;
+    --on-accent: #ffffff;
+    --accent-soft: #1a2547;
+    --accent-text: #8da8ff;
+    --live: #3dd68c;
+    --live-soft: #12301f;
+    --danger: #ff6b5e;
+    --sora: 'Sora Variable', 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --roboto: 'Roboto Variable', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+    --r-sm: 12px;
+    --r-md: 18px;
+    --r-lg: 26px;
+    --ap-g: clamp(16px, 4vw, 48px);
+    /* Read as a document, the chapter sits in one centred 1160 px column. */
+    --ap-inline: max(var(--ap-g), (100% - 1160px) / 2);
+    position: relative;
+    z-index: 1;
+    padding-bottom: clamp(56px, 10vh, 112px);
+    /* Read as a document (lite, reduced), the chapter paints its own Ink, so its light text never
+       sits on a neighbour's background while the fixed layers change over. */
+    background: var(--ink);
+    color: var(--text);
+    font: 400 16px/1.5 var(--roboto);
+  }
+
+  .ap-world ::selection {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .ap-world :focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Shared pieces: labels, chips, tiles, buttons (Surfaces.kt) ---------- */
+  .ap-label {
+    display: block;
+    font: 500 11px/14px var(--roboto);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .ap-tile {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-sm);
+    background: var(--tile);
+    color: var(--text);
+    font-size: 22px;
+  }
+
+  .ap-tile--accent {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+
+  .ap-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 22px;
+    border-radius: 99px;
+    font: 600 16px/20px var(--sora);
+    letter-spacing: -0.005em;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .ap-btn:active {
+    transform: scale(0.97);
+  }
+
+  .ap-btn :global(.ap-btn__icon) {
+    font-size: 20px;
+  }
+
+  .ap-btn--primary {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .ap-btn--primary:hover {
+    background: #2e5fff;
+  }
+
+  .ap-btn--ghost {
+    color: var(--accent-text);
+  }
+
+  .ap-btn--ghost:hover {
+    background: rgb(141 168 255 / 0.1);
+  }
+
+  .ap-btn--neutral {
+    background: var(--raised);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--outline);
+  }
+
+  .ap-btn--neutral:hover {
+    box-shadow: inset 0 0 0 1px var(--outline-strong);
+  }
+
+  .ap-btn--compact {
+    min-height: 44px;
+    padding: 0 16px;
+    font: 500 14px/20px var(--roboto);
+  }
+
+  .ap-btn--compact :global(.ap-btn__icon) {
+    font-size: 18px;
+  }
+
+  /* ---------- Top bar (HomeScreen.kt TopBar) ---------- */
+  .ap-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+    padding: 18px var(--ap-inline);
+  }
+
+  .ap-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ap-brand :global(.ap-brand__mark) {
+    width: 38px;
+    height: 38px;
+    margin: -2px 0 0 -4px;
+    --loop-stroke: var(--accent);
+  }
+
+  .ap-brand__name {
+    font: 600 22px/28px var(--sora);
+    letter-spacing: -0.015em;
+  }
+
+  .ap-nav__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-left: auto;
+    color: var(--text-2);
+    font: 400 14px/20px var(--roboto);
+  }
+
+  .ap-nav__meta span:first-child {
+    color: var(--accent-text);
+    font-family: var(--sora);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 760px) {
+    .ap-nav__meta {
+      order: 3;
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .ap-nav__cta {
+      margin-left: auto;
+    }
+  }
+
+  /* ---------- Hero (the onboarding page: display type over platform body copy) ---------- */
+  .ap-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(28px, 7vh, 88px) var(--ap-inline) clamp(36px, 6vh, 64px);
+  }
+
+  .ap-title {
+    margin-top: 22px;
+    font: 600 clamp(40px, 9.6vw, 76px) / 1.08 var(--sora);
+    letter-spacing: -0.035em;
+    outline: none;
+  }
+
+  .ap-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 30px;
+  }
+
+  /* ---------- Stage: the PC and the phone ---------- */
+  .ap-stage {
+    display: grid;
+    justify-items: center;
+    gap: 36px;
+    padding: 0 var(--ap-inline);
+  }
+
+  .ap-stage :global(.ap-stage__pc) {
+    width: min(100%, 680px);
+  }
+
+  .ap-handset {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    width: min(300px, 74vw);
+  }
+
+  /* Dark surfaces in the app separate by outline, not shadow; a long shadow only muddies Ink. */
+  .ap-handset :global(.ap-phone) {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.08) inset,
+      0 0 0 1.5px var(--outline-strong);
+  }
+
+  .ap-swipe {
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .ap-shot {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1080 / 2400;
+  }
+
+  .ap-shot :global(.shot) {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The live pad overlay only runs with the scrubbed story; elsewhere the screenshot's own cursor shows. */
+  .ap-pad {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    overflow: visible;
+  }
+
+  .ap-pad__guide {
+    fill: none;
+    stroke: none;
+  }
+
+  .ap-pad__trail path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ap-pad__halo {
+    fill: rgb(59 105 255 / 0.18);
+  }
+
+  .ap-pad__core {
+    fill: var(--accent);
+  }
+
+  .ap-pad__ripple {
+    fill: none;
+    stroke: var(--live);
+    stroke-width: 5.25;
+    opacity: 0;
+  }
+
+  /* ---------- Decisions: the onboarding pager's pages and dots, each with its art ---------- */
+  .ap-why {
+    padding: clamp(56px, 10vh, 112px) var(--ap-inline) 0;
+  }
+
+  .ap-why__head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* PageDots (OnboardingScreen.kt): 8 dp dots, the active one a 26 dp Electric pill. Only shown when paging. */
+  .ap-dots {
+    position: relative;
+    display: none;
+    width: 54px;
+    height: 8px;
+  }
+
+  .ap-dots__slot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 8px;
+  }
+
+  .ap-dots__dot,
+  .ap-dots__pill {
+    position: absolute;
+    top: 0;
+    height: 8px;
+    border-radius: 99px;
+  }
+
+  .ap-dots__dot {
+    left: 9px;
+    width: 8px;
+    background: var(--outline-strong);
+  }
+
+  .ap-dots__pill {
+    left: 0;
+    width: 26px;
+    background: var(--accent);
+    opacity: 0;
+  }
+
+  .ap-why__list {
+    display: grid;
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .ap-why__item {
+    display: grid;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .ap-page__title {
+    font: 600 clamp(22px, 2vw, 26px) / 1.25 var(--sora);
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  /* AirCard: surface, a 1 dp outline, 26 dp corners, 20 dp padding. */
+  .ap-card {
+    padding: 20px;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--outline);
+  }
+
+  /* 01: the SessionButton and the two blues. */
+  .ap-session {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 64px;
+    border-radius: 99px;
+    background: var(--accent);
+    color: var(--on-accent);
+    overflow: hidden;
+  }
+
+  .ap-session > * {
+    grid-area: 1 / 1;
+  }
+
+  .ap-session__band {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 50%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.22), transparent);
+    transform: translateX(-120%);
+  }
+
+  .ap-session__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 16px/20px var(--sora);
+    letter-spacing: -0.005em;
+  }
+
+  .ap-session__label--busy {
+    gap: 6px;
+    visibility: hidden;
+  }
+
+  .ap-session :global(.ap-session__loop) {
+    width: 30px;
+    height: 30px;
+    margin: -2px -2px 0 -6px;
+    --loop-stroke: #fff;
+  }
+
+  .ap-session__dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .ap-session__dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .ap-swatches {
+    display: grid;
+    gap: 4px;
+    margin-top: 14px;
+  }
+
+  .ap-swatch {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 4px;
+  }
+
+  .ap-swatch > i {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--r-sm);
+  }
+
+  .ap-swatch > span {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ap-swatch b {
+    font: 500 15px/20px var(--roboto);
+  }
+
+  .ap-swatch small {
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .ap-swatch em {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-2);
+    font: 600 14px/1 var(--sora);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ap-swatch em.is-pass {
+    color: var(--live);
+  }
+
+  .ap-swatch em :global(.air-icon) {
+    font-size: 16px;
+  }
+
+  /* 02: the tray icon's three states. */
+  .ap-trays ul {
+    display: grid;
+    gap: 2px;
+    margin-top: 12px;
+  }
+
+  .ap-trays__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px;
+  }
+
+  .ap-trays__hl {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-md);
+    background: var(--raised);
+    opacity: 0;
+  }
+
+  .ap-trays__icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-sm);
+    background: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--outline);
+  }
+
+  .ap-trays__icon :global(.loop) {
+    width: 30px;
+    height: 30px;
+    --loop-stroke: var(--text);
+  }
+
+  .ap-trays__row--paused .ap-trays__icon :global(.loop) {
+    --loop-stroke: #8a909c;
+  }
+
+  .ap-trays__row--listening .ap-trays__icon :global(.loop) {
+    --loop-dot: #6e92ff;
+  }
+
+  .ap-trays__row--connected .ap-trays__icon :global(.loop) {
+    --loop-dot: var(--live);
+  }
+
+  .ap-trays__text {
+    position: relative;
+    display: grid;
+  }
+
+  .ap-trays__text b {
+    font: 500 15px/20px var(--roboto);
+  }
+
+  .ap-trays__text small {
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  /* 03: the link stage. */
+  .ap-links {
+    padding: 18px;
+  }
+
+  @media (min-width: 900px) {
+    .ap-stage {
+      grid-template-columns: auto minmax(0, 680px);
+      justify-content: center;
+      align-items: center;
+      gap: clamp(32px, 5vw, 72px);
+    }
+
+    .ap-handset {
+      width: 280px;
+    }
+
+    .ap-why__item {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+      gap: clamp(24px, 4vw, 56px);
+      padding-top: 24px;
+      border-top: 1px solid var(--outline);
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport. The hero hands over to the decisions
+     in the left column while the PC and the phone hold the stage.
+     ------------------------------------------------------------------ */
+  /* In the pinned story the fixed layers carry the colour, so the transitions can show through. */
+  :global(html.mode-full) .ap-world {
+    --stage-l: 44vw;
+    --stage-r: calc(var(--rail) + var(--gutter));
+    --col-w: calc(var(--stage-l) - var(--ap-g) - 3vw);
+    --phone-sw: min(64vh * 0.4621, 300px, 21vw);
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    background: none;
+  }
+
+  :global(html.mode-full) .ap-nav {
+    position: absolute;
+    inset: 0 0 auto;
+    flex-wrap: nowrap;
+    padding: 18px calc(var(--rail) + var(--ap-g)) 18px var(--ap-g);
+  }
+
+  :global(html.mode-full) .ap-hero {
+    position: absolute;
+    left: var(--ap-g);
+    top: 88px;
+    bottom: 32px;
+    width: var(--col-w);
+    max-width: none;
+    justify-content: center;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .ap-title {
+    font-size: clamp(42px, 4.7vw, 82px);
+  }
+
+  :global(html.mode-full) .ap-stage {
+    position: absolute;
+    left: var(--stage-l);
+    right: var(--stage-r);
+    top: 0;
+    bottom: 0;
+    display: block;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .ap-stage :global(.ap-stage__pc) {
+    position: absolute;
+    right: 0;
+    top: max(104px, 16vh);
+    width: min(92%, (100vh - 250px) * 1.6);
+  }
+
+  :global(html.mode-full) .ap-handset {
+    position: absolute;
+    left: -1.5vw;
+    bottom: 28px;
+    z-index: 2;
+    width: calc(var(--phone-sw) + 14px);
+  }
+
+  :global(html.mode-full) .ap-swipe {
+    display: none;
+  }
+
+  :global(html.mode-full) .ap-pad {
+    display: block;
+  }
+
+  :global(html.mode-full) .ap-why {
+    position: absolute;
+    left: var(--ap-g);
+    top: 92px;
+    bottom: 28px;
+    width: var(--col-w);
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  :global(html.mode-full) .ap-dots {
+    display: block;
+  }
+
+  :global(html.mode-full) .ap-why__list {
+    display: grid;
+    margin-top: 22px;
+  }
+
+  /* The three pages share one cell; the timeline turns them. */
+  :global(html.mode-full) .ap-why__item {
+    grid-area: 1 / 1;
+    grid-template-columns: none;
+    gap: 22px;
+    padding: 0;
+    border: 0;
+  }
+
+  :global(html.mode-full) .ap-page__title {
+    font-size: clamp(22px, 1.9vw, 28px);
+  }
+
+  :global(html.mode-full) .ap-card {
+    max-width: 440px;
+  }
+
+  @media (max-height: 800px) {
+    :global(html.mode-full) .ap-why__item {
+      gap: 16px;
+    }
+
+    :global(html.mode-full) .ap-card {
+      padding: 14px 16px;
+    }
+
+    :global(html.mode-full) .ap-swatches {
+      margin-top: 8px;
+    }
+
+    :global(html.mode-full) .ap-swatch {
+      padding: 4px;
+    }
+
+    :global(html.mode-full) .ap-trays__row {
+      padding: 4px 6px;
+    }
+
+    :global(html.mode-full) .ap-session {
+      height: 56px;
+    }
+  }
+</style>

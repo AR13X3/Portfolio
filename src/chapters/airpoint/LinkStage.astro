@@ -1,0 +1,259 @@
+---
+/**
+ * The link stage, recreated from android/.../ui/components/LinkStage.kt: S Pen, phone and
+ * PC as 64 dp nodes in 96 dp columns, joined by 2 dp wires that are dotted when off, march
+ * while connecting and glow when live. Pen motion sends Electric particles along the wire;
+ * a click sends a larger green packet that rings the PC node. Sized in --dp.
+ */
+import Icon from './Icon.astro';
+import Loop from './Loop.astro';
+
+interface Props {
+  pcName: string;
+  /** Motion particles to render (the motion code launches them). */
+  particles?: number;
+}
+const { pcName, particles = 7 } = Astro.props;
+const nodes = [
+  { key: 'pen', label: 'S Pen' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'pc', label: pcName },
+];
+---
+
+<div class="ap-link" data-ap="link">
+  <div class="ap-link__wires" aria-hidden="true">
+    {
+      ['pen', 'pc'].map((w) => (
+        <span class={`ap-wire ap-wire--${w}`} data-ap="wire">
+          <i class="ap-wire__off" data-ap="wire-off" />
+          <i class="ap-wire__busy" data-ap="wire-busy">
+            <b data-ap="wire-march" />
+          </i>
+          <i class="ap-wire__live" data-ap="wire-live" />
+        </span>
+      ))
+    }
+    <span class="ap-link__track">
+      {
+        Array.from({ length: particles }, () => (
+          <i class="ap-particle" data-ap="particle">
+            <b />
+          </i>
+        ))
+      }
+      <i class="ap-particle ap-particle--click" data-ap="packet">
+        <b />
+      </i>
+    </span>
+  </div>
+  <div class="ap-link__nodes">
+    {
+      nodes.map((n) => (
+        <div class={`ap-node ap-node--${n.key}`} data-ap="node">
+          <span class="ap-node__well">
+            <span class="ap-node__pulse" data-ap="node-pulse" />
+            {n.key === 'pc' && <span class="ap-node__hit" data-ap="node-hit" />}
+            <span class="ap-node__disc" data-ap="node-disc">
+              {n.key === 'pen' && <Icon name="stylus" class="ap-node__glyph" />}
+              {n.key === 'phone' && <Loop class="ap-node__loop" />}
+              {n.key === 'pc' && <Icon name="monitor" class="ap-node__glyph" />}
+            </span>
+            <span class="ap-node__badge" data-ap="node-badge">
+              <Icon name="check" />
+            </span>
+          </span>
+          <span class="ap-node__label" data-ap="node-label">
+            {n.label}
+          </span>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .ap-link {
+    --dp: 1.08px;
+    --node: calc(64 * var(--dp));
+    --col: calc(96 * var(--dp));
+    --gap: calc(6 * var(--dp));
+    --wire-y: calc(32 * var(--dp));
+    --good: var(--accent);
+    position: relative;
+    height: calc(98 * var(--dp));
+  }
+
+  .ap-link__wires,
+  .ap-link__nodes {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ap-link__nodes {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Wires run from just past one node's rim to just before the next. */
+  .ap-wire {
+    position: absolute;
+    top: calc(var(--wire-y) - 1 * var(--dp));
+    height: calc(2 * var(--dp));
+    overflow: hidden;
+    border-radius: 99px;
+  }
+
+  .ap-wire--pen {
+    left: calc(var(--col) / 2 + var(--node) / 2 + var(--gap));
+    right: calc(50% + var(--node) / 2 + var(--gap));
+  }
+
+  .ap-wire--pc {
+    left: calc(50% + var(--node) / 2 + var(--gap));
+    right: calc(var(--col) / 2 + var(--node) / 2 + var(--gap));
+  }
+
+  .ap-wire i {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Off: round dots of outlineStrong every 7 dp. */
+  .ap-wire__off {
+    background: radial-gradient(circle at 50% 50%, var(--outline-strong) 0 calc(1 * var(--dp)), transparent calc(1.2 * var(--dp))) 0 0 /
+      calc(7 * var(--dp)) 100% repeat-x;
+    opacity: 0;
+  }
+
+  /* Busy: 9 dp accent dashes, 7 dp gaps, marching. The strip is one period wider than the wire. */
+  .ap-wire__busy {
+    opacity: 0;
+  }
+
+  .ap-wire__busy b {
+    position: absolute;
+    inset: 0 calc(-16 * var(--dp)) 0 0;
+    background: repeating-linear-gradient(90deg, rgb(59 105 255 / 0.85) 0 calc(9 * var(--dp)), transparent 0 calc(16 * var(--dp)));
+  }
+
+  /* Live: solid accent at 55%. */
+  .ap-wire__live {
+    background: rgb(59 105 255 / 0.55);
+  }
+
+  /* Particles travel the full span from the pen's centre to the PC's, under the nodes. */
+  .ap-link__track {
+    position: absolute;
+    left: calc(var(--col) / 2);
+    right: calc(var(--col) / 2);
+    top: var(--wire-y);
+    height: 0;
+  }
+
+  .ap-particle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 0;
+    opacity: 0;
+  }
+
+  .ap-particle b {
+    --core: calc(3 * var(--dp));
+    position: absolute;
+    left: calc(var(--core) * -3.2);
+    top: calc(var(--core) * -3.2);
+    width: calc(var(--core) * 6.4);
+    height: calc(var(--core) * 6.4);
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent) 0 calc(var(--core) - 0.5px), rgb(59 105 255 / 0.18) var(--core) 100%);
+  }
+
+  .ap-particle--click b {
+    --core: calc(4.5 * var(--dp));
+    background: radial-gradient(circle, var(--live) 0 calc(var(--core) - 0.5px), rgb(61 214 140 / 0.18) var(--core) 100%);
+  }
+
+  .ap-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: var(--col);
+  }
+
+  .ap-node__well {
+    position: relative;
+    display: grid;
+    width: var(--node);
+    height: var(--node);
+  }
+
+  .ap-node__well > * {
+    grid-area: 1 / 1;
+  }
+
+  .ap-node__disc {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--raised);
+    box-shadow: inset 0 0 0 calc(1.5 * var(--dp)) var(--good);
+    color: var(--accent-text);
+  }
+
+  .ap-node--pc {
+    --good: var(--live);
+  }
+
+  .ap-node--pc .ap-node__disc {
+    color: var(--live);
+  }
+
+  .ap-node__disc :global(.ap-node__glyph) {
+    font-size: calc(26 * var(--dp));
+  }
+
+  .ap-node__disc :global(.ap-node__loop) {
+    width: calc(34 * var(--dp));
+    height: calc(34 * var(--dp));
+    --loop-stroke: var(--accent-text);
+  }
+
+  .ap-node__pulse,
+  .ap-node__hit {
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 calc(2 * var(--dp)) var(--accent);
+    opacity: 0;
+  }
+
+  .ap-node__hit {
+    box-shadow: inset 0 0 0 calc(2 * var(--dp)) var(--live);
+  }
+
+  .ap-node__badge {
+    display: grid;
+    place-items: center;
+    align-self: end;
+    justify-self: end;
+    width: calc(22 * var(--dp));
+    height: calc(22 * var(--dp));
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 calc(2.5 * var(--dp)) var(--surface);
+    color: var(--ink);
+    font-size: calc(12 * var(--dp));
+  }
+
+  .ap-node__label {
+    margin-top: calc(10 * var(--dp));
+    max-width: 100%;
+    font: 500 calc(13 * var(--dp)) / calc(16 * var(--dp)) var(--roboto);
+    letter-spacing: 0.01em;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

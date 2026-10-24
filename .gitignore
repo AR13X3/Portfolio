@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+*.log
+.env
+.captures/
+# Local agent notes, captures and settings: never published.
+.claude/

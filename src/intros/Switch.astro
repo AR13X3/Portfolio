@@ -1,0 +1,132 @@
+---
+/**
+ * The intro switch: try the other way in without reloading. Each route places it in its first
+ * frame's top bar, inside the shell its timeline or strip lifts away, so it can only be used at
+ * the top. It ships hidden: scripts/boot.ts shows it once the engine runs (no switch without
+ * JavaScript) and does what pressing it does. Nothing about the choice is ever stored.
+ */
+import { intros } from './registry';
+import type { IntroId } from './types';
+
+interface Props {
+  current: IntroId;
+  class?: string;
+}
+const { current, class: className } = Astro.props;
+const at = Math.max(0, intros.findIndex((m) => m.id === current));
+---
+
+<div class:list={['intro-switch', className]} role="group" aria-label="Intro" data-intro-switch hidden style={`--at:${at}`}>
+  <span class="intro-switch__label" aria-hidden="true">Intro</span>
+  <span class="intro-switch__track">
+    <i class="intro-switch__thumb" aria-hidden="true"></i>
+    {
+      intros.map((m) => (
+        <button type="button" class="intro-switch__opt" data-intro-option={m.id} aria-pressed={m.id === current ? 'true' : 'false'}>
+          {m.label}
+        </button>
+      ))
+    }
+  </span>
+</div>
+
+<style>
+  .intro-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-2);
+    font: 500 13px/1 var(--font-sans);
+    letter-spacing: 0;
+    text-transform: none;
+    pointer-events: auto;
+  }
+
+  .intro-switch[hidden] {
+    display: none;
+  }
+
+  .intro-switch__track {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: repeat(2, 76px);
+    padding: 3px;
+    border: 1px solid rgb(16 17 20 / 0.16);
+    border-radius: 999px;
+  }
+
+  /* The ink pill behind the current way in; it only ever moves sideways. */
+  .intro-switch__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 76px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--ink);
+    transform: translateX(calc(var(--at, 0) * 76px));
+    transition: transform 0.38s var(--ease-out);
+  }
+
+  .intro-switch__opt {
+    position: relative;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .intro-switch__opt[aria-pressed='true'] {
+    color: var(--paper);
+    cursor: default;
+  }
+
+  /* 28px to the eye, 44px to a finger. */
+  .intro-switch__opt::before {
+    content: '';
+    position: absolute;
+    inset: -8px 0;
+  }
+
+  .intro-switch__opt:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 999px;
+  }
+
+  @media (max-width: 399.98px) {
+    .intro-switch__label {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro-switch__thumb,
+    .intro-switch__opt {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .intro-switch__thumb {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+
+    .intro-switch__opt[aria-pressed='true'] {
+      forced-color-adjust: none;
+      color: HighlightText;
+    }
+  }
+
+  @media print {
+    .intro-switch {
+      display: none !important;
+    }
+  }
+</style>

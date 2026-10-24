@@ -1,0 +1,55 @@
+---
+/**
+ * The outer shell every chapter renders inside: section semantics, the chapter's
+ * colour and type tokens, and the overlay for its outgoing transition. What goes
+ * inside is the chapter's own world, built from its product's UI.
+ */
+import type { Chapter } from '../chapters/types';
+import { transitionComponents } from '../transitions';
+import '../styles/chapter.css';
+
+interface Props {
+  chapter: Chapter;
+  /** Slug of the section after this one ("contact" for the last chapter). */
+  next: string;
+  class?: string;
+}
+
+const { chapter, next, class: className } = Astro.props;
+const t = chapter.theme;
+const style = [
+  `--c-bg:${t.bg}`,
+  `--c-surface:${t.surface}`,
+  `--c-fg:${t.fg}`,
+  `--c-muted:${t.muted}`,
+  `--c-accent:${t.accent}`,
+  `--c-accent-text:${t.accentText}`,
+  `--c-on-accent:${t.onAccent}`,
+  `--c-line:${t.line}`,
+  `--c-display:${t.display}`,
+  `--c-body:${t.body}`,
+  t.mono ? `--c-mono:${t.mono}` : '',
+  t.bgArt ? `--c-bg-art:${t.bgArt}` : '',
+]
+  .filter(Boolean)
+  .join(';');
+const Transition = transitionComponents[`${chapter.slug}>${next}`];
+---
+
+<section
+  id={chapter.slug}
+  class:list={['chapter', `chapter--${chapter.slug}`, className]}
+  data-section={chapter.slug}
+  data-scheme={t.scheme}
+  style={style}
+  aria-labelledby={`${chapter.slug}-title`}
+>
+  <slot />
+  {
+    Transition && (
+      <div class="chapter__transition" data-transition aria-hidden="true">
+        <Transition from={chapter.slug} to={next} />
+      </div>
+    )
+  }
+</section>

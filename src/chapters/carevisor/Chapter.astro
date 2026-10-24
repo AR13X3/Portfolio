@@ -1,0 +1,1043 @@
+---
+/**
+ * CareVisor, told in the carevisor.com.au homepage's own language (Reskill-frontend:
+ * src/components/carevisor): its nav and heartbeat mark over the Prism Light Background, the
+ * hero with the six module tabs over the scripted app demo, then the app's redesign in progress:
+ * three directions dealt from one window, then laid side by side.
+ * The page's photographs, illustrations and reviews are left out.
+ */
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/outfit';
+import '@fontsource-variable/inter';
+import ChapterSection from '../../components/ChapterSection.astro';
+import Demo from './Demo.astro';
+import Icon from './Icon.astro';
+import Mark from './Mark.astro';
+import type { Chapter } from '../types';
+
+interface Props {
+  chapter: Chapter;
+  index: number;
+  next: string;
+}
+const { chapter, index, next } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const [site] = chapter.links;
+
+// The hero's six tabs (src/components/carevisor/hero/tabs.ts).
+const tabs = [
+  { key: 'participant', caption: 'Guided onboarding', title: 'Participant Intake', icon: 'user-plus', bg: '#e8f0fe', ink: '#0052cc' },
+  { key: 'staff', caption: 'Compliance-first hiring', title: 'Staff Intake', icon: 'shield-check', bg: '#efe9fe', ink: '#6d4aff' },
+  { key: 'shifts', caption: 'Roster on autopilot', title: 'Shift Management', icon: 'calendar-clock', bg: '#fef3e2', ink: '#d97706' },
+  { key: 'docs', caption: 'Smart templates', title: 'Document Builder', icon: 'file-pen-line', bg: '#e0f5f1', ink: '#0f9d8f' },
+  { key: 'incidents', caption: 'Audit-ready workflows', title: 'Incident Management', icon: 'triangle-alert', bg: '#fdeaea', ink: '#e05252' },
+  { key: 'billing', caption: 'Claims without chaos', title: 'Billing & Payroll', icon: 'wallet', bg: '#e6f6ea', ink: '#1d9d55' },
+] as const;
+
+// The redesign in progress (Reskill-frontend, design/ui-iterations: src/app/design-preview). The
+// chapter's decisions are its three directions, in this order; each is shown on its dashboard and
+// one more screen, all on the preview's sample data.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const shot = (name: string) => ({
+  src: `${base}shots/carevisor/redesign-${name}-1200.webp`,
+  srcset: `${base}shots/carevisor/redesign-${name}-1200.webp 1200w, ${base}shots/carevisor/redesign-${name}-2400.webp 2400w`,
+});
+const directions = [
+  {
+    key: 'glass',
+    first: { ...shot('glass'), alt: 'Liquid Glass dashboard: frosted white panels over a pale blue prism, with sparkline KPI cards, a list of what needs attention and a health gauge.' },
+    second: { ...shot('glass-record'), alt: 'Liquid Glass participant record, laid out as a page with an onboarding stepper, details and an activity feed.' },
+  },
+  {
+    key: 'midnight',
+    first: { ...shot('midnight'), alt: 'Midnight Pro dashboard: a dense dark bento grid with monospaced figures, a compliance score ring and an onboarding funnel.' },
+    second: { ...shot('midnight-list'), alt: 'Midnight Pro participants table, with saved filters, inline status menus and document progress bars.' },
+  },
+  {
+    key: 'raycast',
+    first: { ...shot('raycast'), alt: 'Keystroke dashboard: a command bar across the top, a needs-attention list with type tags and an action bar with keyboard shortcuts.' },
+    second: { ...shot('raycast-list'), alt: 'Keystroke participants list, grouped into needs a first call and waiting on documents, with shortcuts in the action bar.' },
+  },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+// The module wall: three columns that scroll in opposite directions, each scene twice so the
+// columns run taller than the screen. The middle column falls while the others rise, so its bottom
+// half meets their top rows at the start and its top half their bottom rows at the end: every row
+// on screen shows three different modules. Read as a page, the outer columns' first two cards and
+// the middle column's last two hold all six.
+const wall = [
+  ['participant', 'docs', 'billing', 'staff'],
+  ['participant', 'docs', 'shifts', 'incidents'],
+  ['staff', 'billing', 'shifts', 'incidents'],
+] as const;
+const tab = (key: string) => tabs.find((t) => t.key === key)!;
+---
+
+<ChapterSection chapter={chapter} next={next} class="cv">
+  <div class="cv-world">
+    <header class="cv-nav" data-cv="nav" data-clear>
+      <span class="cv-brand">
+        <Mark class="cv-brand__mark" />
+        <span class="cv-brand__name" data-cv="brand-name">Care<span>Visor</span></span>
+        <span class="cv-brand__sep" aria-hidden="true"></span>
+        <span class="cv-brand__tag">NDIS service provider platform</span>
+      </span>
+      <p class="cv-nav__meta">
+        <span>{num}</span>
+      </p>
+      <a class="cv-btn cv-btn--solid cv-btn--sm" href={site.href} target="_blank" rel="noopener noreferrer">
+        Visit the site<span class="visually-hidden"> (opens in a new tab)</span>
+      </a>
+    </header>
+
+    <div class="cv-hero" data-cv="hero" data-clear>
+      <p class="cv-hero__meta" aria-hidden="true">{num}</p>
+      <h2 class="cv-hero__title" id={`${chapter.slug}-title`} tabindex="-1" data-focus data-cv="title">
+        The complete NDIS compliance and <br class="cv-br" /><span class="cv-blue">Audit&#8209;Ready</span> platform.
+      </h2>
+      <div class="cv-hero__ctas" data-cv="ctas">
+        <a class="cv-btn cv-btn--solid" href={site.href} target="_blank" rel="noopener noreferrer">
+          Visit {site.label}<span class="visually-hidden"> (opens in a new tab)</span>
+          <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+    </div>
+
+    <div class="cv-product" data-cv="product" data-clear>
+      <ol class="cv-tabs" aria-label="The six modules of the hero demo">
+        {
+          tabs.map((t, i) => (
+            <li class:list={['cv-tab', { 'is-on': i === 0 }]} data-cv="tab">
+              <span class="cv-tab__tile" style={`--tile:${t.bg};--tile-ink:${t.ink}`} data-cv="tile">
+                <Icon name={t.icon} size={18} />
+              </span>
+              <span class="cv-tab__caption">{t.caption}</span>
+              <span class="cv-tab__title">{t.title}</span>
+              <span class="cv-tab__track" aria-hidden="true">
+                <i data-cv="track" />
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+      <div class="cv-demo-wrap" data-cv="demo-wrap">
+        <Demo />
+      </div>
+    </div>
+
+    <div
+      class="cv-wall"
+      role="img"
+      aria-label="The homepage's six module scenes side by side on sample data: participant intake, staff intake, shift management, document builder, incident management, and billing and payroll."
+      data-cv="wall"
+      data-clear
+    >
+      <div class="cv-wall__cols">
+        {
+          wall.map((col, c) => (
+            <div class="cv-wall__col" data-cv="col" data-dir={c % 2 ? 'down' : 'up'}>
+              {col.map((key) => (
+                <div class="cv-wall__card" data-cv="wall-card">
+                  <span class="cv-wall__label">
+                    <span class="cv-tab__tile" style={`--tile:${tab(key).bg};--tile-ink:${tab(key).ink}`}>
+                      <Icon name={tab(key).icon} size={16} />
+                    </span>
+                    <span>
+                      <b>{tab(key).title}</b>
+                      <small>{tab(key).caption}</small>
+                    </span>
+                  </span>
+                  <Demo scene={key} bare />
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="cv-rd" data-cv="rd" data-clear>
+      <div class="cv-rd__copy" data-cv="rd-copy">
+        <h3 class="cv-rd__title" data-cv="rd-title">The app, redesigned three ways.</h3>
+        <ol class="cv-rd__list" aria-label="The three directions">
+          {
+            chapter.decisions.map((d, i) => (
+              <li class="cv-rd__item" data-cv="rd-item">
+                <span class="cv-rd__track" aria-hidden="true">
+                  <i data-cv="rd-fill" />
+                </span>
+                <span class="cv-rd__num" aria-hidden="true">{pad(i + 1)}</span>
+                <h4 class="cv-rd__name">{d.title}</h4>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div class="cv-rd__stage" data-cv="rd-stage">
+        {
+          directions.map((dir, i) => (
+            <figure class:list={['cv-rd__win', `is-${dir.key}`]} data-cv="rd-win">
+              <div class="cv-rd__frame">
+                <div class="cv-rd__bar" aria-hidden="true">
+                  <span class="cv-rd__dots">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span class="cv-rd__url">CareVisor · {chapter.decisions[i].title}</span>
+                </div>
+                <div class="cv-rd__screen">
+                  <img
+                    class="cv-rd__shot"
+                    src={dir.first.src}
+                    srcset={dir.first.srcset}
+                    sizes="(min-width: 1024px) 66vw, (min-width: 1000px) 31vw, 92vw"
+                    alt={dir.first.alt}
+                    width="1200"
+                    height="750"
+                    loading="lazy"
+                    decoding="async"
+                    data-cv="rd-shot"
+                  />
+                  <span class="cv-rd__next" data-cv="rd-next">
+                    <img
+                      class="cv-rd__shot"
+                      src={dir.second.src}
+                      srcset={dir.second.srcset}
+                      sizes="66vw"
+                      alt={dir.second.alt}
+                      width="1200"
+                      height="750"
+                      loading="lazy"
+                      decoding="async"
+                      data-cv="rd-shot2"
+                    />
+                  </span>
+                </div>
+              </div>
+              <figcaption class="cv-rd__cap">
+                <span class="cv-rd__num" aria-hidden="true">{pad(i + 1)}</span>
+                <b>{chapter.decisions[i].title}</b>
+              </figcaption>
+            </figure>
+          ))
+        }
+        <span class="cv-rd__seam" aria-hidden="true" data-cv="rd-seam"></span>
+      </div>
+
+      {/* The finale's layout: the windows fly to these slots, so CSS decides where they land. */}
+      <div class="cv-rd__end">
+        <div class="cv-rd__fan" aria-hidden="true" data-cv="rd-fan">
+          {
+            chapter.decisions.map((d, i) => (
+              <span class="cv-rd__slot" data-cv="rd-slot">
+                <span class="cv-rd__ghost" data-cv="rd-ghost" />
+                <span class="cv-rd__slot-name" data-cv="rd-slot-name">
+                  <span class="cv-rd__num">{pad(i + 1)}</span>
+                  {d.title}
+                </span>
+              </span>
+            ))
+          }
+        </div>
+
+        <p class="cv-rd__line" data-cv="rd-stat">One app, <span class="cv-blue">three directions.</span></p>
+      </div>
+    </div>
+  </div>
+</ChapterSection>
+
+<style>
+  /* Tokens from src/styles/carevisor-marketing.css and the hero's Tailwind classes. (On .cv-world:
+     the <section> belongs to ChapterSection, outside this component's scope.) */
+  .cv-world {
+    --ink: #000918;
+    --slate: #465062;
+    --blue: #0052cc;
+    --blue-deep: #0a3f9e;
+    --blue-light: #99c2ff;
+    --rule: #e4e6e4;
+    --night: #141a1f;
+    --font-cv-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-cv: 'Outfit Variable', 'Outfit', ui-sans-serif, system-ui, sans-serif;
+    --font-cv-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    --cv-gutter: clamp(16px, 4vw, 48px);
+    position: relative;
+    z-index: 1;
+    color: var(--ink);
+    font: 400 16px/1.6 var(--font-cv);
+  }
+
+  .cv-world ::selection {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .cv-world :focus-visible {
+    outline-color: var(--blue);
+  }
+
+  .cv-blue {
+    color: var(--blue);
+  }
+
+  /* ---------- Nav ---------- */
+  .cv-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px var(--cv-gutter);
+  }
+
+  .cv-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cv-brand :global(.cv-brand__mark) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cv-brand__name {
+    font: 700 18px/1 var(--font-cv);
+    letter-spacing: -0.3px;
+  }
+
+  .cv-brand__name span {
+    color: var(--blue);
+  }
+
+  .cv-brand__sep {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: rgb(0 9 24 / 0.14);
+  }
+
+  .cv-brand__tag {
+    color: var(--slate);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .cv-nav__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-left: auto;
+  }
+
+  .cv-nav__meta span {
+    padding: 9px 14px;
+    border-radius: 10px;
+    color: #424242;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+  }
+
+  .cv-nav__meta span:first-child {
+    color: var(--blue);
+    font: 700 13px/1.4 var(--font-cv-mono);
+  }
+
+  /* ---------- Buttons ---------- */
+  .cv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: 999px;
+    font: 600 14.5px/1 var(--font-cv);
+    text-decoration: none;
+    white-space: nowrap;
+    /* The hover grow is on `scale`, not `transform`: the motion writes transform, and a CSS
+       transition on it would leave the button mid-ease when the scrub re-measures. */
+    transition:
+      scale 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .cv-btn :global(.cv-icon) {
+    transition: transform 0.3s ease;
+  }
+
+  .cv-btn:hover {
+    scale: 1.03;
+  }
+
+  .cv-btn:hover :global(.cv-icon) {
+    transform: translateX(3px);
+  }
+
+  .cv-btn--solid {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 10px 26px rgb(0 82 204 / 0.35);
+  }
+
+  .cv-btn--solid:hover {
+    background: #003d99;
+  }
+
+  .cv-btn--sm {
+    min-height: 44px;
+    padding: 0 22px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ---------- Hero ---------- */
+  .cv-hero {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(48px, 10vh, 112px) var(--cv-gutter) 40px;
+    text-align: center;
+  }
+
+  /* Phones: the nav's meta moves here, as the site folds its nav links into a menu. */
+  .cv-hero__meta {
+    display: none;
+    margin-bottom: 16px;
+    color: var(--blue);
+    font: 700 12px/1.5 var(--font-cv-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .cv-hero__title {
+    font: 800 clamp(36px, 4.2vw, 60px) / 1.06 var(--font-cv-display);
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    outline: none;
+  }
+
+  /* The site breaks the headline after "and" on wide screens (md:!block). */
+  .cv-br {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .cv-br {
+      display: inline;
+    }
+  }
+
+  .cv-hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 860px) {
+    .cv-nav__meta,
+    .cv-brand__sep,
+    .cv-brand__tag {
+      display: none;
+    }
+
+    .cv-nav .cv-btn {
+      margin-left: auto;
+    }
+
+    .cv-hero__meta {
+      display: block;
+    }
+  }
+
+  /* ---------- Tabs + demo ---------- */
+  .cv-product {
+    max-width: 1072px;
+    margin: 0 auto;
+    padding: 0 var(--cv-gutter) clamp(56px, 10vh, 96px);
+  }
+
+  .cv-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 8px;
+  }
+
+  @media (min-width: 1024px) {
+    .cv-tabs {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .cv-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+    text-align: center;
+  }
+
+  .cv-tab__tile {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--tile);
+    color: var(--tile-ink);
+  }
+
+  /* The site dims inactive tabs to 0.55. Here only the tile dims; the words keep full contrast. */
+  :global(html.mode-full) .cv-tab:not(.is-on) .cv-tab__tile {
+    opacity: 0.5;
+  }
+
+  .cv-tab__caption {
+    color: var(--slate);
+    font: 500 11px/1.25 'Inter Variable', 'Inter', ui-sans-serif, sans-serif;
+  }
+
+  .cv-tab__title {
+    font: 700 12.5px/1.25 'Inter Variable', 'Inter', ui-sans-serif, sans-serif;
+  }
+
+  .cv-tab__track {
+    display: block;
+    width: 100%;
+    max-width: 120px;
+    height: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--rule);
+  }
+
+  .cv-tab__track i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--blue);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .cv-tab.is-on .cv-tab__track i {
+    transform: none;
+  }
+
+  .cv-demo-wrap {
+    margin-top: 40px;
+  }
+
+  /* The hero's tabs and peeking demo belong to the scrolled story; elsewhere the wall shows
+     every module. */
+  .cv-product {
+    display: none;
+  }
+
+  :global(html.mode-full) .cv-product {
+    display: block;
+  }
+
+  /* ---------- The module wall ---------- */
+  .cv-wall {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 8px var(--cv-gutter) clamp(48px, 8vh, 80px);
+  }
+
+  .cv-wall__cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .cv-wall__col {
+    display: grid;
+    align-content: start;
+    gap: 24px;
+  }
+
+  /* Read as a page, two cards a column are enough: together they hold all six scenes. */
+  .cv-wall__col:not(:nth-child(2)) .cv-wall__card:nth-child(n + 3),
+  .cv-wall__col:nth-child(2) .cv-wall__card:nth-child(-n + 2) {
+    display: none;
+  }
+
+  .cv-wall__card {
+    display: grid;
+    gap: 10px;
+  }
+
+  .cv-wall__label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Inter Variable', 'Inter', ui-sans-serif, sans-serif;
+  }
+
+  .cv-wall__label .cv-tab__tile {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .cv-wall__label b,
+  .cv-wall__label small {
+    display: block;
+    line-height: 1.25;
+  }
+
+  .cv-wall__label b {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .cv-wall__label small {
+    color: var(--slate);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 700px) {
+    .cv-wall__cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .cv-wall__col {
+      gap: 14px;
+    }
+
+    /* Two columns: the outer pair, which share no scene. (The motion runs them in opposite directions.) */
+    .cv-wall__col:nth-child(2) {
+      display: none;
+    }
+
+    .cv-wall__label {
+      gap: 8px;
+    }
+
+    .cv-wall__label .cv-tab__tile {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+    }
+
+    .cv-wall__label small {
+      display: none;
+    }
+
+    .cv-wall__label b {
+      font-size: 11.5px;
+    }
+  }
+
+  /* Moving: the columns run past each other inside a window that fades at its edges. */
+  :global(html:is(.mode-full, .mode-lite)) .cv-wall {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  }
+
+  /* (:nth-child(n) outranks the page rule above, which hides cards by position.) */
+  :global(html:is(.mode-full, .mode-lite)) .cv-wall__col:nth-child(n) .cv-wall__card:nth-child(n) {
+    display: grid;
+  }
+
+  /* A window a good deal shorter than a column, so the columns have room to run. */
+  :global(html.mode-lite) .cv-wall {
+    height: min(112vw, 640px);
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: clamp(48px, 8vh, 80px);
+  }
+
+  /* ---------- The redesign: three directions ---------- */
+  .cv-rd {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px var(--cv-gutter) clamp(72px, 12vh, 120px);
+  }
+
+  .cv-rd__title {
+    max-width: 15ch;
+    margin-top: 12px;
+    font: 800 clamp(30px, 3.6vw, 52px) / 1.04 var(--font-cv-display);
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .cv-rd__num {
+    color: var(--blue);
+    font: 700 12px/1 var(--font-cv-mono);
+    letter-spacing: 0.08em;
+  }
+
+  /* The list beside the pinned window; without it, each window carries its own caption. */
+  .cv-rd__list {
+    display: none;
+  }
+
+  .cv-rd__item {
+    --on: 1;
+    position: relative;
+    padding-left: 22px;
+  }
+
+  .cv-rd__item > .cv-rd__num,
+  .cv-rd__name,
+  .cv-rd__body {
+    opacity: calc(0.32 + 0.68 * var(--on));
+  }
+
+  .cv-rd__item > .cv-rd__num {
+    display: block;
+  }
+
+  .cv-rd__track {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 0;
+    width: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgb(0 9 24 / 0.1);
+  }
+
+  .cv-rd__track i {
+    display: block;
+    height: 100%;
+    background: var(--blue);
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+  }
+
+  .cv-rd__name {
+    margin: 8px 0 0;
+    font: 800 clamp(18px, 1.5vw, 22px) / 1.2 var(--font-cv-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Without the pinned scene: the three directions side by side, each on its dashboard. */
+  .cv-rd__stage {
+    display: grid;
+    gap: 36px 28px;
+    margin-top: 36px;
+  }
+
+  @media (min-width: 1000px) {
+    .cv-rd__stage {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .cv-rd__win {
+    --win-bar: rgb(255 255 255 / 0.82);
+    --win-ink: #465062;
+    --win-dot: rgb(0 9 24 / 0.16);
+    --win-line: rgb(0 9 24 / 0.08);
+    --win-ground: #c7ddf8;
+    position: relative;
+    margin: 0;
+  }
+
+  .cv-rd__win.is-midnight {
+    --win-bar: #121316;
+    --win-ink: #a3abb8;
+    --win-dot: rgb(255 255 255 / 0.18);
+    --win-line: rgb(255 255 255 / 0.08);
+    --win-ground: #08090a;
+  }
+
+  .cv-rd__win.is-raycast {
+    --win-bar: #2a2a2e;
+    --win-ink: #b4b4bb;
+    --win-dot: rgb(255 255 255 / 0.2);
+    --win-line: rgb(255 255 255 / 0.07);
+    --win-ground: #1c1c1f;
+  }
+
+  .cv-rd__frame {
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--win-bar);
+    box-shadow:
+      0 0 0 1px rgb(0 9 24 / 0.08),
+      0 34px 80px -30px rgb(0 32 90 / 0.5),
+      0 12px 24px -12px rgb(0 9 24 / 0.22);
+  }
+
+  .cv-rd__bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 34px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--win-line);
+  }
+
+  .cv-rd__dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .cv-rd__dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--win-dot);
+  }
+
+  .cv-rd__url {
+    flex: 1;
+    min-width: 0;
+    margin-right: 41px;
+    overflow: hidden;
+    color: var(--win-ink);
+    font: 600 11.5px/1 'Inter Variable', 'Inter', ui-sans-serif, sans-serif;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The page meets the toolbar square, as a browser window's does; the frame rounds the bottom. */
+  .cv-rd__screen {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--win-ground);
+  }
+
+  .cv-rd__shot {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cv-rd__next,
+  .cv-rd__seam,
+  .cv-rd__fan {
+    display: none;
+  }
+
+  .cv-rd__cap {
+    display: grid;
+    gap: 6px;
+    margin-top: 18px;
+  }
+
+  .cv-rd__cap b {
+    font: 800 19px/1.2 var(--font-cv-display);
+    letter-spacing: -0.02em;
+  }
+
+  .cv-rd__cap > span:last-child {
+    color: var(--slate);
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.55;
+  }
+
+  .cv-rd__end {
+    margin-top: clamp(40px, 7vh, 64px);
+  }
+
+  /* Under the three: one line, in the hero's voice. */
+  .cv-rd__line {
+    margin-top: 28px;
+    font: 800 clamp(28px, 3vw, 44px) / 1.1 var(--font-cv-display);
+    letter-spacing: -0.035em;
+  }
+
+  /* ------------------------------------------------------------------
+     Full mode: one pinned viewport. The hero hands the stage to the
+     product, the product to the module wall, the wall to the redesign.
+     ------------------------------------------------------------------ */
+  :global(html.mode-full) .cv-world {
+    position: absolute;
+    inset: 0;
+  }
+
+  :global(html.mode-full) .cv-nav {
+    position: absolute;
+    inset: 0 0 auto;
+    padding-right: calc(var(--rail) + var(--cv-gutter));
+  }
+
+  :global(html.mode-full) .cv-hero {
+    position: absolute;
+    left: 0;
+    right: var(--rail);
+    top: clamp(84px, 13vh, 132px);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  :global(html.mode-full) .cv-product {
+    position: absolute;
+    left: 0;
+    right: var(--rail);
+    top: clamp(84px, 11vh, 110px);
+    padding-bottom: 0;
+  }
+
+  :global(html.mode-full) .cv-demo-wrap {
+    width: min(100%, calc((100vh - clamp(84px, 11vh, 110px) - 170px) * 2.13));
+    margin: clamp(20px, 3vh, 36px) auto 0;
+  }
+
+  :global(html.mode-full) .cv-wall {
+    position: absolute;
+    top: 72px;
+    bottom: 0;
+    left: 0;
+    right: var(--rail);
+    max-width: none;
+    padding: 0 clamp(24px, 4vw, 64px);
+  }
+
+  :global(html.mode-full) .cv-wall__cols {
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+
+  :global(html.mode-full) .cv-rd {
+    --rd-pad-x: clamp(24px, 4vw, 64px);
+    --rd-pad-y: clamp(20px, 4vh, 48px);
+    position: absolute;
+    top: 72px;
+    bottom: 0;
+    left: 0;
+    right: var(--rail);
+    display: grid;
+    grid-template-columns: clamp(300px, 26vw, 420px) minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(32px, 4.5vw, 88px);
+    max-width: none;
+    margin: 0;
+    padding: var(--rd-pad-y) var(--rd-pad-x);
+  }
+
+  :global(html.mode-full) .cv-rd__list {
+    display: grid;
+    gap: clamp(14px, 2.6vh, 24px);
+    margin-top: clamp(22px, 4.5vh, 44px);
+  }
+
+  /* The window, as large as the height allows; the three stack and wipe over each other. */
+  :global(html.mode-full) .cv-rd__stage {
+    position: relative;
+    justify-self: center;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, calc((100vh - 72px - 2 * var(--rd-pad-y) - 34px) * 1.6));
+    margin: 0;
+    gap: 0;
+  }
+
+  :global(html.mode-full) .cv-rd__win {
+    grid-area: 1 / 1;
+  }
+
+  :global(html.mode-full) .cv-rd__cap {
+    display: none;
+  }
+
+  /* The direction's second screen, pushed in over its dashboard. */
+  :global(html.mode-full) .cv-rd__next {
+    position: absolute;
+    inset: 0;
+    display: block;
+    box-shadow: -24px 0 48px rgb(0 0 0 / 0.28);
+  }
+
+  :global(html.mode-full) .cv-rd__seam {
+    position: absolute;
+    top: -14px;
+    bottom: -14px;
+    left: 0;
+    z-index: 5;
+    display: block;
+    width: 3px;
+    margin-left: -1.5px;
+    border-radius: 3px;
+    background: linear-gradient(transparent, #4d94ff 14%, #fff 50%, #4d94ff 86%, transparent);
+    box-shadow: 0 0 22px 5px rgb(0 82 204 / 0.5);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The finale: the three windows land in these slots, side by side, the middle one a little larger. */
+  :global(html.mode-full) .cv-rd__end {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: var(--rd-pad-y) var(--rd-pad-x);
+    pointer-events: none;
+  }
+
+  :global(html.mode-full) .cv-rd__fan {
+    display: grid;
+    grid-template-columns: 30fr 34fr 30fr;
+    align-items: center;
+    column-gap: 4%;
+    width: 100%;
+    max-width: 1640px;
+  }
+
+  .cv-rd__slot {
+    display: contents;
+  }
+
+  .cv-rd__ghost {
+    grid-row: 1;
+    aspect-ratio: 16 / 10.4;
+  }
+
+  .cv-rd__slot:nth-child(2) > * {
+    grid-column: 2;
+  }
+
+  .cv-rd__slot:nth-child(3) > * {
+    grid-column: 3;
+  }
+
+  .cv-rd__slot-name {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    grid-row: 2;
+    margin-top: clamp(18px, 3vh, 30px);
+    font: 800 clamp(16px, 1.3vw, 20px) / 1.2 var(--font-cv-display);
+    letter-spacing: -0.02em;
+  }
+
+  :global(html.mode-full) .cv-rd__line {
+    margin-top: clamp(26px, 5vh, 52px);
+    text-align: center;
+  }
+
+  /* Short windows: a smaller title, so the list keeps all three directions in the frame. */
+  @media (max-height: 760px) {
+
+    :global(html.mode-full) .cv-rd__title {
+      max-width: none;
+      font-size: clamp(28px, 5.4vh, 40px);
+    }
+
+    :global(html.mode-full) .cv-rd__list {
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+/** 03 SiteScore: a crop of its hex map. The dot bounces down three cells and SiteScore picks site 1. */
+
+// The map's cells, column by column (x = 8 + 15i; odd columns sit half a row lower), shaded by
+// heat: a quiet, b warm, c hot.
+const heat = ['aababaa', 'aabcab', 'aaabbaa', 'aaaaba', 'baaaaaa', 'aaaaba', 'aaaaaba', 'aaaaac', 'aaaaaba', 'aaaaab', 'bbaaaaa', 'cbaaaa'];
+const fill = { a: '#e9e8e4', b: '#f4d4d5', c: '#eeb3b5' } as const;
+const cells = heat.flatMap((col, i) =>
+  [...col].map((k, j) => ({ x: (8 + 15 * i).toFixed(1), y: ((i % 2 ? 14.66 : 6) + 17.32 * j).toFixed(1), fill: fill[k as keyof typeof fill] })),
+);
+---
+
+<svg class="jm-art" viewBox="0 0 180 108">
+  <defs>
+    <clipPath id="jm-ss-clip"><rect width="180" height="108" rx="10" /></clipPath>
+    <path id="jm-hex" d="M9 0 4.5 7.79-4.5 7.79-9 0-4.5-7.79 4.5-7.79z" />
+  </defs>
+  <rect x="3" y="7" width="180" height="108" rx="10" fill="#161616" opacity=".07" />
+  <g clip-path="url(#jm-ss-clip)">
+    <rect width="180" height="108" fill="#fbfaf8" />
+    <path d="M-6 78C30 66 62 92 104 70s60-46 84-40" fill="none" stroke="#e6e3de" stroke-width="5" />
+    <path d="M50-6 70 116M140-6 120 116" fill="none" stroke="#ebe8e3" stroke-width="3" />
+    <g opacity=".92">{cells.map((c) => <use href="#jm-hex" x={c.x} y={c.y} fill={c.fill} />)}</g>
+    <g class="jm-ss-breathe-set"><use class="jm-ss-breathe" href="#jm-hex" x="38.0" y="58.0" fill="#e5484d" /><use class="jm-ss-breathe" href="#jm-hex" x="158.0" y="23.3" fill="#e5484d" /><use class="jm-ss-breathe" href="#jm-hex" x="128.0" y="92.6" fill="#e5484d" /></g>
+    <use data-r="h1" href="#jm-hex" x="83" y="31.98" fill="#f6d3d4" opacity="0" />
+    <use data-r="h2" href="#jm-hex" x="113" y="49.3" fill="#ee9fa2" opacity="0" />
+    <use data-r="h3" href="#jm-hex" x="143" y="66.62" fill="#e5484d" opacity="0" />
+  </g>
+  <rect x=".5" y=".5" width="179" height="107" rx="10" fill="none" stroke="#d6d5d0" />
+  <g class="jm-ss-mk"><g class="jm-ss-peek"><path d="M153 66.62 148 75.28H138L133 66.62 138 57.96H148z" fill="#e5484d" stroke="#fff" stroke-width="1.5" /><text x="143" y="70.6" text-anchor="middle" class="jm-t" font-size="11" font-weight="700" fill="#161616">1</text></g>
+  <g data-r="ss-marker" opacity="0"><path d="M153 66.62 148 75.28H138L133 66.62 138 57.96H148z" fill="#e5484d" stroke="#fff" stroke-width="1.5" /><text x="143" y="70.6" text-anchor="middle" class="jm-t" font-size="11" font-weight="700" fill="#161616">1</text></g></g>
+  <rect x="134" y="8" width="38" height="16" rx="8" fill="#161616" />
+  <path d="M144 12.5l3.2 1.85v3.7L144 19.9l-3.2-1.85v-3.7z" fill="none" stroke="#fff" stroke-width="1.1" />
+  <text x="151" y="19.4" class="jm-t" font-size="8" font-weight="600" fill="#fff">Heat</text>
+</svg>
