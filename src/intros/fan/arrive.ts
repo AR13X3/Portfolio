@@ -9,7 +9,7 @@ import type { FanDom } from './dom';
  */
 
 /** When the deck starts opening (the load-in's blade delay, fan.css): the rivet lands then. */
-const CONTACT = 0.62;
+export const CONTACT = 0.62;
 
 export interface Spot {
   x: number;

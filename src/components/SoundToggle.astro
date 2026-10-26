@@ -1,0 +1,110 @@
+---
+/**
+ * Sound on or off (scripts/sound.ts does what pressing it does, for every copy on the page). It
+ * ships hidden, like the intro switch: there is no sound without JavaScript.
+ */
+interface Props {
+  /** Show the word as well as the speaker (the choice screen). */
+  text?: boolean;
+  class?: string;
+}
+const { text = false, class: className } = Astro.props;
+---
+
+<button type="button" class:list={['sound', { 'sound--text': text }, className]} data-sound-toggle aria-pressed="false" aria-label={text ? undefined : 'Sound'} hidden>
+  <svg class="sound__icon" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+    <path class="sound__cone" d="M3.5 7.5h3l4-3.5v12l-4-3.5h-3z" />
+    <path class="sound__wave" d="M13.2 7.2a4 4 0 0 1 0 5.6M15.4 5a7 7 0 0 1 0 10" />
+    <path class="sound__mute" d="M13.5 7.5l5 5M18.5 7.5l-5 5" />
+  </svg>
+  {text && <span class="sound__word">Sound</span>}
+</button>
+
+<style>
+  .sound {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgb(16 17 20 / 0.16);
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-2);
+    font: 500 13px/1 var(--font-sans);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .sound[hidden] {
+    display: none;
+  }
+
+  .sound--text {
+    width: auto;
+    padding: 0 14px 0 10px;
+  }
+
+  /* 34px to the eye, 44px to a finger. */
+  .sound::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+  }
+
+  .sound:hover,
+  .sound[aria-pressed='true'] {
+    color: var(--ink);
+    border-color: rgb(16 17 20 / 0.32);
+  }
+
+  .sound:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .sound__icon {
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .sound__cone {
+    fill: currentColor;
+  }
+
+  .sound__wave {
+    stroke-dasharray: 12;
+    stroke-dashoffset: 12;
+    transition: stroke-dashoffset 0.3s var(--ease-out);
+  }
+
+  .sound[aria-pressed='true'] .sound__wave {
+    stroke-dashoffset: 0;
+  }
+
+  .sound[aria-pressed='true'] .sound__mute {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sound,
+    .sound__wave {
+      transition: none;
+    }
+  }
+
+  @media print {
+    .sound {
+      display: none !important;
+    }
+  }
+</style>

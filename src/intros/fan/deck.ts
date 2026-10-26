@@ -1,4 +1,5 @@
 import { gsap } from 'gsap';
+import { buzz, sfx } from '../../scripts/sound';
 import { clamp, num, setVar, type FanDom, type Geo } from './dom';
 
 /* ---------------------------------------------------------------
@@ -62,6 +63,7 @@ export function createDeck(f: FanDom, geo: () => Geo | null, { motion }: { motio
   let focusIdx = -1;
   let pinIdx = -1; // lite: a blade a finger raised stays raised (never set on desktop)
   let riffle: { t0: number; dur: number; from: number; to: number } | null = null;
+  let riffleAt = -1; // the blade the riffle's wave last passed (one soft tick each)
   let pivot = { x: 0, y: 0 };
   let L = 400;
   let moveOff = 0;
@@ -84,6 +86,10 @@ export function createDeck(f: FanDom, geo: () => Geo | null, { motion }: { motio
     if (hot >= 0) [lis[hot], tips[hot]].forEach((el) => el?.classList.remove('is-hot'));
     hot = i;
     if (hot >= 0) [lis[hot], tips[hot]].forEach((el) => el?.classList.add('is-hot'));
+    if (hot >= 0) {
+      sfx.blade(hot);
+      buzz('tick');
+    }
     root.classList.toggle('is-reading', hot >= 0);
     show.show(hot);
   }
@@ -175,6 +181,9 @@ export function createDeck(f: FanDom, geo: () => Geo | null, { motion }: { motio
         phi = riffle.from + (riffle.to - riffle.from) * e;
         ampT = 6 * Math.sin(Math.PI * t);
         wave = true;
+        const at = Math.round((phi - blades[0].a) / STEP);
+        if (at !== riffleAt && at >= 0 && at < n) sfx.blade(at, true);
+        riffleAt = at;
       }
     }
     [amp, ampV] = spring(amp, ampV, ampT, 110, 1, dt);
@@ -197,6 +206,7 @@ export function createDeck(f: FanDom, geo: () => Geo | null, { motion }: { motio
   function runRiffle() {
     if (touched || calmV > 0.05 || !motion || dead) return;
     riffle = { t0: performance.now(), dur: 1250, from: blades[0].a - 26, to: blades[n - 1].a + 26 };
+    riffleAt = -1;
     wake();
   }
 
@@ -447,12 +457,17 @@ export function createSnap(f: FanDom, motion: boolean) {
       gsap.to(tips, { opacity: 0, duration: 0.12, ease: 'none' });
       gsap
         .timeline({ delay: D - 0.01 })
+        .call(() => {
+          sfx.clack();
+          buzz('clack');
+        })
         .to(jolt, { rotation: -1.8, duration: 0.05, ease: 'power2.out' })
         .to(jolt, { rotation: 0.5, duration: 0.1, ease: 'sine.inOut' })
         .to(jolt, { rotation: 0, duration: 0.18, ease: 'sine.out' });
       gsap.fromTo(rivetHead, { scale: 1 }, { keyframes: [{ scale: 0.8, duration: 0.05, ease: 'power2.out' }, { scale: 1, duration: 0.32, ease: 'back.out(3)' }], delay: D - 0.01 });
       gsap.fromTo(name, { y: 0 }, { keyframes: [{ y: 5, duration: 0.05, ease: 'power2.out' }, { y: 0, duration: 0.34, ease: 'back.out(2.6)' }], delay: D - 0.01 });
     } else {
+      sfx.unfold(blades.length);
       snapV.forEach((p, i) => gsap.to(p, { v: 0, duration: 0.95, delay: i * 0.022, ease: 'back.out(1.25)', onUpdate: () => writeOne(i) }));
       gsap.to(tips, { opacity: 1, duration: 0.35, delay: 0.45, stagger: 0.035, ease: 'none' });
     }

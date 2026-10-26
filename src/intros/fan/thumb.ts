@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import { clamp, cubicBezier, num, rad, type FanDom, type Geo } from './dom';
+import { buzz, sfx } from '../../scripts/sound';
 import { leftAlone } from './deck';
 
 /* The phone readout: prebuilt nodes; only text and two colours change. */
@@ -254,6 +255,8 @@ export function createThumbDeck(f: FanDom, geo: Geo, { motion, fresh, entered }:
   }
   // The fold shutting: it lands against the index and rebounds once, through the rivet into the name.
   function bigClack() {
+    sfx.clack();
+    buzz('clack');
     gsap
       .timeline()
       .to(jolt, { rotation: 1.8, duration: 0.05, ease: 'power2.out', overwrite: true })
@@ -270,6 +273,8 @@ export function createThumbDeck(f: FanDom, geo: Geo, { motion, fresh, entered }:
     det = r;
     if (hot >= 0) setHot(-1);
     clack(dir, user);
+    sfx.blade(det);
+    buzz('tick');
     if (reading) read0.show(det);
     cue();
     marks();
@@ -631,6 +636,7 @@ export function createThumbDeck(f: FanDom, geo: Geo, { motion, fresh, entered }:
       restAt = performance.now();
       snapTl = gsap.timeline({ onUpdate: wake });
       snapTl.to(opens, { v: 1, duration: 0.95, stagger: 0.022, ease: 'back.out(1.25)' });
+      sfx.unfold(n);
     }
     wake();
   }

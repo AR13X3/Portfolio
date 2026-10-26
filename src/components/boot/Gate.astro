@@ -12,6 +12,7 @@
  * choice's words and drawings live in <template>s, so crawlers and the no-JS page never see them.
  */
 import type { Chapter } from '../../chapters/types';
+import SoundToggle from '../SoundToggle.astro';
 import { intros } from '../../intros/registry';
 import { fanBlades, machineSvg, type Layout } from './previews';
 
@@ -69,7 +70,7 @@ const layouts: Layout[] = ['wide', 'stacked'];
           </button>
         ))
       }
-      <p class="choice__skip" data-ch="skip"><a href="#carevisor" data-boot-skip>Skip intro</a></p>
+      <p class="choice__skip" data-ch="skip"><a href="#carevisor" data-boot-skip>Skip intro</a><SoundToggle text class="choice__sound" /></p>
     </div>
   </template>
 
@@ -641,7 +642,7 @@ const layouts: Layout[] = ['wide', 'stacked'];
      while the page is built under them; each on an element the entrance does not animate itself
      (a pick can come while it still plays, and a second animation of the same property on one
      element keeps it off the compositor, frozen until the build is done). */
-  .boot.is-picking :is(.choice__head, .choice__skip > a),
+  .boot.is-picking :is(.choice__head, .choice__skip > a, .choice__sound),
   .boot[data-pick='fan'] [data-side='machine'],
   .boot[data-pick='machine'] [data-side='fan'] {
     opacity: 0;
@@ -677,6 +678,10 @@ const layouts: Layout[] = ['wide', 'stacked'];
     left: var(--gutter);
     bottom: 18px;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
     white-space: nowrap;
   }
 

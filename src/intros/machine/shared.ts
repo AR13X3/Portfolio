@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import type { Box, IntroBuild, IntroContext } from '../types';
+import { buzz, sfx } from '../../scripts/sound';
 
 /**
  * What the bench (bench.ts) and the fall line (fall.ts) share: the root's pieces, the load-in, the
@@ -186,6 +187,10 @@ export function loadIn(ctx: IntroContext, p: Pieces, opts: { length: number; con
   if (!ctx.entered) root.classList.add('jm--held');
   ctx.signal.addEventListener('abort', () => root.classList.remove('jm--held', 'jm--enter', 'jm--arrive', 'jm--landed', 'jm--ov'), { once: true });
   let entered = ctx.entered;
+  const touchDown = () => {
+    sfx.thock(1.1, 0.9);
+    buzz('clack');
+  };
   const enter = (o: { arrive?: boolean } = {}) => {
     if (entered) return;
     entered = true;
@@ -193,6 +198,8 @@ export function loadIn(ctx: IntroContext, p: Pieces, opts: { length: number; con
     root.classList.remove('jm--held');
     root.classList.toggle('jm--arrive', !!o.arrive);
     root.classList.add('jm--enter');
+    // Its own drop is heard touching down; a flight from the gate is heard in land().
+    if (!o.arrive) later(touchDown, opts.contact * 1000);
     // The settle (jm--landed) holds until the load-in ends: dropping it earlier would restart the drop.
     later(() => root.classList.remove('jm--enter', 'jm--ov', 'jm--landed'), opts.length * 1000);
     opts.then?.();
@@ -208,6 +215,7 @@ export function loadIn(ctx: IntroContext, p: Pieces, opts: { length: number; con
       if (!root.classList.contains('jm--arrive')) return;
       root.classList.remove('jm--arrive');
       root.classList.add('jm--landed');
+      touchDown();
     },
   };
   return { enter, dot };

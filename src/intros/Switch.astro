@@ -5,6 +5,7 @@
  * the top. It ships hidden: scripts/boot.ts shows it once the engine runs (no switch without
  * JavaScript) and does what pressing it does. Nothing about the choice is ever stored.
  */
+import SoundToggle from '../components/SoundToggle.astro';
 import { intros } from './registry';
 import type { IntroId } from './types';
 
@@ -16,25 +17,34 @@ const { current, class: className } = Astro.props;
 const at = Math.max(0, intros.findIndex((m) => m.id === current));
 ---
 
-<div class:list={['intro-switch', className]} role="group" aria-label="Intro" data-intro-switch hidden style={`--at:${at}`}>
-  <span class="intro-switch__label" aria-hidden="true">Intro</span>
-  <span class="intro-switch__track">
-    <i class="intro-switch__thumb" aria-hidden="true"></i>
-    {
-      intros.map((m) => (
-        <button type="button" class="intro-switch__opt" data-intro-option={m.id} aria-pressed={m.id === current ? 'true' : 'false'}>
-          {m.label}
-        </button>
-      ))
-    }
+<div class:list={['intro-switch', className]} data-intro-switch hidden style={`--at:${at}`}>
+  <span class="intro-switch__group" role="group" aria-label="Intro">
+    <span class="intro-switch__label" aria-hidden="true">Intro</span>
+    <span class="intro-switch__track">
+      <i class="intro-switch__thumb" aria-hidden="true"></i>
+      {
+        intros.map((m) => (
+          <button type="button" class="intro-switch__opt" data-intro-option={m.id} aria-pressed={m.id === current ? 'true' : 'false'}>
+            {m.label}
+          </button>
+        ))
+      }
+    </span>
   </span>
+  <SoundToggle />
 </div>
 
 <style>
-  .intro-switch {
+  .intro-switch,
+  .intro-switch__group {
     display: inline-flex;
     align-items: center;
     gap: 10px;
+  }
+
+  .intro-switch {
+    --opt: 76px;
+    gap: 12px;
     color: var(--ink-2);
     font: 500 13px/1 var(--font-sans);
     letter-spacing: 0;
@@ -49,7 +59,7 @@ const at = Math.max(0, intros.findIndex((m) => m.id === current));
   .intro-switch__track {
     position: relative;
     display: inline-grid;
-    grid-template-columns: repeat(2, 76px);
+    grid-template-columns: repeat(2, var(--opt));
     padding: 3px;
     border: 1px solid rgb(16 17 20 / 0.16);
     border-radius: 999px;
@@ -60,11 +70,11 @@ const at = Math.max(0, intros.findIndex((m) => m.id === current));
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 76px;
+    width: var(--opt);
     height: 28px;
     border-radius: 999px;
     background: var(--ink);
-    transform: translateX(calc(var(--at, 0) * 76px));
+    transform: translateX(calc(var(--at, 0) * var(--opt)));
     transition: transform 0.38s var(--ease-out);
   }
 
@@ -102,6 +112,17 @@ const at = Math.max(0, intros.findIndex((m) => m.id === current));
   @media (max-width: 399.98px) {
     .intro-switch__label {
       display: none;
+    }
+
+    /* Room for the links beside it on a small phone: a narrower track, the speaker unboxed. */
+    .intro-switch {
+      --opt: 60px;
+      gap: 2px;
+    }
+
+    .intro-switch :global(.sound.sound) {
+      width: 28px;
+      border-color: transparent;
     }
   }
 

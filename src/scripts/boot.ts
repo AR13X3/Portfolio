@@ -1,5 +1,6 @@
 import { DEFAULT_INTRO, SHELL_FONTS, introById, intros, isIntroId } from '../intros/registry';
 import type { IntroId, IntroRoute } from '../intros/types';
+import { buzz, sfx, syncSoundToggles } from './sound';
 import { createSpecimen } from './specimen';
 
 /**
@@ -120,12 +121,14 @@ function mount(id: IntroId) {
   if (title) section.setAttribute('aria-labelledby', title.id);
   html.dataset.route = id;
   active = id;
+  syncSoundToggles();
   return root;
 }
 
 /** The switch only exists with the engine running: un-hide it in every mounted root. */
 function showSwitches() {
   section?.querySelectorAll<HTMLElement>('[data-intro-switch]').forEach((s) => (s.hidden = false));
+  syncSoundToggles();
 }
 
 /**
@@ -529,6 +532,7 @@ function gateIn(gate: HTMLElement) {
     if (!template) return;
     name.after(template.content.cloneNode(true));
     choice = gate.querySelector<HTMLElement>('[data-choice]');
+    syncSoundToggles();
     gate.classList.add('is-choosing');
     relayout();
     lastSize = `${gate.clientWidth}x${probe.offsetHeight}`;
@@ -657,6 +661,8 @@ function gateIn(gate: HTMLElement) {
   const pick = async (id: IntroId) => {
     if (state !== 'choosing' || !choice) return;
     state = 'picking';
+    sfx.latch();
+    buzz('press');
     // gate[data-pick] fades the heading, the skip link, the other side and the chosen words
     // (CSS transitions: they keep running on the compositor through the build).
     gate.dataset.pick = id;
@@ -852,6 +858,8 @@ document.addEventListener('click', async (e) => {
   const id = button?.dataset.introOption;
   if (!button || !isIntroId(id) || id === active || switching || !engine || !section || html.dataset.boot !== 'done') return;
   switching = true;
+  sfx.press();
+  buzz('press');
   section.setAttribute('aria-busy', 'true');
   // (The live region sits just outside the section, so what it says is read while the section is busy.)
   const status = document.querySelector('[data-intro-status]');

@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motionEases } from '../../chapters/airpoint/eases';
 import { decode } from '../../scripts/motion/scramble';
 import { offsetWithin } from '../../scripts/motion/setter';
+import { buzz, sfx } from '../../scripts/sound';
 import type { TransitionMotion } from '../../scripts/motion/types';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -17,7 +18,7 @@ const CHROME = 36;
  * turns to the site's light grey, and the window grows until its inside is the viewport, so the
  * next chapter opens inside the frame the eye is already on.
  */
-export const airpointToComparebestai: TransitionMotion = ({ tl, el, next, mode, crossfade, clear }) => {
+export const airpointToComparebestai: TransitionMotion = ({ tl, el, next, mode, crossfade, clear, cue }) => {
   if (!el) return;
   const e = motionEases();
   const full = mode === 'full';
@@ -102,6 +103,8 @@ export const airpointToComparebestai: TransitionMotion = ({ tl, el, next, mode, 
     at(0.6),
   );
 
+  cue(at(0.6), () => sfx.slide(0.7, true, 0.14));
+
   // 2. Airpoint's cursor comes up the page, presses the address bar, and the URL decodes in.
   tl.fromTo(
     cursor,
@@ -113,6 +116,10 @@ export const airpointToComparebestai: TransitionMotion = ({ tl, el, next, mode, 
   tl.to(cursor, { x: () => url().x, y: () => url().y, duration: 0.55, ease: 'sine.inOut' }, at(1.4));
   // The press: the core shrinks to its pressed size, the ripple rings out green.
   tl.to(cursor, { keyframes: [{ scale: 0.78, duration: 0.08 }, { scale: 1, duration: 0.2 }] }, at(1.96));
+  cue(at(1.96), () => (sfx.press(), buzz('press')));
+  cue(at(2.0), () => sfx.ping(1568, 0.06));
+  cue(at(2.1), () => sfx.decode(0.7));
+  cue(at(2.4), () => sfx.slide(0.45, false, 0.1));
   tl.fromTo(
     pulse,
     { x: () => url().x, y: () => url().y, scale: 0, opacity: 0.9 },
@@ -142,7 +149,9 @@ export const airpointToComparebestai: TransitionMotion = ({ tl, el, next, mode, 
 
     // 4. The window grows until its inside is the viewport. The chrome and the shells stay: the
     //    chapter's own take over on the seam, in the same places, and fill in.
+    cue(at(2.95), () => sfx.ratchet(shells.length, 0.07, 2400, 80, 0.1));
     tl.set(win, { transformOrigin: '0% 0%' }, 3.7);
+    cue(3.7, () => sfx.slide(1.2, true, 0.2));
     tl.to(
       win,
       // From the window's own laid-out place, so it lands on the viewport whatever width the CSS used.

@@ -1,13 +1,15 @@
 import { gsap } from 'gsap';
+import { cueTrack, sfx, type Cue } from '../sound';
 import { chapterParts } from './chapter';
 import type { TransitionContext, TransitionMotion } from './types';
 
 export type Layers = Map<string, HTMLElement>;
 
 /** Fallback when a pair has no bespoke transition: clear the stage and morph the background. */
-export const defaultTransition: TransitionMotion = ({ tl, clear, crossfade }) => {
+export const defaultTransition: TransitionMotion = ({ tl, clear, crossfade, cue }) => {
   clear(0, { dur: 1.2 });
   crossfade(0.6, 1.8);
+  cue(0.05, () => sfx.slide(0.9, true, 0.14));
   tl.to({}, { duration: 0.4 }, '>');
 };
 
@@ -47,7 +49,14 @@ export function transitionTimeline(
   const clear: TransitionContext['clear'] = (at, opts = {}) => {
     if (ctx.mode === 'full') addClear(tl, ctx.section, at, opts.keep, opts.dur);
   };
-  (motion ?? defaultTransition)({ ...ctx, tl, crossfade, clear });
+  const cues: Cue[] = [];
+  const cue: TransitionContext['cue'] = (at, play) => void cues.push([at, play]);
+  (motion ?? defaultTransition)({ ...ctx, tl, crossfade, clear, cue });
   if (!faded) crossfade(0.5, 1.5);
+  // Nested in a chapter's pinned timeline (full) or scrubbed on its own (lite), it renders either way.
+  if (cues.length) {
+    const sounds = cueTrack(cues);
+    tl.eventCallback('onUpdate', () => sounds(tl.time()));
+  }
   return tl;
 }

@@ -4,6 +4,7 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motionEases } from '../../chapters/airpoint/eases';
 import { AIR, DISPLAY_DOT, loopPoints, polyline, type Pt } from '../../chapters/airpoint/geometry';
+import { buzz, sfx } from '../../scripts/sound';
 import type { TransitionMotion } from '../../scripts/motion/types';
 
 gsap.registerPlugin(DrawSVGPlugin, MotionPathPlugin, ScrollTrigger);
@@ -35,7 +36,7 @@ const f = (n: number) => n.toFixed(1);
  * becomes the live pad's trail over its dot grid, and the trail writes the Loop. Forest
  * turns to Ink and the type to Sora; it ends on Ink with everything cleared.
  */
-export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, mode, crossfade, clear }) => {
+export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, mode, crossfade, clear, cue }) => {
   if (!el) return;
   const e = motionEases();
   const full = mode === 'full';
@@ -158,6 +159,7 @@ export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, m
   // 2. The glowing head appears on the line and runs it; behind it the line becomes a tapering trail.
   const run = 1.6;
   tl.set(cursor, { opacity: 1 }, at(0.2));
+  cue(at(0.2), () => sfx.beat());
   tl.fromTo(glow, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.3, ease: e.lively, immediateRender: false }, at(0.2));
   tl.to(cursor, { motionPath: { path: travel }, duration: run, ease: 'power1.inOut' }, at(0.3));
   tl.set(trail, { opacity: 1 }, at(0.3));
@@ -175,6 +177,7 @@ export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, m
   // 3. The head becomes the live pad's cursor: Electric core, 2.8× halo, punched centre.
   tl.to(glow, { opacity: 0, duration: 0.3, ease: 'none' }, at(0.85));
   tl.fromTo(core, { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' }, { opacity: 1, scale: 1, duration: 0.45, ease: e.lively, immediateRender: false }, at(0.85));
+  cue(at(0.85), () => sfx.press());
 
   // 4. The cursor writes the Loop: the stroke draws on beneath it on Motion.Draw, then the point lands on a spring.
   const write = at(0.3 + run);
@@ -193,6 +196,7 @@ export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, m
   tl.to(cursor, { x: () => dotAt[0], y: () => dotAt[1], duration: 0.22, ease: 'power2.out' }, write + dur);
   tl.to(core, { scale: 0.5, opacity: 0, duration: 0.22, ease: 'power1.in' }, write + dur);
   tl.to(dot, { scale: 1, duration: 0.55, ease: e.point }, write + dur * (1050 / 1150));
+  cue(write + dur * (1050 / 1150), () => (sfx.ping(1760, 0.09), buzz('tick')));
   tl.set(cursor, { opacity: 0 }, write + dur + 0.22);
 
   // 5. The type turns to Sora: the wordmark rises in place under the mark (riseTransition).
@@ -207,6 +211,7 @@ export const bloodlineToAirpoint: TransitionMotion = ({ tl, el, section, next, m
   const lift = one('lift');
   if (full && navMark && navName) {
     const fly = 0.85;
+    cue(out, () => sfx.slide(fly, true, 0.12));
     tl.to(lift, { x: () => flight.x, y: () => flight.y, scale: () => flight.scale, svgOrigin: '0 0', duration: fly, ease: e.draw }, out);
     tl.to(word, { x: () => flight.wx, y: () => flight.wy, scale: () => flight.ws, transformOrigin: '0% 0%', duration: fly, ease: e.draw }, out);
     tl.to({}, { duration: 0.1 }, out + fly);

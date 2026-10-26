@@ -1,3 +1,4 @@
+import { sfx } from '../../scripts/sound';
 import type { TransitionMotion } from '../../scripts/motion/types';
 
 /**
@@ -6,7 +7,7 @@ import type { TransitionMotion } from '../../scripts/motion/types';
  * onto Coral Reeds' frosted glow, Halation's own first frame. Lite: a short dark band dims the page
  * and Halation's canvas comes up out of it, holding mid-screen while its frost wipes away.
  */
-export const carevisorToHalation: TransitionMotion = ({ tl, el, mode, crossfade, clear }) => {
+export const carevisorToHalation: TransitionMotion = ({ tl, el, mode, crossfade, clear, cue }) => {
   if (!el) return;
   const one = (key: string) => el.querySelector<HTMLElement>(`[data-cxh="${key}"]`);
   const all = (key: string) => Array.from(el.querySelectorAll<HTMLElement>(`[data-cxh="${key}"]`));
@@ -16,6 +17,7 @@ export const carevisorToHalation: TransitionMotion = ({ tl, el, mode, crossfade,
     tl.set(el, { zIndex: 2 }, 0);
     tl.to(one('vig'), { opacity: 1, duration: 0.8, ease: 'power1.in' }, 0);
     tl.to(one('dim'), { opacity: 1, duration: 1.0, ease: 'power2.in' }, 0.15);
+    cue(0.15, () => sfx.thunk());
     // In the dark, CareVisor clears and the ground turns to Halation's.
     clear(1.1, { dur: 0.2 });
     crossfade(1.2, 0.2);
@@ -25,6 +27,8 @@ export const carevisorToHalation: TransitionMotion = ({ tl, el, mode, crossfade,
     const seam = one('seam');
     const [left, right] = all('door');
     tl.to(seam, { opacity: 1, duration: 0.35, ease: 'power1.out' }, 1.5);
+    cue(1.5, () => sfx.ping(2637, 0.035));
+    cue(2.1, () => sfx.slide(1.1, true, 0.18));
     tl.to(all('spill'), { opacity: 1, duration: 0.5, ease: 'power1.out' }, 1.6);
     tl.to(left, { xPercent: -100, duration: 1.3, ease: 'power3.inOut' }, 2.1);
     tl.to(right, { xPercent: 100, duration: 1.3, ease: 'power3.inOut' }, 2.1);
@@ -35,5 +39,7 @@ export const carevisorToHalation: TransitionMotion = ({ tl, el, mode, crossfade,
 
   // Lite: as the band dims the page, the ground turns slowly to Halation's under it.
   crossfade(1.0, 1.6);
+  cue(0.4, () => sfx.thunk());
+  cue(1.0, () => sfx.slide(0.9, true, 0.14));
   tl.to({}, { duration: 0.1 }, 2.9);
 };

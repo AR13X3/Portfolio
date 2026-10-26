@@ -20,6 +20,8 @@ import {
   type Point,
   type Segment,
 } from './geometry';
+import { buzz, sfx } from '../../scripts/sound';
+import { runSounds } from './cues';
 import { debugOn, idleSwitch, keepPristine, loadIn, originSets, pieces, timers, type MachineBuild, type Pieces } from './shared';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -703,8 +705,30 @@ export function fallLite(ctx: IntroContext): IntroLite & MachineBuild {
   let ringOn = false;
   let hudShown: boolean | null = null;
   let st: ScrollTrigger | null = null;
+  const sounds = runSounds(() => {
+    const T = G.T;
+    return {
+      hop: T.hop0,
+      cb: T.cb,
+      ap: T.ap,
+      apBtn: T.apBtn,
+      apTip: T.apTip,
+      bl: T.bl,
+      blCross: T.blCross,
+      h1: T.h1,
+      h2: T.h2,
+      h3: T.h3,
+      hx: T.hx,
+      ride: T.hxRide,
+      rideDur: T.hxEnd - T.hxRide,
+      flick: T.flick,
+      press: T.press,
+      open: T.disc0,
+    };
+  });
   const sync = () => {
     const t = tl.time();
+    sounds(t);
     const hv = hudOn(t);
     if (hv !== hudShown) {
       hudShown = hv;
@@ -1018,10 +1042,14 @@ export function fallLite(ctx: IntroContext): IntroLite & MachineBuild {
         if (was) {
           if (Math.abs(dx) > 18) {
             back(true);
+            sfx.hop();
+            buzz('press');
             later(play, 0.12);
           } else back(false);
         } else if (Math.hypot(dx, dy) < 10) {
           // A tap.
+          sfx.press();
+          buzz('press');
           gsap.fromTo(p.lean, { scaleX: 1.2, scaleY: 0.8 }, { scaleX: 1, scaleY: 1, duration: 0.3, ease: 'back.out(3)', transformOrigin: '50% 100%' });
           later(play, 0.1);
         }

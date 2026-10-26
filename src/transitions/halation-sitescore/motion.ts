@@ -4,6 +4,7 @@ import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
 import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
 import { frameFor, offsetWithin, setter } from '../../chapters/halation/frame';
 import { decode } from '../../scripts/motion/scramble';
+import { buzz, sfx } from '../../scripts/sound';
 import type { TransitionMotion } from '../../scripts/motion/types';
 import { BAND, H, W } from '../shared/sitescore-map';
 import { BASE, POINTS, pointAt } from './months';
@@ -14,7 +15,7 @@ gsap.registerPlugin(CustomEase, DrawSVGPlugin, MorphSVGPlugin);
 const wipe = CustomEase.create('ss-wipe', '0.7, 0, 0.2, 1');
 const drop = CustomEase.create('ss-drop', '0.2, 1.4, 0.4, 1');
 
-export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, crossfade, clear }) => {
+export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, crossfade, clear, cue }) => {
   if (!el) return;
   const one = (key: string) => el.querySelector<HTMLElement>(`[data-b2s="${key}"]`);
   const all = (key: string) => Array.from(el.querySelectorAll<HTMLElement>(`[data-b2s="${key}"]`));
@@ -71,6 +72,7 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
     };
     tl.set(head, { x: () => from().x, y: () => from().y, opacity: 1 }, 0);
     tl.to(head, { x: () => start().x, y: () => start().y, duration: 1.2, ease: 'power2.inOut' }, 0.25);
+    cue(0.25, () => sfx.press());
   } else {
     // Lite: the block opens on its own copy of the still and the playhead fades in at month 0.
     gsap.set(one('art'), { opacity: 1 });
@@ -79,6 +81,7 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
 
   // ---------- 2. Quantise: the artwork snaps into 36 columns, one per month, left to right. ----------
   tl.to(q, { opacity: 1, duration: 0.2, stagger: 0.018, ease: 'none' }, 1.3);
+  cue(1.3, () => sfx.ratchet(12, 0.026, 1800, 70, 0.14));
   if (full && canvas) tl.to(canvas, { autoAlpha: 0, duration: 0.6 }, 1.9);
   if (!full) tl.to(one('art'), { opacity: 0, duration: 0.6 }, 1.9);
   crossfade(1.8, 0.9);
@@ -90,10 +93,12 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
 
   // The strip settles into bars standing on the baseline.
   tl.to(ink, { scaleY: (_: number, t: HTMLElement) => Number(t.dataset.s), duration: 0.9, stagger: 0.01, ease: wipe }, 2.6);
+  cue(2.6, () => sfx.slide(0.5, true, 0.1));
 
   // The type switches to SiteScore's: the kicker decodes in JetBrains Mono, the headline is uncovered in Inter.
   tl.set(kicker, { opacity: 1 }, 3.9);
   tl.add(decode(kicker, { duration: 0.8 }), 3.9);
+  cue(3.9, () => sfx.decode(0.8));
   words.forEach((word, i) => {
     const at = 4.05 + i * 0.13;
     const block = blocks[i];
@@ -117,6 +122,7 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
   // At month 36 the playhead settles into the sparkline's end dot.
   const end = () => px(...POINTS[POINTS.length - 1]);
   tl.fromTo(dot, { x: () => end().x, y: () => end().y, opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, immediateRender: false }, 5.15);
+  cue(5.15, () => sfx.ping(1760, 0.08));
   tl.to(head, { opacity: 0, duration: 0.2 }, 5.15);
   tl.to(band, { morphSVG: BAND, opacity: 1, duration: 0.9, ease: wipe }, 4.6);
   tl.to(axis, { opacity: 1, duration: 0.5 }, 4.8);
@@ -153,6 +159,7 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
   const tip = setter((v) => ((scene.tip = v), render()), 0);
   const rec = setter((v) => ((scene.rec = v), render()), 0);
   tl.fromTo(tip, { v: 0 }, { v: 1, duration: 1.6, ease: wipe, immediateRender: false }, 5.7);
+  cue(5.7, () => sfx.slide(1.2, false, 0.14));
   tl.to(one('map'), { opacity: 1, duration: 0.6 }, 5.9);
   tl.to(all('ring'), { opacity: 1, duration: 0.5, stagger: 0.14 }, 6.2);
   tl.to(band, { opacity: 0.4, duration: 0.6 }, 6.3);
@@ -160,6 +167,8 @@ export const halationToSitescore: TransitionMotion = ({ tl, el, section, mode, c
     const fall = setter((v) => ((scene.drop[i] = v), render()), 0);
     tl.fromTo(pin, { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 6.9 + i * 0.15);
     tl.fromTo(fall, { v: 0 }, { v: 1, duration: 0.6, ease: drop, immediateRender: false }, 6.9 + i * 0.15);
+    // Each pin is heard landing (its drop eases in over 0.6).
+    cue(6.9 + i * 0.15 + 0.3, () => (sfx.thock(0.45, 1.35 + i * 0.06), buzz('tick')));
   });
 
   // ---------- 5. The map recedes and SiteScore's paper is all that is left. ----------

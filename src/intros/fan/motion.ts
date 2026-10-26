@@ -1,7 +1,8 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { IntroBuild, IntroContext, IntroFull, IntroLite, IntroRoute } from '../types';
-import { flyIn, gateDot, type Spot } from './arrive';
+import { buzz, sfx } from '../../scripts/sound';
+import { CONTACT, flyIn, gateDot, type Spot } from './arrive';
 import { createDeck, createFinger, createSnap } from './deck';
 import { clearLayout, fanDom, layoutDeck, layoutPoster, layoutThumb, measureTittle, type FanDom, type Geo } from './dom';
 import { buildFull } from './full';
@@ -44,6 +45,7 @@ function frame(ctx: IntroContext, f: FanDom, classes: string[], motion: boolean)
   if (memory && memory <= 2) root.classList.add('low-mem');
   let done = 0;
   let flight: Animation[] = [];
+  let landed = 0;
   // The gate is gone (display: none) by the time enter() runs: remember its dot meanwhile.
   let dot: Spot | null = null;
   if (motion && !ctx.entered) {
@@ -61,10 +63,20 @@ function frame(ctx: IntroContext, f: FanDom, classes: string[], motion: boolean)
       }
       root.classList.remove('is-held');
       root.classList.add('is-entering');
+      // The rivet seats in the i as the deck fans out of it.
+      if (motion)
+        landed = window.setTimeout(() => {
+          if (flight.length) {
+            sfx.clack(true);
+            buzz('clack');
+          }
+          sfx.unfold(f.blades.length);
+        }, CONTACT * 1000);
       done = window.setTimeout(() => root.classList.remove('is-entering', 'is-arriving'), LOAD_IN);
     },
     destroy() {
       clearTimeout(done);
+      clearTimeout(landed);
       flight.forEach((a) => a.cancel());
       root.classList.remove(...all);
       clearLayout(f);

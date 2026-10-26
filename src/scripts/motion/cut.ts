@@ -1,4 +1,5 @@
 import { gsap } from 'gsap';
+import { buzz, hush, sfx } from '../sound';
 
 /** Seconds the shutter takes to close over the page, and to open off it again. */
 const CLOSE = 0.55;
@@ -51,6 +52,8 @@ export function createCut() {
       const before = forward ? 'inset(100% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)';
       const after = forward ? 'inset(0% 0% 100% 0%)' : 'inset(100% 0% 0% 0%)';
       const dir = forward ? 1 : -1;
+      // The shutter is heard closing, landing shut, and opening; the jump under it is not.
+      sfx.slide(CLOSE, forward, 0.2);
       gsap
         .timeline({
           onComplete: () => {
@@ -67,9 +70,13 @@ export function createCut() {
           { yPercent: 0, autoAlpha: 1, duration: 0.42, ease: 'power3.out', stagger: 0.05 },
           CLOSE * 0.55,
         )
-        .call(cover)
+        .call(() => (sfx.thock(1.1, 0.7), buzz('clack')), [], CLOSE - 0.03)
+        .call(() => {
+          hush(250);
+          cover();
+        })
         .to([num, name], { yPercent: -50 * dir, autoAlpha: 0, duration: 0.34, ease: 'power2.in', stagger: 0.03 }, `+=${HOLD}`)
-        .to(shutter, { clipPath: after, duration: OPEN, ease: 'power3.inOut' }, '<0.08');
+        .to(shutter, { clipPath: after, duration: OPEN, ease: 'power3.inOut', onStart: () => sfx.slide(OPEN, forward, 0.16) }, '<0.08');
     },
   };
 }

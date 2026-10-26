@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { IntroBuild, IntroContext, IntroFull, IntroFullContext } from '../types';
+import { runSounds } from './cues';
 import { arcDir, arcLift, line, offsetWithin, pathOf, poseAt, prop, timeAt, tumbleUp, turn, uAt, type Point, type Segment } from './geometry';
 import { debugOn, idleSwitch, keepPristine, loadIn, originSets, pieces, timers, type MachineBuild, type Pieces } from './shared';
 
@@ -429,11 +430,29 @@ export function benchFull(ctx: IntroFullContext): IntroFull & MachineBuild {
 
   const revealEase = gsap.parseEase('power2.in');
   const timecode = R('hx-time');
+  const sounds = runSounds(() => ({
+    hop: 0.01,
+    cb: T.cba,
+    ap: T.pen,
+    apBtn: T.penBtn,
+    apTip: T.penTip,
+    bl: T.bl,
+    blCross: T.blCross,
+    h1: T.ss1,
+    h2: T.ss2,
+    h3: T.ss3,
+    hx: T.hx,
+    ride: T.hxSlide,
+    rideDur: T.hxDur,
+    press: T.cv,
+    open: T.reveal,
+  }));
   let running = false;
   let shown = '';
   const sync = () => {
     const time = tl.time();
     place(uAt(G.S, time));
+    sounds(time);
     // What is on screen: the shell until it has lifted, the cut from the press, the bench until the
     // ground has taken over.
     const state = `${time < 0.48 ? 1 : 0}${time >= T.cv && time < gone ? 1 : 0}${time < gone ? 1 : 0}`;

@@ -49,6 +49,8 @@ export interface TransitionContext {
   crossfade: (at: number, dur?: number) => void;
   /** Move chapter A's content out of the way (full mode only; no-op in lite). */
   clear: (at: number, opts?: { keep?: Element[]; dur?: number }) => void;
+  /** A sound (or a haptic) for the moment `at`: it plays as the scroll passes it going forward. */
+  cue: (at: number, play: () => void) => void;
 }
 
 /** A transition between two sections, registered in src/transitions/motions.ts. */
