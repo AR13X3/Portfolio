@@ -134,6 +134,42 @@ html.js main [style*='opacity: 0;'][style*='visibility: hidden'] :is(a, button, 
   border: 0;
 }
 
+/* "Copied", under an email link for a moment after a click (scripts/copy-email.ts). */
+.copied {
+  position: fixed;
+  z-index: 110;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 12px/1 var(--font-sans);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s var(--ease-out);
+}
+
+.copied.is-on {
+  opacity: 1;
+  transform: none;
+  transition-duration: 0.12s, 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copied {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .copied {
+    border: 1px solid CanvasText;
+  }
+}
+
 /* The shutter a far jump cuts behind (scripts/motion/cut.ts): in the destination's colours. */
 .cut {
   position: fixed;

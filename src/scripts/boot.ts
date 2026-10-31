@@ -1,5 +1,6 @@
 import { DEFAULT_INTRO, SHELL_FONTS, introById, intros, isIntroId } from '../intros/registry';
 import type { IntroId, IntroRoute } from '../intros/types';
+import './copy-email';
 import { buzz, sfx, syncSoundToggles } from './sound';
 import { createSpecimen } from './specimen';
 
